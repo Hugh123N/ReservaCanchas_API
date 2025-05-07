@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Reserva.Dto.Rol
+namespace Reserva.Dto.Dbo.Rol
 {
     public class GetRolDto : RolDto
     {

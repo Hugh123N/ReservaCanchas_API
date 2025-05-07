@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Reserva.Dto.Rol
+namespace Reserva.Dto.Dbo.Rol
 {
-    public class UpdateRolDto : RolDto
+    public class ListRolDto : RolDto
     {
-        public int IdRol { get; set; }
     }
 }

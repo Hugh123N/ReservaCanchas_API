@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Reserva.Dto.Rol
+namespace Reserva.Dto.Dbo.DiaSemana
 {
-    internal class RolFilterDto
+    public class ListDiaSemanaDto : DiaSemanaDto
     {
-        public int? IdRol { get; set; }
     }
 }

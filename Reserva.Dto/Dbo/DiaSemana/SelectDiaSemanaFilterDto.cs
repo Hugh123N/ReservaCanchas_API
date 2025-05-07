@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Reserva.Dto.Rol
+namespace Reserva.Dto.Dbo.DiaSemana
 {
-    public class SelectRolDto : RolDto
+    public class SelectDiaSemanaFilterDto
     {
-        public int? IdRol { get; set; }
+        public string? Nombre { get; set; }
     }
 }

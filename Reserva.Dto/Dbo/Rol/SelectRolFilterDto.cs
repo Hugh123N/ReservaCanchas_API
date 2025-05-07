@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Reserva.Dto.Rol
+namespace Reserva.Dto.Dbo.Rol
 {
-    public class RolDto
+    public class SelectRolFilterDto
     {
-        public string Nombre { get; set; } = null!;
+        public string? Nombre { get; set; }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Azure;
 using Microsoft.AspNetCore.Mvc;
-using Reserva.Application.Abstractions;
+using Reserva.Application.Abstractions.Dbo;
 using Reserva.Dto.Base;
-using Reserva.Dto.Rol;
+using Reserva.Dto.Dbo.Rol;
 using Reserva.Entity.Models;
 
 namespace Reserva.Api.Controllers

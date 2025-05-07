@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Reserva.Dto.Rol
+namespace Reserva.Dto.Dbo.Rol
 {
-    public class SelectComboRolFilterDto
+    public class CreateRolDto : RolDto
     {
-        public int? IdRol { get; set; }
     }
 }
