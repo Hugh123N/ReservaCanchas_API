@@ -1,11 +1,5 @@
 ﻿using AutoMapper;
 using Reserva.Dto.Dbo.DiaSemana;
-using Reserva.Dto.Dbo.DiaSemana;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Reserva.Domain.Mapping
 {
@@ -20,6 +14,7 @@ namespace Reserva.Domain.Mapping
             CreateMap<Entity.Models.DiaSemana, ListDiaSemanaDto>().ReverseMap();
             CreateMap<Entity.Models.DiaSemana, SelectComboDiaSemanaDto>().ReverseMap();
             CreateMap<Entity.Models.DiaSemana, SearchDiaSemanaDto>().ReverseMap();
+            CreateMap<Entity.Models.DiaSemana, SelectDiaSemanaDto>().ReverseMap();
         }
     }
 }

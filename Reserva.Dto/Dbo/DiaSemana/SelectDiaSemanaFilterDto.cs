@@ -8,6 +8,7 @@ namespace Reserva.Dto.Dbo.DiaSemana
 {
     public class SelectDiaSemanaFilterDto
     {
-        public string? Nombre { get; set; }
+        public int? IdDia { get; set; }
+        //public string? Nombre { get; set; }
     }
 }

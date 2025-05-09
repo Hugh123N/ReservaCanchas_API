@@ -1,13 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Reserva.Application.Extensions;
 using Reserva.Domain.Extensions;
+using Reserva.Entity.ITransactions;
 using Reserva.Entity.Models;
+using Reserva.Entity.Transactions;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 //conexion a base de datos desde secretos de usuario
 builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(configuration["ConexionString"]));
+//ojo
+builder.Services.AddSingleton<TimeZoneInfo>(TimeZoneInfo.Local);
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork<ReservaCanchasContext>>();
 
 // Controllers
 builder.Services.AddControllers();
