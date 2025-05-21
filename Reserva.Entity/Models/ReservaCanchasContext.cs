@@ -19,11 +19,15 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Comision> Comisions { get; set; }
 
+    public virtual DbSet<Departamento> Departamentos { get; set; }
+
     public virtual DbSet<DetallePago> DetallePagos { get; set; }
 
     public virtual DbSet<DiaSemana> DiaSemanas { get; set; }
 
     public virtual DbSet<Disponibilidad> Disponibilidads { get; set; }
+
+    public virtual DbSet<Distrito> Distritos { get; set; }
 
     public virtual DbSet<EstadoPago> EstadoPagos { get; set; }
 
@@ -41,6 +45,8 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Proveedor> Proveedors { get; set; }
 
+    public virtual DbSet<Provincium> Provincia { get; set; }
+
     public virtual DbSet<Reserva> Reservas { get; set; }
 
     public virtual DbSet<Rol> Rols { get; set; }
@@ -49,14 +55,12 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
-    /*  protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-  #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-          => optionsBuilder.UseSqlServer("Server=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True;");
-
-    
-    scaffolding
-      scaffold-dbContext "Server=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutPutDir Models -force
-  */
+    public virtual DbSet<Zona> Zonas { get; set; }
+    /*
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True;");
+    */
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Cancha>(entity =>
@@ -82,6 +86,7 @@ public partial class ReservaCanchasContext : DbContext
                 .HasColumnName("fechaCreacion");
             entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
             entity.Property(e => e.IdTipo).HasColumnName("idTipo");
+            entity.Property(e => e.IdZona).HasColumnName("idZona");
             entity.Property(e => e.Imagen)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -110,6 +115,10 @@ public partial class ReservaCanchasContext : DbContext
                 .HasForeignKey(d => d.IdTipo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Cancha__idTipo__33D4B598");
+
+            entity.HasOne(d => d.IdZonaNavigation).WithMany(p => p.Canchas)
+                .HasForeignKey(d => d.IdZona)
+                .HasConstraintName("FK__Cancha__idZona__0B91BA14");
         });
 
         modelBuilder.Entity<Comision>(entity =>
@@ -135,6 +144,19 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.Porcentaje)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("porcentaje");
+        });
+
+        modelBuilder.Entity<Departamento>(entity =>
+        {
+            entity.HasKey(e => e.IdDepartamento).HasName("PK__Departam__C225F98DD0AA7FE9");
+
+            entity.ToTable("Departamento");
+
+            entity.Property(e => e.IdDepartamento).HasColumnName("idDepartamento");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
         });
 
         modelBuilder.Entity<DetallePago>(entity =>
@@ -210,6 +232,25 @@ public partial class ReservaCanchasContext : DbContext
                 .HasForeignKey(d => d.IdDia)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Disponibi__idDia__5EBF139D");
+        });
+
+        modelBuilder.Entity<Distrito>(entity =>
+        {
+            entity.HasKey(e => e.IdDistrito).HasName("PK__Distrito__494092A87BD0F7E5");
+
+            entity.ToTable("Distrito");
+
+            entity.Property(e => e.IdDistrito).HasColumnName("idDistrito");
+            entity.Property(e => e.IdProvincia).HasColumnName("idProvincia");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+
+            entity.HasOne(d => d.IdProvinciaNavigation).WithMany(p => p.Distritos)
+                .HasForeignKey(d => d.IdProvincia)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Distrito__idProv__07C12930");
         });
 
         modelBuilder.Entity<EstadoPago>(entity =>
@@ -422,6 +463,23 @@ public partial class ReservaCanchasContext : DbContext
                 .HasConstraintName("FK__Proveedor__idPro__2D27B809");
         });
 
+        modelBuilder.Entity<Provincium>(entity =>
+        {
+            entity.HasKey(e => e.IdProvincia).HasName("PK__Provinci__5F9F113C8576DAE3");
+
+            entity.Property(e => e.IdProvincia).HasColumnName("idProvincia");
+            entity.Property(e => e.IdDepartamento).HasColumnName("idDepartamento");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+
+            entity.HasOne(d => d.IdDepartamentoNavigation).WithMany(p => p.Provincia)
+                .HasForeignKey(d => d.IdDepartamento)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Provincia__idDep__04E4BC85");
+        });
+
         modelBuilder.Entity<Reserva>(entity =>
         {
             entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C82366B72E");
@@ -555,6 +613,25 @@ public partial class ReservaCanchasContext : DbContext
                 .HasForeignKey(d => d.IdRol)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Usuario__idRol__286302EC");
+        });
+
+        modelBuilder.Entity<Zona>(entity =>
+        {
+            entity.HasKey(e => e.IdZona).HasName("PK__Zona__1EE4D75CD64A1720");
+
+            entity.ToTable("Zona");
+
+            entity.Property(e => e.IdZona).HasColumnName("idZona");
+            entity.Property(e => e.IdDistrito).HasColumnName("idDistrito");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+
+            entity.HasOne(d => d.IdDistritoNavigation).WithMany(p => p.Zonas)
+                .HasForeignKey(d => d.IdDistrito)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Zona__idDistrito__0A9D95DB");
         });
 
         OnModelCreatingPartial(modelBuilder);

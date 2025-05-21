@@ -23,6 +23,8 @@ public partial class Cancha
 
     public int? IdProveedor { get; set; }
 
+    public int? IdZona { get; set; }
+
     public DateTime? FechaCreacion { get; set; }
 
     public DateTime? FechaActualizacion { get; set; }
@@ -36,6 +38,8 @@ public partial class Cancha
     public virtual Proveedor? IdProveedorNavigation { get; set; }
 
     public virtual TipoCancha IdTipoNavigation { get; set; } = null!;
+
+    public virtual Zona? IdZonaNavigation { get; set; }
 
     public virtual ICollection<ImagenCancha> ImagenCanchas { get; set; } = new List<ImagenCancha>();
 

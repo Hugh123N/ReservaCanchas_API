@@ -8,6 +8,9 @@ namespace Reserva.Dto.Dbo.Cancha
 {
     public class CanchaFilterDto
     {
+        public string? Departamento { get; set; }
+        public string? Distrito { get; set; }
+        public string? Zona { get; set; }
         public string? Nombre { get; set; }
     }
 }

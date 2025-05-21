@@ -19,5 +19,11 @@ namespace Reserva.Dto.Dbo.Cancha
         public string? Imagen { get; set; }
 
         public decimal? PrecioHora { get; set; }
+
+        public int? CreadoPor { get; set; }
+
+        public int? IdProveedor { get; set; }
+
+        public int? IdZona { get; set; }
     }
 }
