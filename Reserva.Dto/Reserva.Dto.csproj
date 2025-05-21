@@ -10,4 +10,21 @@
     <PackageReference Include="FluentValidation" Version="11.11.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Dbo\Comision\" />
+    <Folder Include="Dbo\DetallePago\" />
+    <Folder Include="Dbo\Disponibilidad\" />
+    <Folder Include="Dbo\EstadoPago\" />
+    <Folder Include="Dbo\ImagenCancha\" />
+    <Folder Include="Dbo\MetodoPago\" />
+    <Folder Include="Dbo\Notificacion\" />
+    <Folder Include="Dbo\Pago\" />
+    <Folder Include="Dbo\Proveedor\" />
+    <Folder Include="Dbo\Reserva\" />
+    <Folder Include="Dbo\TipoCancha\" />
+    <Folder Include="Dbo\Usuario\" />
+    <Folder Include="Dbo\GananciaProveedor\" />
+    <Folder Include="Dbo\EstadoReserva\" />
+  </ItemGroup>
+
 </Project>

@@ -9,5 +9,7 @@ public partial class DiaSemana
 
     public string Nombre { get; set; } = null!;
 
+    public bool? Activo { get; set; }
+
     public virtual ICollection<Disponibilidad> Disponibilidads { get; set; } = new List<Disponibilidad>();
 }

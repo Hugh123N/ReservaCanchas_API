@@ -19,11 +19,25 @@ public partial class Cancha
 
     public decimal? PrecioHora { get; set; }
 
-    public bool? Activa { get; set; }
+    public int? CreadoPor { get; set; }
+
+    public int? IdProveedor { get; set; }
+
+    public DateTime? FechaCreacion { get; set; }
+
+    public DateTime? FechaActualizacion { get; set; }
+
+    public bool? Activo { get; set; }
+
+    public virtual Usuario? CreadoPorNavigation { get; set; }
 
     public virtual ICollection<Disponibilidad> Disponibilidads { get; set; } = new List<Disponibilidad>();
 
-    public virtual Tipo IdTipoNavigation { get; set; } = null!;
+    public virtual Proveedor? IdProveedorNavigation { get; set; }
+
+    public virtual TipoCancha IdTipoNavigation { get; set; } = null!;
+
+    public virtual ICollection<ImagenCancha> ImagenCanchas { get; set; } = new List<ImagenCancha>();
 
     public virtual ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }
