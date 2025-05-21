@@ -87,10 +87,6 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
             entity.Property(e => e.IdTipo).HasColumnName("idTipo");
             entity.Property(e => e.IdZona).HasColumnName("idZona");
-            entity.Property(e => e.Imagen)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("imagen");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .IsUnicode(false)

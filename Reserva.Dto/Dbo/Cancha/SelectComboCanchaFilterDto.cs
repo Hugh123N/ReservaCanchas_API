@@ -8,6 +8,6 @@ namespace Reserva.Dto.Dbo.Cancha
 {
     public class SelectComboCanchaFilterDto
     {
-        public int? IdDia { get; set; }
+        public int? IdCancha { get; set; }
     }
 }

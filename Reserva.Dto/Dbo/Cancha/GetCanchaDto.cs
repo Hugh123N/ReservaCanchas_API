@@ -8,6 +8,8 @@ namespace Reserva.Dto.Dbo.Cancha
 {
     public class GetCanchaDto : CanchaDto
     {
-        public int IdDia { get; set; }
+        public int IdCancha { get; set; }
+
+        public bool Activo { get; set; }
     }
 }

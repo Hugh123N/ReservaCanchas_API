@@ -8,7 +8,7 @@ namespace Reserva.Dto.Dbo.Cancha
 {
     public class SelectCanchaFilterDto
     {
-        public int? IdDia { get; set; }
+        public int? IdCancha { get; set; }
         //public string? Nombre { get; set; }
     }
 }

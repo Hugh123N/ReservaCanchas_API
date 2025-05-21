@@ -16,8 +16,6 @@ namespace Reserva.Dto.Dbo.Cancha
 
         public string? Ubicacion { get; set; }
 
-        public string? Imagen { get; set; }
-
         public decimal? PrecioHora { get; set; }
 
         public int? CreadoPor { get; set; }

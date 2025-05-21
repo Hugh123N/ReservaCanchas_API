@@ -15,21 +15,19 @@ public partial class Cancha
 
     public string? Ubicacion { get; set; }
 
-    public string? Imagen { get; set; }
-
     public decimal? PrecioHora { get; set; }
 
     public int? CreadoPor { get; set; }
 
     public int? IdProveedor { get; set; }
 
-    public int? IdZona { get; set; }
-
     public DateTime? FechaCreacion { get; set; }
 
     public DateTime? FechaActualizacion { get; set; }
 
     public bool? Activo { get; set; }
+
+    public int? IdZona { get; set; }
 
     public virtual Usuario? CreadoPorNavigation { get; set; }
 
