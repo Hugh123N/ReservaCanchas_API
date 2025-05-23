@@ -5,7 +5,7 @@ namespace Reserva.Entity.Models;
 
 public partial class ImagenCancha
 {
-    public int IdImagen { get; set; }
+    public int IdImagenCancha { get; set; }
 
     public int IdCancha { get; set; }
 

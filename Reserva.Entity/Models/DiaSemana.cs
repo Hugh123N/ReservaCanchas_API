@@ -5,7 +5,7 @@ namespace Reserva.Entity.Models;
 
 public partial class DiaSemana
 {
-    public int IdDia { get; set; }
+    public int IdDiaSemana { get; set; }
 
     public string Nombre { get; set; } = null!;
 

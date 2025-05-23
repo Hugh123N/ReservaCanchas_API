@@ -13,11 +13,21 @@ public partial class Proveedor
 
     public string? Descripcion { get; set; }
 
+    public int IdTipoProveedor { get; set; }
+
+    public int IdEstadoProveedor { get; set; }
+
+    public DateTime? FechaCreacion { get; set; }
+
     public bool? Activo { get; set; }
 
     public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
 
     public virtual ICollection<GananciaProveedor> GananciaProveedors { get; set; } = new List<GananciaProveedor>();
 
+    public virtual EstadoProveedor IdEstadoProveedorNavigation { get; set; } = null!;
+
     public virtual Usuario IdProveedorNavigation { get; set; } = null!;
+
+    public virtual TipoProveedor IdTipoProveedorNavigation { get; set; } = null!;
 }

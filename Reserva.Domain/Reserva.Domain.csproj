@@ -7,11 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Reserva.Dto\Reserva.Dto.csproj" />
-    <ProjectReference Include="..\Reserva.Entity\Reserva.Entity.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
@@ -19,6 +14,13 @@
     <PackageReference Include="RandomStringCreator" Version="2.0.0" />
     <PackageReference Include="Scrutor" Version="6.0.1" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reserva.Common\Reserva.Common.csproj" />
+    <ProjectReference Include="..\Reserva.Dto\Reserva.Dto.csproj" />
+    <ProjectReference Include="..\Reserva.Repository.Abstractions\Reserva.Repository.Abstractions.csproj" />
+    <ProjectReference Include="..\Reserva.Repository\Reserva.Repository.csproj" />
   </ItemGroup>
 
 </Project>

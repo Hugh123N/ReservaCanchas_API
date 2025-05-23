@@ -17,7 +17,7 @@ public partial class Reserva
 
     public TimeOnly HoraFin { get; set; }
 
-    public int IdEstado { get; set; }
+    public int IdEstadoReserva { get; set; }
 
     public int? CreadoPor { get; set; }
 
@@ -33,7 +33,7 @@ public partial class Reserva
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 
-    public virtual EstadoReserva IdEstadoNavigation { get; set; } = null!;
+    public virtual EstadoReserva IdEstadoReservaNavigation { get; set; } = null!;
 
     public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
 }

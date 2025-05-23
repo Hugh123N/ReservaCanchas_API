@@ -5,11 +5,11 @@ namespace Reserva.Entity.Models;
 
 public partial class Disponibilidad
 {
-    public int Id { get; set; }
+    public int IdDisponibilidad { get; set; }
 
     public int IdCancha { get; set; }
 
-    public int IdDia { get; set; }
+    public int IdDiaSemana { get; set; }
 
     public TimeOnly HoraInicio { get; set; }
 
@@ -27,5 +27,5 @@ public partial class Disponibilidad
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 
-    public virtual DiaSemana IdDiaNavigation { get; set; } = null!;
+    public virtual DiaSemana IdDiaSemanaNavigation { get; set; } = null!;
 }

@@ -11,9 +11,9 @@ public partial class Pago
 
     public decimal Monto { get; set; }
 
-    public int? IdMetodo { get; set; }
+    public int? IdMetodoPago { get; set; }
 
-    public int IdEstado { get; set; }
+    public int IdEstadoPago { get; set; }
 
     public int? CreadoPor { get; set; }
 
@@ -23,9 +23,9 @@ public partial class Pago
 
     public virtual Usuario? CreadoPorNavigation { get; set; }
 
-    public virtual EstadoPago IdEstadoNavigation { get; set; } = null!;
+    public virtual EstadoPago IdEstadoPagoNavigation { get; set; } = null!;
 
-    public virtual MetodoPago? IdMetodoNavigation { get; set; }
+    public virtual MetodoPago? IdMetodoPagoNavigation { get; set; }
 
     public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
 }

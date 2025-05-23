@@ -5,7 +5,9 @@ namespace Reserva.Entity.Models;
 
 public partial class MetodoPago
 {
-    public int IdMetodo { get; set; }
+    public int IdMetodoPago { get; set; }
+
+    public string Codigo { get; set; } = null!;
 
     public string Nombre { get; set; } = null!;
 

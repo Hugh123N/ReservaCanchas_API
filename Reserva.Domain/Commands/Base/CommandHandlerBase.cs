@@ -2,7 +2,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Dto.Base;
-using Reserva.Entity.ITransactions;
+using Reserva.Repository.Abstractions.Transactions;
 
 #pragma warning disable CS8604 // Possible null reference argument.
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly

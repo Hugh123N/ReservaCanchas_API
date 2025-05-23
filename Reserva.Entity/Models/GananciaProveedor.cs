@@ -5,7 +5,7 @@ namespace Reserva.Entity.Models;
 
 public partial class GananciaProveedor
 {
-    public int Id { get; set; }
+    public int IdGananciaProveedor { get; set; }
 
     public int IdReserva { get; set; }
 

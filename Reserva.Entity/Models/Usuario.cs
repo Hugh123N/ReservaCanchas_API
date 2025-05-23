@@ -21,7 +21,7 @@ public partial class Usuario
 
     public int IdRol { get; set; }
 
-    public string? Estado { get; set; }
+    public int IdEstadoUsuario { get; set; }
 
     public DateTime? FechaCreacion { get; set; }
 
@@ -32,6 +32,8 @@ public partial class Usuario
     public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
 
     public virtual ICollection<Disponibilidad> Disponibilidads { get; set; } = new List<Disponibilidad>();
+
+    public virtual EstadoUsuario IdEstadoUsuarioNavigation { get; set; } = null!;
 
     public virtual Rol IdRolNavigation { get; set; } = null!;
 

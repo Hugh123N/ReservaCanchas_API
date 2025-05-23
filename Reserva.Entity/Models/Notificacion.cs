@@ -5,7 +5,7 @@ namespace Reserva.Entity.Models;
 
 public partial class Notificacion
 {
-    public int Id { get; set; }
+    public int IdNotificacion { get; set; }
 
     public int IdUsuario { get; set; }
 

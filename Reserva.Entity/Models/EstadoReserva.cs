@@ -5,7 +5,9 @@ namespace Reserva.Entity.Models;
 
 public partial class EstadoReserva
 {
-    public int IdEstado { get; set; }
+    public int IdEstadoReserva { get; set; }
+
+    public string Codigo { get; set; } = null!;
 
     public string Nombre { get; set; } = null!;
 
