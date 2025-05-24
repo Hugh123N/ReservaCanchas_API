@@ -19,7 +19,7 @@ public partial class Pago
 
     public DateTime? FechaCreacion { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual Usuario? CreadoPorNavigation { get; set; }
 

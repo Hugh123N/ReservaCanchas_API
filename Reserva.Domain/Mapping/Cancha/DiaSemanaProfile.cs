@@ -27,6 +27,8 @@ namespace Reserva.Domain.Mapping.DiaSemana
 
             CreateMap<Entity.Models.DiaSemana, SearchDiaSemanaDto>()
                 .ReverseMap();
+            CreateMap<Entity.Models.DiaSemana, SelectDiaSemanaDto>()
+                .ReverseMap();
         }
     }
 }

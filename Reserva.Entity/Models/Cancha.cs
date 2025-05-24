@@ -29,7 +29,7 @@ public partial class Cancha
 
     public DateTime? FechaActualizacion { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual Usuario? CreadoPorNavigation { get; set; }
 

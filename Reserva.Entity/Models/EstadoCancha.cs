@@ -11,7 +11,7 @@ public partial class EstadoCancha
 
     public string Nombre { get; set; } = null!;
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
 }

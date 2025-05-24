@@ -19,7 +19,7 @@ public partial class GananciaProveedor
 
     public DateTime? FechaCreacion { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual Proveedor IdProveedorNavigation { get; set; } = null!;
 

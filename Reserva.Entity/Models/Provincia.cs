@@ -10,6 +10,7 @@ public partial class Provincia
     public string Nombre { get; set; } = null!;
 
     public int IdDepartamento { get; set; }
+    public bool Activo { get; set; }
 
     public virtual ICollection<Distrito> Distritos { get; set; } = new List<Distrito>();
 

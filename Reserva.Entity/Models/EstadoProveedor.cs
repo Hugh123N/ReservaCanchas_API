@@ -11,7 +11,7 @@ public partial class EstadoProveedor
 
     public string? Nombre { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual ICollection<Proveedor> Proveedors { get; set; } = new List<Proveedor>();
 }

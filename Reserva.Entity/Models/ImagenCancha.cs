@@ -15,7 +15,7 @@ public partial class ImagenCancha
 
     public DateTime? FechaCreacion { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 }

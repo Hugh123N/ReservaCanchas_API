@@ -10,6 +10,7 @@ public partial class Zona
     public string Nombre { get; set; } = null!;
 
     public int IdDistrito { get; set; }
+    public bool Activo { get; set; }
 
     public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
 

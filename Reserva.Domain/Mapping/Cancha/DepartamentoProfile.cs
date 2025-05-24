@@ -27,6 +27,9 @@ namespace Reserva.Domain.Mapping.Departamento
 
             CreateMap<Entity.Models.Departamento, SearchDepartamentoDto>()
                 .ReverseMap();
+
+            CreateMap<Entity.Models.Departamento, SelectDepartamentoDto>()
+                .ReverseMap();
         }
     }
 }

@@ -10,6 +10,7 @@ public partial class Distrito
     public string Nombre { get; set; } = null!;
 
     public int IdProvincia { get; set; }
+    public bool Activo { get; set; }
 
     public virtual Provincia IdProvinciaNavigation { get; set; } = null!;
 
