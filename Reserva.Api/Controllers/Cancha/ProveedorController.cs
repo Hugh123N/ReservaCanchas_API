@@ -3,7 +3,7 @@ using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Cancha;
 using Reserva.Dto.Cancha.Proveedor;
 
-namespace Reserva.Apis.Controllers.Cancha
+namespace Reserva.Api.Controllers.Cancha
 {
     [ApiController]
     [Route("api/Proveedor")]

@@ -11,9 +11,10 @@ public partial class Notificacion
 
     public string Mensaje { get; set; } = null!;
 
-    public bool Leido { get; set; }
+    public bool? Leido { get; set; }
 
     public DateTime? FechaCreacion { get; set; }
+
     public bool Activo { get; set; }
 
     public virtual Usuario IdUsuarioNavigation { get; set; } = null!;

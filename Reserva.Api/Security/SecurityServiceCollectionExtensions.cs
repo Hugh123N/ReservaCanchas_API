@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Reserva.Repository.Security;
 using System.Text;
 
-namespace Reserva.Apis.Security
+namespace Reserva.Api.Security
 {
     public static class SecurityServiceCollectionExtensions
     {
@@ -64,7 +64,7 @@ namespace Reserva.Apis.Security
                         ValidateAudience = true,
                         ValidAudience = validAudience,
                         ValidIssuer = validIssuer,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey!))
                     };
                 });
             #endregion

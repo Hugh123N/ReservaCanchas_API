@@ -19,15 +19,11 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Comision> Comisions { get; set; }
 
-    public virtual DbSet<Departamento> Departamentos { get; set; }
-
     public virtual DbSet<DetallePago> DetallePagos { get; set; }
 
     public virtual DbSet<DiaSemana> DiaSemanas { get; set; }
 
     public virtual DbSet<Disponibilidad> Disponibilidads { get; set; }
-
-    public virtual DbSet<Distrito> Distritos { get; set; }
 
     public virtual DbSet<EstadoCancha> EstadoCanchas { get; set; }
 
@@ -51,8 +47,6 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Proveedor> Proveedors { get; set; }
 
-    public virtual DbSet<Provincia> Provincia { get; set; }
-
     public virtual DbSet<Reserva> Reservas { get; set; }
 
     public virtual DbSet<Rol> Rols { get; set; }
@@ -61,21 +55,23 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<TipoProveedor> TipoProveedors { get; set; }
 
-    public virtual DbSet<Usuario> Usuarios { get; set; }
+    public virtual DbSet<Ubigeo> Ubigeos { get; set; }
 
-    public virtual DbSet<Zona> Zonas { get; set; }
+    public virtual DbSet<Usuario> Usuarios { get; set; }
     /*
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True;");
-    
-     scaffold-dbContext "Server=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutPutDir Models -force
+   
+    uso de:
+    scaffold-dbContext "Server=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutPutDir Models -force
+     
      */
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Cancha>(entity =>
         {
-            entity.HasKey(e => e.IdCancha).HasName("PK__Cancha__7ECD19EE24F60C6C");
+            entity.HasKey(e => e.IdCancha).HasName("PK__Cancha__7ECD19EE1303B1EF");
 
             entity.ToTable("Cancha");
 
@@ -83,10 +79,19 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true)
                 .HasColumnName("activo");
+            entity.Property(e => e.CodigoUbigeo)
+                .HasMaxLength(6)
+                .IsUnicode(false)
+                .IsFixedLength()
+                .HasColumnName("codigoUbigeo");
             entity.Property(e => e.CreadoPor).HasColumnName("creadoPor");
             entity.Property(e => e.Descripcion)
                 .HasColumnType("text")
                 .HasColumnName("descripcion");
+            entity.Property(e => e.Direccion)
+                .HasMaxLength(500)
+                .IsUnicode(false)
+                .HasColumnName("direccion");
             entity.Property(e => e.FechaActualizacion)
                 .HasColumnType("datetime")
                 .HasColumnName("fechaActualizacion");
@@ -97,7 +102,12 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.IdEstadoCancha).HasColumnName("idEstadoCancha");
             entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
             entity.Property(e => e.IdTipoCancha).HasColumnName("idTipoCancha");
-            entity.Property(e => e.IdZona).HasColumnName("idZona");
+            entity.Property(e => e.Latitud)
+                .HasColumnType("decimal(10, 8)")
+                .HasColumnName("latitud");
+            entity.Property(e => e.Longitud)
+                .HasColumnType("decimal(10, 8)")
+                .HasColumnName("longitud");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .IsUnicode(false)
@@ -106,36 +116,35 @@ public partial class ReservaCanchasContext : DbContext
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("precioHora");
             entity.Property(e => e.Ubicacion)
-                .HasMaxLength(255)
-                .IsUnicode(false)
+                .HasColumnType("ntext")
                 .HasColumnName("ubicacion");
+
+            entity.HasOne(d => d.CodigoUbigeoNavigation).WithMany(p => p.Canchas)
+                .HasForeignKey(d => d.CodigoUbigeo)
+                .HasConstraintName("FK__Cancha__codigoUb__59FA5E80");
 
             entity.HasOne(d => d.CreadoPorNavigation).WithMany(p => p.Canchas)
                 .HasForeignKey(d => d.CreadoPor)
-                .HasConstraintName("FK__Cancha__creadoPo__5FB337D6");
+                .HasConstraintName("FK__Cancha__creadoPo__5812160E");
 
             entity.HasOne(d => d.IdEstadoCanchaNavigation).WithMany(p => p.Canchas)
                 .HasForeignKey(d => d.IdEstadoCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Cancha__idEstado__628FA481");
+                .HasConstraintName("FK__Cancha__idEstado__5AEE82B9");
 
             entity.HasOne(d => d.IdProveedorNavigation).WithMany(p => p.Canchas)
                 .HasForeignKey(d => d.IdProveedor)
-                .HasConstraintName("FK__Cancha__idProvee__60A75C0F");
+                .HasConstraintName("FK__Cancha__idProvee__59063A47");
 
             entity.HasOne(d => d.IdTipoCanchaNavigation).WithMany(p => p.Canchas)
                 .HasForeignKey(d => d.IdTipoCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Cancha__idTipoCa__5EBF139D");
-
-            entity.HasOne(d => d.IdZonaNavigation).WithMany(p => p.Canchas)
-                .HasForeignKey(d => d.IdZona)
-                .HasConstraintName("FK__Cancha__idZona__619B8048");
+                .HasConstraintName("FK__Cancha__idTipoCa__571DF1D5");
         });
 
         modelBuilder.Entity<Comision>(entity =>
         {
-            entity.HasKey(e => e.IdComision).HasName("PK__Comision__12A3EDC2C47730D4");
+            entity.HasKey(e => e.IdComision).HasName("PK__Comision__12A3EDC277E55CD2");
 
             entity.ToTable("Comision");
 
@@ -158,25 +167,15 @@ public partial class ReservaCanchasContext : DbContext
                 .HasColumnName("porcentaje");
         });
 
-        modelBuilder.Entity<Departamento>(entity =>
-        {
-            entity.HasKey(e => e.IdDepartamento).HasName("PK__Departam__C225F98D26DBEC92");
-
-            entity.ToTable("Departamento");
-
-            entity.Property(e => e.IdDepartamento).HasColumnName("idDepartamento");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-        });
-
         modelBuilder.Entity<DetallePago>(entity =>
         {
             entity
                 .HasNoKey()
                 .ToTable("DetallePago");
 
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
             entity.Property(e => e.IdDetallePago)
                 .ValueGeneratedOnAdd()
                 .HasColumnName("idDetallePago");
@@ -185,16 +184,16 @@ public partial class ReservaCanchasContext : DbContext
 
             entity.HasOne(d => d.IdPagoNavigation).WithMany()
                 .HasForeignKey(d => d.IdPago)
-                .HasConstraintName("FK__DetallePa__idPag__03F0984C");
+                .HasConstraintName("FK__DetallePa__idPag__7C4F7684");
 
             entity.HasOne(d => d.IdReservaNavigation).WithMany()
                 .HasForeignKey(d => d.IdReserva)
-                .HasConstraintName("FK__DetallePa__idRes__04E4BC85");
+                .HasConstraintName("FK__DetallePa__idRes__7D439ABD");
         });
 
         modelBuilder.Entity<DiaSemana>(entity =>
         {
-            entity.HasKey(e => e.IdDiaSemana).HasName("PK__DiaSeman__10EB836B711C75E8");
+            entity.HasKey(e => e.IdDiaSemana).HasName("PK__DiaSeman__10EB836B91261A26");
 
             entity.ToTable("DiaSemana");
 
@@ -210,11 +209,11 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Disponibilidad>(entity =>
         {
-            entity.HasKey(e => e.IdDisponibilidad).HasName("PK__Disponib__3213E83F51973043");
+            entity.HasKey(e => e.IdDisponibilidad).HasName("PK__Disponib__96A3EB6AB089CD0E");
 
             entity.ToTable("Disponibilidad");
 
-            entity.Property(e => e.IdDisponibilidad).HasColumnName("id");
+            entity.Property(e => e.IdDisponibilidad).HasColumnName("idDisponibilidad");
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true)
                 .HasColumnName("activo");
@@ -233,41 +232,22 @@ public partial class ReservaCanchasContext : DbContext
 
             entity.HasOne(d => d.CreadoPorNavigation).WithMany(p => p.Disponibilidads)
                 .HasForeignKey(d => d.CreadoPor)
-                .HasConstraintName("FK__Disponibi__cread__0C85DE4D");
+                .HasConstraintName("FK__Disponibi__cread__05D8E0BE");
 
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.Disponibilidads)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Disponibi__idCan__0A9D95DB");
+                .HasConstraintName("FK__Disponibi__idCan__03F0984C");
 
             entity.HasOne(d => d.IdDiaSemanaNavigation).WithMany(p => p.Disponibilidads)
                 .HasForeignKey(d => d.IdDiaSemana)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Disponibi__idDia__0B91BA14");
-        });
-
-        modelBuilder.Entity<Distrito>(entity =>
-        {
-            entity.HasKey(e => e.IdDistrito).HasName("PK__Distrito__494092A84301EA00");
-
-            entity.ToTable("Distrito");
-
-            entity.Property(e => e.IdDistrito).HasColumnName("idDistrito");
-            entity.Property(e => e.IdProvincia).HasColumnName("idProvincia");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-
-            entity.HasOne(d => d.IdProvinciaNavigation).WithMany(p => p.Distritos)
-                .HasForeignKey(d => d.IdProvincia)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Distrito__idProv__3B75D760");
+                .HasConstraintName("FK__Disponibi__idDia__04E4BC85");
         });
 
         modelBuilder.Entity<EstadoCancha>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoCancha).HasName("PK__EstadoCa__3B089FAB04B42B96");
+            entity.HasKey(e => e.IdEstadoCancha).HasName("PK__EstadoCa__3B089FABCBA05331");
 
             entity.ToTable("EstadoCancha");
 
@@ -288,7 +268,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoPago>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoPago).HasName("PK__EstadoPa__03C5BA224D375182");
+            entity.HasKey(e => e.IdEstadoPago).HasName("PK__EstadoPa__03C5BA2287F0569D");
 
             entity.ToTable("EstadoPago");
 
@@ -309,7 +289,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoProveedor>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoProveedor).HasName("PK__EstadoPr__B0AF2C7315BDCA33");
+            entity.HasKey(e => e.IdEstadoProveedor).HasName("PK__EstadoPr__B0AF2C73E689F5BB");
 
             entity.ToTable("EstadoProveedor");
 
@@ -330,7 +310,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoReserva>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoReserva).HasName("PK__EstadoRe__AC7BB7062AF5E898");
+            entity.HasKey(e => e.IdEstadoReserva).HasName("PK__EstadoRe__AC7BB70688A53472");
 
             entity.ToTable("EstadoReserva");
 
@@ -351,7 +331,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoUsuario>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoUsuario).HasName("PK__EstadoUs__57088573D3435047");
+            entity.HasKey(e => e.IdEstadoUsuario).HasName("PK__EstadoUs__5708857389C748C7");
 
             entity.ToTable("EstadoUsuario");
 
@@ -372,7 +352,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<GananciaProveedor>(entity =>
         {
-            entity.HasKey(e => e.IdGananciaProveedor).HasName("PK__Ganancia__138496C122FFDD59");
+            entity.HasKey(e => e.IdGananciaProveedor).HasName("PK__Ganancia__138496C118883942");
 
             entity.ToTable("GananciaProveedor");
 
@@ -399,17 +379,17 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdProveedorNavigation).WithMany(p => p.GananciaProveedors)
                 .HasForeignKey(d => d.IdProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__GananciaP__idPro__1AD3FDA4");
+                .HasConstraintName("FK__GananciaP__idPro__151B244E");
 
             entity.HasOne(d => d.IdReservaNavigation).WithMany(p => p.GananciaProveedors)
                 .HasForeignKey(d => d.IdReserva)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__GananciaP__idRes__19DFD96B");
+                .HasConstraintName("FK__GananciaP__idRes__14270015");
         });
 
         modelBuilder.Entity<ImagenCancha>(entity =>
         {
-            entity.HasKey(e => e.IdImagenCancha).HasName("PK__ImagenCa__A5EF7FB114E60FA9");
+            entity.HasKey(e => e.IdImagenCancha).HasName("PK__ImagenCa__A5EF7FB15C01D1A5");
 
             entity.ToTable("ImagenCancha");
 
@@ -433,12 +413,12 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.ImagenCanchas)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ImagenCan__idCan__6754599E");
+                .HasConstraintName("FK__ImagenCan__idCan__5FB337D6");
         });
 
         modelBuilder.Entity<MetodoPago>(entity =>
         {
-            entity.HasKey(e => e.IdMetodoPago).HasName("PK__MetodoPa__817BFC32D1405153");
+            entity.HasKey(e => e.IdMetodoPago).HasName("PK__MetodoPa__817BFC3297D18833");
 
             entity.ToTable("MetodoPago");
 
@@ -459,11 +439,14 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Notificacion>(entity =>
         {
-            entity.HasKey(e => e.IdNotificacion).HasName("PK__Notifica__AFE1D7E4159729FF");
+            entity.HasKey(e => e.IdNotificacion).HasName("PK__Notifica__AFE1D7E441ACB4BD");
 
             entity.ToTable("Notificacion");
 
             entity.Property(e => e.IdNotificacion).HasColumnName("idNotificacion");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
             entity.Property(e => e.FechaCreacion)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -479,12 +462,12 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Notificacions)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Notificac__idUsu__114A936A");
+                .HasConstraintName("FK__Notificac__idUsu__0A9D95DB");
         });
 
         modelBuilder.Entity<Pago>(entity =>
         {
-            entity.HasKey(e => e.IdPago).HasName("PK__Pago__BD2295AD9E5F4017");
+            entity.HasKey(e => e.IdPago).HasName("PK__Pago__BD2295AD19710F75");
 
             entity.ToTable("Pago");
 
@@ -506,26 +489,26 @@ public partial class ReservaCanchasContext : DbContext
 
             entity.HasOne(d => d.CreadoPorNavigation).WithMany(p => p.PagoCreadoPorNavigations)
                 .HasForeignKey(d => d.CreadoPor)
-                .HasConstraintName("FK__Pago__creadoPor__00200768");
+                .HasConstraintName("FK__Pago__creadoPor__787EE5A0");
 
             entity.HasOne(d => d.IdEstadoPagoNavigation).WithMany(p => p.Pagos)
                 .HasForeignKey(d => d.IdEstadoPago)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Pago__idEstadoPa__7F2BE32F");
+                .HasConstraintName("FK__Pago__idEstadoPa__778AC167");
 
             entity.HasOne(d => d.IdMetodoPagoNavigation).WithMany(p => p.Pagos)
                 .HasForeignKey(d => d.IdMetodoPago)
-                .HasConstraintName("FK__Pago__idMetodoPa__7E37BEF6");
+                .HasConstraintName("FK__Pago__idMetodoPa__76969D2E");
 
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.PagoIdUsuarioNavigations)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Pago__idUsuario__7D439ABD");
+                .HasConstraintName("FK__Pago__idUsuario__75A278F5");
         });
 
         modelBuilder.Entity<Proveedor>(entity =>
         {
-            entity.HasKey(e => e.IdProveedor).HasName("PK__Proveedo__A3FA8E6B5F095396");
+            entity.HasKey(e => e.IdProveedor).HasName("PK__Proveedo__A3FA8E6B776B9D72");
 
             entity.ToTable("Proveedor");
 
@@ -556,39 +539,22 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdEstadoProveedorNavigation).WithMany(p => p.Proveedors)
                 .HasForeignKey(d => d.IdEstadoProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Proveedor__idEst__5441852A");
+                .HasConstraintName("FK__Proveedor__idEst__4CA06362");
 
             entity.HasOne(d => d.IdProveedorNavigation).WithOne(p => p.Proveedor)
                 .HasForeignKey<Proveedor>(d => d.IdProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Proveedor__idPro__52593CB8");
+                .HasConstraintName("FK__Proveedor__idPro__4AB81AF0");
 
             entity.HasOne(d => d.IdTipoProveedorNavigation).WithMany(p => p.Proveedors)
                 .HasForeignKey(d => d.IdTipoProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Proveedor__idTip__534D60F1");
-        });
-
-        modelBuilder.Entity<Provincia>(entity =>
-        {
-            entity.HasKey(e => e.IdProvincia).HasName("PK__Provinci__5F9F113CE716594E");
-
-            entity.Property(e => e.IdProvincia).HasColumnName("idProvincia");
-            entity.Property(e => e.IdDepartamento).HasColumnName("idDepartamento");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-
-            entity.HasOne(d => d.IdDepartamentoNavigation).WithMany(p => p.Provincia)
-                .HasForeignKey(d => d.IdDepartamento)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Provincia__idDep__38996AB5");
+                .HasConstraintName("FK__Proveedor__idTip__4BAC3F29");
         });
 
         modelBuilder.Entity<Reserva>(entity =>
         {
-            entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C82EBC7643");
+            entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C8A3FF39AC");
 
             entity.ToTable("Reserva");
 
@@ -613,27 +579,27 @@ public partial class ReservaCanchasContext : DbContext
 
             entity.HasOne(d => d.CreadoPorNavigation).WithMany(p => p.ReservaCreadoPorNavigations)
                 .HasForeignKey(d => d.CreadoPor)
-                .HasConstraintName("FK__Reserva__creadoP__72C60C4A");
+                .HasConstraintName("FK__Reserva__creadoP__6B24EA82");
 
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.Reservas)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idCanch__70DDC3D8");
+                .HasConstraintName("FK__Reserva__idCanch__693CA210");
 
             entity.HasOne(d => d.IdEstadoReservaNavigation).WithMany(p => p.Reservas)
                 .HasForeignKey(d => d.IdEstadoReserva)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idEstad__71D1E811");
+                .HasConstraintName("FK__Reserva__idEstad__6A30C649");
 
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.ReservaIdUsuarioNavigations)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idUsuar__6FE99F9F");
+                .HasConstraintName("FK__Reserva__idUsuar__68487DD7");
         });
 
         modelBuilder.Entity<Rol>(entity =>
         {
-            entity.HasKey(e => e.IdRol).HasName("PK__Rol__3C872F7618994769");
+            entity.HasKey(e => e.IdRol).HasName("PK__Rol__3C872F76B29398C6");
 
             entity.ToTable("Rol");
 
@@ -654,7 +620,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<TipoCancha>(entity =>
         {
-            entity.HasKey(e => e.IdTipoCancha).HasName("PK__TipoCanc__1E32E1ED8C9432D4");
+            entity.HasKey(e => e.IdTipoCancha).HasName("PK__TipoCanc__1E32E1EDAB1DBEB8");
 
             entity.ToTable("TipoCancha");
 
@@ -670,7 +636,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<TipoProveedor>(entity =>
         {
-            entity.HasKey(e => e.IdTipoProveedor).HasName("PK__TipoProv__3CDA60060037FD8F");
+            entity.HasKey(e => e.IdTipoProveedor).HasName("PK__TipoProv__3CDA600641A747B3");
 
             entity.ToTable("TipoProveedor");
 
@@ -689,9 +655,37 @@ public partial class ReservaCanchasContext : DbContext
                 .HasColumnName("nombre");
         });
 
+        modelBuilder.Entity<Ubigeo>(entity =>
+        {
+            entity.HasKey(e => e.CodigoUbigeo).HasName("PK__Ubigeo__B096A3D74B0A72FE");
+
+            entity.ToTable("Ubigeo");
+
+            entity.Property(e => e.CodigoUbigeo)
+                .HasMaxLength(6)
+                .IsUnicode(false)
+                .IsFixedLength()
+                .HasColumnName("codigoUbigeo");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Departamento)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("departamento");
+            entity.Property(e => e.Distrito)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("distrito");
+            entity.Property(e => e.Provincia)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("provincia");
+        });
+
         modelBuilder.Entity<Usuario>(entity =>
         {
-            entity.HasKey(e => e.IdUsuario).HasName("PK__Usuario__645723A6BE84E39B");
+            entity.HasKey(e => e.IdUsuario).HasName("PK__Usuario__645723A60EAEF4D6");
 
             entity.ToTable("Usuario");
 
@@ -736,31 +730,12 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdEstadoUsuarioNavigation).WithMany(p => p.Usuarios)
                 .HasForeignKey(d => d.IdEstadoUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Usuario__idEstad__47DBAE45");
+                .HasConstraintName("FK__Usuario__idEstad__403A8C7D");
 
             entity.HasOne(d => d.IdRolNavigation).WithMany(p => p.Usuarios)
                 .HasForeignKey(d => d.IdRol)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Usuario__idRol__46E78A0C");
-        });
-
-        modelBuilder.Entity<Zona>(entity =>
-        {
-            entity.HasKey(e => e.IdZona).HasName("PK__Zona__1EE4D75CA932BD51");
-
-            entity.ToTable("Zona");
-
-            entity.Property(e => e.IdZona).HasColumnName("idZona");
-            entity.Property(e => e.IdDistrito).HasColumnName("idDistrito");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("nombre");
-
-            entity.HasOne(d => d.IdDistritoNavigation).WithMany(p => p.Zonas)
-                .HasForeignKey(d => d.IdDistrito)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Zona__idDistrito__3E52440B");
+                .HasConstraintName("FK__Usuario__idRol__3F466844");
         });
 
         OnModelCreatingPartial(modelBuilder);

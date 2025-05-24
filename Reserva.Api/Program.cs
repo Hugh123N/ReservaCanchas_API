@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Reserva.Apis.Security;
+using Reserva.Api.Security;
 using Reserva.Application.Extensions;
 using Reserva.Domain.Extensions;
 using Reserva.Entity.Models;
@@ -19,8 +19,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 // Repositories
 builder.Services.UseRepositories(
-    configuration["ConexionString"],
-    configuration["AuditOptions:ApiUrl"],
+    configuration["ConexionString"]!,
+    configuration["AuditOptions:ApiUrl"]!,
     typeof(Program).Assembly.GetName().Name!
  );
 

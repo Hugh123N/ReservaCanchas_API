@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-namespace Reserva.Apis.Security
+namespace Reserva.Api.Security
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class AuthorizeAttribute : Microsoft.AspNetCore.Authorization.AuthorizeAttribute

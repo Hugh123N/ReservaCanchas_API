@@ -3,7 +3,7 @@ using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Cancha;
 using Reserva.Dto.Cancha.Pago;
 
-namespace Reserva.Apis.Controllers.Cancha
+namespace Reserva.Api.Controllers.Cancha
 {
     [ApiController]
     [Route("api/Pago")]

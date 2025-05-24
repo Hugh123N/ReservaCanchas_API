@@ -15,13 +15,19 @@ public partial class Cancha
 
     public string? Ubicacion { get; set; }
 
+    public decimal? Latitud { get; set; }
+
+    public decimal? Longitud { get; set; }
+
+    public string? Direccion { get; set; }
+
     public decimal? PrecioHora { get; set; }
 
     public int? CreadoPor { get; set; }
 
     public int? IdProveedor { get; set; }
 
-    public int? IdZona { get; set; }
+    public string? CodigoUbigeo { get; set; }
 
     public int IdEstadoCancha { get; set; }
 
@@ -30,6 +36,8 @@ public partial class Cancha
     public DateTime? FechaActualizacion { get; set; }
 
     public bool Activo { get; set; }
+
+    public virtual Ubigeo? CodigoUbigeoNavigation { get; set; }
 
     public virtual Usuario? CreadoPorNavigation { get; set; }
 
@@ -40,8 +48,6 @@ public partial class Cancha
     public virtual Proveedor? IdProveedorNavigation { get; set; }
 
     public virtual TipoCancha IdTipoCanchaNavigation { get; set; } = null!;
-
-    public virtual Zona? IdZonaNavigation { get; set; }
 
     public virtual ICollection<ImagenCancha> ImagenCanchas { get; set; } = new List<ImagenCancha>();
 

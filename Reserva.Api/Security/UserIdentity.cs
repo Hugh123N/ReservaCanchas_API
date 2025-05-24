@@ -2,7 +2,7 @@ using Reserva.Common;
 using Reserva.Repository.Security;
 using System.Security.Claims;
 
-namespace Reserva.Apis.Security
+namespace Reserva.Api.Security
 {
     public class UserIdentity : IUserIdentity
     {
@@ -12,7 +12,7 @@ namespace Reserva.Apis.Security
             => _httpContextAccessor = httpContextAccessor;
 
         public IEnumerable<Claim> GetCurrentUserClaims()
-            => _httpContextAccessor.HttpContext?.User?.Claims ?? new List<Claim>();
+            => _httpContextAccessor.HttpContext?.User?.Claims ?? [];
 
         public string GetIdSucursal()
             => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "IdSucursal")?.Value!;
