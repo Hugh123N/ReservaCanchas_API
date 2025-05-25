@@ -11,6 +11,8 @@ public partial class DetallePago
 
     public int? IdReserva { get; set; }
 
+    public bool Activo { get; set; }
+
     public virtual Pago? IdPagoNavigation { get; set; }
 
     public virtual Reserva? IdReservaNavigation { get; set; }

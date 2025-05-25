@@ -17,17 +17,23 @@ public partial class Reserva
 
     public TimeOnly HoraFin { get; set; }
 
-    public int IdEstado { get; set; }
-
-    public DateTime? FechaCreacion { get; set; }
+    public int IdEstadoReserva { get; set; }
 
     public int? CreadoPor { get; set; }
 
+    public DateTime? FechaCreacion { get; set; }
+
+    public DateTime? FechaActualizacion { get; set; }
+
+    public bool Activo { get; set; }
+
     public virtual Usuario? CreadoPorNavigation { get; set; }
+
+    public virtual ICollection<GananciaProveedor> GananciaProveedors { get; set; } = new List<GananciaProveedor>();
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 
-    public virtual EstadoReserva IdEstadoNavigation { get; set; } = null!;
+    public virtual EstadoReserva IdEstadoReservaNavigation { get; set; } = null!;
 
     public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
 }

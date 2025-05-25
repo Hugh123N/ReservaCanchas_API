@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using Reserva.Application.Abstractions;
+using Reserva.Api.Security;
 using Reserva.Application.Extensions;
 using Reserva.Domain.Extensions;
 using Reserva.Entity.Models;
-using Reserva.Application;
+using Reserva.Repository.Extensions;
+using Reserva.Repository.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -11,15 +12,23 @@ var configuration = builder.Configuration;
 //conexion a base de datos desde secretos de usuario
 builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(configuration["ConexionString"]));
 
-builder.Services.AddScoped<IRolApplication, RolApplication>();
 // Controllers
 builder.Services.AddControllers();
 // Endpoints
 builder.Services.AddEndpointsApiExplorer();
+
+// Repositories
+builder.Services.UseRepositories(
+    configuration["ConexionString"]!,
+    configuration["AuditOptions:ApiUrl"]!,
+    typeof(Program).Assembly.GetName().Name!
+ );
+
 // Domain Services
 builder.Services.UseDomainServices();
-
-
+// Security
+builder.Services.AddHttpContextAccessor();
+builder.Services.UseSecurity(configuration);
 // Application Services
 builder.Services.UseApplicationServices();
 // Add services to the container.

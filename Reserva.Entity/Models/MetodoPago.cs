@@ -5,9 +5,13 @@ namespace Reserva.Entity.Models;
 
 public partial class MetodoPago
 {
-    public int IdMetodo { get; set; }
+    public int IdMetodoPago { get; set; }
+
+    public string Codigo { get; set; } = null!;
 
     public string Nombre { get; set; } = null!;
+
+    public bool Activo { get; set; }
 
     public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 }
