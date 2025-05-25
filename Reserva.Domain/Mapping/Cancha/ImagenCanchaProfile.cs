@@ -17,6 +17,7 @@ namespace Reserva.Domain.Mapping.ImagenCancha
                 .ReverseMap();
 
             CreateMap<Entity.Models.ImagenCancha, GetImagenCanchaDto>()
+                //.ForMember(x => x.Cancha, opt => opt.MapFrom(x => x.IdCanchaNavigation))
                 .ReverseMap();
 
             CreateMap<Entity.Models.ImagenCancha, ListImagenCanchaDto>()

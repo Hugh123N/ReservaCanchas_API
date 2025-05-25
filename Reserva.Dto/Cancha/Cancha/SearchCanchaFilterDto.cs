@@ -2,9 +2,12 @@ namespace Reserva.Dto.Cancha.Cancha
 {
     public class SearchCanchaFilterDto
     {
-        public DateTimeOffset? FechaDesde { get; set; }
-        public DateTimeOffset? FechaHasta { get; set; }
-        public int? IdCancha { get; set; }
+        public string? Nombre { get; set; }
+        public string? CodigoDepartamento { get; set; }
+        public string? CodigoProvincia { get; set; }
+        public string? CodigoDistrito { get; set; }
+        public int? IdTipoCancha { get; set; }
+        public int? IdEstadoCancha { get; set; }
         public bool? Activo { get; set; }
     }
 }
