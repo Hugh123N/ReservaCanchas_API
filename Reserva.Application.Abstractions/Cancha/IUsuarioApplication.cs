@@ -1,5 +1,6 @@
 using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
+using Reserva.Dto.User;
 
 namespace Reserva.Application.Abstractions.Cancha
 {
@@ -13,7 +14,7 @@ namespace Reserva.Application.Abstractions.Cancha
         Task<ResponseDto<SearchResultDto<SearchUsuarioDto>>> Search(SearchParamsDto<SearchUsuarioFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboUsuarioDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectUsuarioDto>>> Select(SearchParamsDto<SelectUsuarioFilterDto> searchParams);
-
+        Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto);
     }
 }
 
