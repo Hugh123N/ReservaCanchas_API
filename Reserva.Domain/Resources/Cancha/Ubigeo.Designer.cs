@@ -39,7 +39,7 @@ namespace Reserva.Domain.Resources.Cancha {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Acopio.Pesaje.Domain.Resources.Dbo.Ubigeo", typeof(Ubigeo).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Acopio.Pesaje.Domain.Resources.Cancha.Ubigeo", typeof(Ubigeo).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

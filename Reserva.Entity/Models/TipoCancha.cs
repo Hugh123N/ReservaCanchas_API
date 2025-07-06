@@ -7,7 +7,7 @@ public partial class TipoCancha
 {
     public int IdTipoCancha { get; set; }
 
-    public string Nombre { get; set; } = null!;
+    public string? Nombre { get; set; }
 
     public bool Activo { get; set; }
 

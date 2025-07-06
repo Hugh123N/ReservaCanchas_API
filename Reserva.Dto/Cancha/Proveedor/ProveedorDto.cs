@@ -10,6 +10,5 @@ namespace Reserva.Dto.Cancha.Proveedor
         public string? Descripcion { get; set; }
         public int IdTipoProveedor { get; set; }
         public int IdEstadoProveedor { get; set; }
-        public DateTime? FechaCreacion { get; set; }
     }
 }

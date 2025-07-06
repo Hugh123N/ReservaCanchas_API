@@ -13,7 +13,7 @@ public partial class Notificacion
 
     public bool? Leido { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public DateTimeOffset? FechaCreacion { get; set; }
 
     public bool Activo { get; set; }
 

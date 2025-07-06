@@ -13,7 +13,5 @@ namespace Reserva.Dto.Cancha.Usuario
         public string? Imagen { get; set; }
         public int IdRol { get; set; }
         public int IdEstadoUsuario { get; set; }
-        public DateTime? FechaCreacion { get; set; }
-        public DateTime? FechaActualizacion { get; set; }
     }
 }

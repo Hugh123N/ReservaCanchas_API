@@ -9,11 +9,19 @@ public partial class Comision
 
     public decimal Porcentaje { get; set; }
 
-    public DateTime? FechaInicio { get; set; }
+    public DateTimeOffset? FechaInicio { get; set; }
 
-    public DateTime? FechaFin { get; set; }
+    public DateTimeOffset? FechaFin { get; set; }
 
-    public DateTime? FechaActualizacion { get; set; }
+    public DateTimeOffset? FechaActualizacion { get; set; }
+
+    public string UserNameCreate { get; set; } = null!;
+
+    public DateTimeOffset CreateDate { get; set; }
+
+    public string? UserNameUpdate { get; set; }
+
+    public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
 }

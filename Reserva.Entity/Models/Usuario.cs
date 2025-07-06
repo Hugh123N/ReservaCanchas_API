@@ -7,7 +7,7 @@ public partial class Usuario
 {
     public int IdUsuario { get; set; }
 
-    public string Nombre { get; set; } = null!;
+    public string? Nombre { get; set; }
 
     public string? Apellidos { get; set; }
 
@@ -23,29 +23,29 @@ public partial class Usuario
 
     public int IdEstadoUsuario { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public string UserNameCreate { get; set; } = null!;
 
-    public DateTime? FechaActualizacion { get; set; }
+    public DateTimeOffset CreateDate { get; set; }
+
+    public string? UserNameUpdate { get; set; }
+
+    public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
-
-    public virtual ICollection<Disponibilidad> Disponibilidads { get; set; } = new List<Disponibilidad>();
+    public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; } = new List<CanchaFavorita>();
 
     public virtual EstadoUsuario IdEstadoUsuarioNavigation { get; set; } = null!;
 
     public virtual Rol IdRolNavigation { get; set; } = null!;
 
+    public virtual ICollection<IntentoLogin> IntentoLogins { get; set; } = new List<IntentoLogin>();
+
     public virtual ICollection<Notificacion> Notificacions { get; set; } = new List<Notificacion>();
 
-    public virtual ICollection<Pago> PagoCreadoPorNavigations { get; set; } = new List<Pago>();
-
-    public virtual ICollection<Pago> PagoIdUsuarioNavigations { get; set; } = new List<Pago>();
+    public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
 
     public virtual Proveedor? Proveedor { get; set; }
 
-    public virtual ICollection<Reserva> ReservaCreadoPorNavigations { get; set; } = new List<Reserva>();
-
-    public virtual ICollection<Reserva> ReservaIdUsuarioNavigations { get; set; } = new List<Reserva>();
+    public virtual ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }

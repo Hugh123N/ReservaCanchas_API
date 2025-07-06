@@ -15,15 +15,15 @@ public partial class Disponibilidad
 
     public TimeOnly HoraFin { get; set; }
 
-    public int? CreadoPor { get; set; }
+    public string UserNameCreate { get; set; } = null!;
 
-    public DateTime? FechaCreacion { get; set; }
+    public DateTimeOffset CreateDate { get; set; }
 
-    public DateTime? FechaActualizacion { get; set; }
+    public string? UserNameUpdate { get; set; }
+
+    public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
-
-    public virtual Usuario? CreadoPorNavigation { get; set; }
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 

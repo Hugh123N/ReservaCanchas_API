@@ -11,8 +11,5 @@ namespace Reserva.Dto.Cancha.Reserva
         public TimeSpan HoraInicio { get; set; }
         public TimeSpan HoraFin { get; set; }
         public int IdEstadoReserva { get; set; }
-        public int? CreadoPor { get; set; }
-        public DateTime? FechaCreacion { get; set; }
-        public DateTime? FechaActualizacion { get; set; }
     }
 }

@@ -17,7 +17,13 @@ public partial class GananciaProveedor
 
     public decimal GananciaNeta { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public string UserNameCreate { get; set; } = null!;
+
+    public DateTimeOffset CreateDate { get; set; }
+
+    public string? UserNameUpdate { get; set; }
+
+    public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
 
