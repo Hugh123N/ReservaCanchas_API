@@ -10,6 +10,5 @@ namespace Reserva.Dto.Cancha.GananciaProveedor
         public decimal MontoTotal { get; set; }
         public decimal Comision { get; set; }
         public decimal GananciaNeta { get; set; }
-        public DateTime? FechaCreacion { get; set; }
     }
 }

@@ -11,13 +11,17 @@ public partial class Proveedor
 
     public string? Ruc { get; set; }
 
-    public string? Descripcion { get; set; }
-
     public int IdTipoProveedor { get; set; }
 
     public int IdEstadoProveedor { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public string UserNameCreate { get; set; } = null!;
+
+    public DateTimeOffset CreateDate { get; set; }
+
+    public string? UserNameUpdate { get; set; }
+
+    public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
 

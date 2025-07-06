@@ -8,6 +8,5 @@ namespace Reserva.Dto.Cancha.ImagenCancha
         public int IdCancha { get; set; }
         public string UrlImagen { get; set; } = null!;
         public bool? EsPrincipal { get; set; }
-        public DateTime? FechaCreacion { get; set; }
     }
 }

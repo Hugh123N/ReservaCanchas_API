@@ -7,7 +7,7 @@ public partial class TipoProveedor
 {
     public int IdTipoProveedor { get; set; }
 
-    public string? Codigo { get; set; }
+    public string Codigo { get; set; } = null!;
 
     public string? Nombre { get; set; }
 

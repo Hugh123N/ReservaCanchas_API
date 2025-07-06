@@ -23,23 +23,25 @@ public partial class Cancha
 
     public decimal? PrecioHora { get; set; }
 
-    public int? CreadoPor { get; set; }
-
     public int? IdProveedor { get; set; }
 
     public string? CodigoUbigeo { get; set; }
 
     public int IdEstadoCancha { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public string UserNameCreate { get; set; } = null!;
 
-    public DateTime? FechaActualizacion { get; set; }
+    public DateTimeOffset CreateDate { get; set; }
+
+    public string? UserNameUpdate { get; set; }
+
+    public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
 
-    public virtual Ubigeo? CodigoUbigeoNavigation { get; set; }
+    public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; } = new List<CanchaFavorita>();
 
-    public virtual Usuario? CreadoPorNavigation { get; set; }
+    public virtual Ubigeo? CodigoUbigeoNavigation { get; set; }
 
     public virtual ICollection<Disponibilidad> Disponibilidads { get; set; } = new List<Disponibilidad>();
 
