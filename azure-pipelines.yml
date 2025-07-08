@@ -1,0 +1,23 @@
+pool:
+  name: Azure Pipelines
+steps:
+- powershell: |
+   dotnet restore
+   
+  displayName: 'PowerShell Script'
+
+- script: 'dotnet publish -c Release -o $(build.artifactstagingdirectory)'
+  displayName: Publish
+
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  inputs:
+    SourceFolder: docker
+    TargetFolder: '$(build.artifactstagingdirectory)'
+    OverWrite: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: develop'
+  inputs:
+    ArtifactName: reservaCancha
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
