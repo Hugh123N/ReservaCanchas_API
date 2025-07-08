@@ -60,8 +60,8 @@ namespace Reserva.Api.Security
                     options.SaveToken = true;
                     options.TokenValidationParameters = new TokenValidationParameters()
                     {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
+                        ValidateIssuer = true, // validar apk, si queremos utilizar la url donde se encunetra almacenado para que pueda ingresar otro app externa 
+                        ValidateAudience = true, // validar quienes pueden acceder a este app esta vinculado con ValidateIssuer
                         ValidAudience = validAudience,
                         ValidIssuer = validIssuer,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey!))

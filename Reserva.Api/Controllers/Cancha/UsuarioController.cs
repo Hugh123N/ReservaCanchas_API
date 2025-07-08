@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Cancha;
+using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
+using Reserva.Dto.User;
 
 namespace Reserva.Api.Controllers.Cancha
 {
@@ -38,6 +40,10 @@ namespace Reserva.Api.Controllers.Cancha
         [HttpPost("select")]
         public async Task<ResponseDto<SearchResultDto<SelectUsuarioDto>>> Select(SearchParamsDto<SelectUsuarioFilterDto> searchParams)
             => await _UsuarioApplication.Select(searchParams);
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
+            => await _UsuarioApplication.Login(loginDto);
 
     }
 }

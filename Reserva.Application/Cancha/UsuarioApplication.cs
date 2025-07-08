@@ -1,10 +1,12 @@
 using MediatR;
-using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Cancha;
 using Reserva.Application.Base;
 using Reserva.Domain.Commands.Cancha.Usuario;
+using Reserva.Domain.Commands.User;
 using Reserva.Domain.Queries.Cancha.Usuario;
+using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
+using Reserva.Dto.User;
 
 namespace Reserva.Application.Cancha
 {
@@ -31,6 +33,8 @@ namespace Reserva.Application.Cancha
             => await _mediator.Send(new SelectComboUsuarioQuery());
         public async Task<ResponseDto<SearchResultDto<SelectUsuarioDto>>> Select(SearchParamsDto<SelectUsuarioFilterDto> searchParams)
              => await _mediator.Send(new SelectUsuarioQuery(searchParams));
+        public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
+            => await _mediator.Send(new LoginCommand(loginDto));
 
     }
 }

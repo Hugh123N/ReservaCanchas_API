@@ -14,8 +14,8 @@ namespace Reserva.Api.Security
         public IEnumerable<Claim> GetCurrentUserClaims()
             => _httpContextAccessor.HttpContext?.User?.Claims ?? [];
 
-        public string GetIdSucursal()
-            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "IdSucursal")?.Value!;
+        public string? GetCurrentToken()
+            => _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
 
         private string GetUserNameClaim()
             => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "UserName")?.Value!;
@@ -24,7 +24,7 @@ namespace Reserva.Api.Security
             => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "DisplayName")?.Value!;
 
         public string GetUserRole()
-            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value!;
+            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value!;
 
         public string GetCurrentUser()
             => GetUserNameClaim() ?? Constants.Security.User.Admin;
