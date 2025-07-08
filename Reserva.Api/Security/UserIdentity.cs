@@ -14,11 +14,11 @@ namespace Reserva.Api.Security
         public IEnumerable<Claim> GetCurrentUserClaims()
             => _httpContextAccessor.HttpContext?.User?.Claims ?? [];
 
-        //public string GetIdSucursal()
-        //    => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "IdSucursal")?.Value!;
+        public string? GetCurrentToken()
+            => _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
 
         private string GetUserNameClaim()
-            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "Nombre")?.Value!;
+            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "UserName")?.Value!;
 
         public string GetUserName()
             => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "DisplayName")?.Value!;

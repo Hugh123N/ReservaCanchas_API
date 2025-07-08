@@ -34,5 +34,6 @@ namespace Reserva.Repository.Abstractions.Base
         Task<SearchResult<TEntity>> SearchByAsync(int page, int pageSize, IEnumerable<SortExpression<TEntity>>? sortExpressions, Expression<Func<TEntity, bool>> filter, params Expression<Func<TEntity, object>>[] includeProperties);
         Task<SearchResult<TEntity>> SearchByAsNoTrackingAsync(int page, int pageSize, IEnumerable<SortExpression<TEntity>>? sortExpressions, Expression<Func<TEntity, bool>> filter, params Expression<Func<TEntity, object>>[] includeProperties);
         Task<int> SaveAsync();
+        void UpdateAuditTrails(TEntity entity, bool creation = true);
     }
 }

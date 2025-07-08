@@ -5,7 +5,8 @@ namespace Reserva.Repository.Security
     public interface IUserIdentity
     {
         IEnumerable<Claim> GetCurrentUserClaims();
-        //string GetIdSucursal();
+
+        public string? GetCurrentToken();
         string GetCurrentUser();
         string GetUserName();
         string GetUserRole();
