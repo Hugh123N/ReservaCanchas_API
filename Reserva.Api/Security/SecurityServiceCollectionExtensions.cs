@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Reserva.Entity;
+using Reserva.Entity.Models;
 using Reserva.Repository.Security;
 using System.Text;
 
@@ -10,6 +12,11 @@ namespace Reserva.Api.Security
     {
         public static IServiceCollection UseSecurity(this IServiceCollection services, IConfiguration configuration)
         {
+            #region SecurityDbContext
+            var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION") ??  configuration["ConexionString"];
+            services.AddSqlServer<SecurityDbContext>(connectionString, b => b.MigrationsAssembly("Reserva.Api"));
+            #endregion
+
             #region IdentityOptions
             services.Configure<IdentityOptions>(options =>
             {
@@ -43,6 +50,17 @@ namespace Reserva.Api.Security
                 options.AccessDeniedPath = "/Identity/Account/AccessDenied";
                 options.SlidingExpiration = true;
             });
+            #endregion
+
+            #region Identity
+            services
+                .AddIdentity<Entity.Models.Usuario, Entity.Models.Rol>(config =>
+                {
+                    //config.Tokens.PasswordResetTokenProvider = ResetPasswordTokenProvider.ProviderKey;
+                    config.SignIn.RequireConfirmedEmail = false;
+                })
+                .AddEntityFrameworkStores<SecurityDbContext>()
+                .AddDefaultTokenProviders();
             #endregion
 
             #region Authentication

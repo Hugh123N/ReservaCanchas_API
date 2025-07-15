@@ -1,0 +1,36 @@
+services:
+  reserva-service:
+    image: reserva-service
+    container_name: reserva-service
+    restart: always
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      DOTNET_USE_POLLING_FILE_WATCHER: 1
+      NUGET_PACKAGES: c:\.nuget\fallbackpackages2
+      NUGET_FALLBACK_PACKAGES: c:\.nuget\fallbackpackages;c:\.nuget\fallbackpackages2
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      DOTNET_VERSION: 6.0
+      ASPNET_VERSION: 6.0
+      LOGGING__CONSOLE__FORMATTERNAME: Json
+      CN_RESERVA_CANCHA: "Data Source=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;"
+      TZ: America/Lima
+      DOTNET_gcServer: "0"
+      DOTNET_GCHeapCount: "c"
+      DOTNET_gcConcurrent: "1"
+    ports:
+      - 9090:80
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes: 
+      - reserva-service-log:/Logs
+    networks:
+      - reserva-red
+networks:
+    reserva-red:
+      name: reserva-red
+volumes:
+    reserva-service-log:
+        name: reserva-service-log

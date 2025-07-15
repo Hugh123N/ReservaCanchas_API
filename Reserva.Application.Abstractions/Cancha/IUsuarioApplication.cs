@@ -15,6 +15,7 @@ namespace Reserva.Application.Abstractions.Cancha
         Task<ResponseDto<IEnumerable<SelectComboUsuarioDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectUsuarioDto>>> Select(SearchParamsDto<SelectUsuarioFilterDto> searchParams);
         Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto);
+        Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto);
     }
 }
 

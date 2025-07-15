@@ -36,5 +36,7 @@ namespace Reserva.Application.Cancha
         public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
             => await _mediator.Send(new LoginCommand(loginDto));
 
+        public async Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto)
+            => await _mediator.Send(new CreateGoogleCommand(createDto));
     }
 }

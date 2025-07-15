@@ -70,5 +70,30 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 
             return await Task.FromResult(response);
         }
+
+        /*public async Task SendCreationEmail(CreateUsuarioCommand request)
+        {
+            var sendMail = _configuration.GetValue<bool>("SignInOptions:SendMailOnSignUp");
+            if (sendMail)
+            {
+                var application = _configuration.GetValue<string>("ApiOptions:Name");
+                var frontUrlLogo = _configuration.GetValue<string>("SecurityOptions:FrontUrlLogo");
+
+                var emailDto = new SendEmailDto
+                {
+                    EmailCode = Constants.Email.User.Registration,
+                    ToEmails = new List<string> { request.CreateDto?.Email ?? string.Empty },
+                    BodyParams = new Dictionary<string, string>
+                    {
+                        { "{APPLICATION}", application },
+                        { "{LOGO}", frontUrlLogo },
+                        { "{USER}", request.CreateDto?.UserName! },
+                        { "{PASSWORD}", request.CreateDto?.Password! }
+                    }
+                };
+
+                await _mediator!.Send(new SendEmailCommand(emailDto));
+            }
+        }*/
     }
 }
