@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 
 namespace Reserva.Entity.Models;
 
-public partial class Usuario
+public partial class Usuario : IdentityUser<Guid>
 {
     public int IdUsuario { get; set; }
 

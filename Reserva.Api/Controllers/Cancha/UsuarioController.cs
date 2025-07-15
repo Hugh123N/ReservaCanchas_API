@@ -44,6 +44,9 @@ namespace Reserva.Api.Controllers.Cancha
         [HttpPost("login")]
         public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
             => await _UsuarioApplication.Login(loginDto);
+        [HttpPost("createGoogle")]
+        public async Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto)
+            => await _UsuarioApplication.CreateGoogle(createDto);
 
     }
 }

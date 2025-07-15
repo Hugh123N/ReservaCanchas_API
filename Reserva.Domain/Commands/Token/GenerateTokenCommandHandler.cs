@@ -53,9 +53,8 @@ namespace Reserva.Domain.Commands.Token
                 new Claim(JwtRegisteredClaimNames.Iat, now.ToString(), ClaimValueTypes.String),
                 new Claim(JwtRegisteredClaimNames.Email, usuario.Email ?? ""),
                 new Claim("UserId", usuario.IdUsuario.ToString()),
-                new Claim("DisplayName", $"{usuario.Nombre} {usuario.Apellidos}"),
-                new Claim("UserName", usuario.Nombre),
-                new Claim("ApplicationCode", request.ApplicationCode),
+                new Claim("DisplayName", $"{usuario.Nombre} {usuario.Apellidos}" ?? ""),
+                new Claim("UserName", usuario.Nombre ?? ""),
                 new Claim(ClaimTypes.Role, usuario.IdRolNavigation?.Nombre ?? "SinRol")
             };
 
