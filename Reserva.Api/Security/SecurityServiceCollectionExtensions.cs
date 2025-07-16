@@ -54,7 +54,7 @@ namespace Reserva.Api.Security
 
             #region Identity
             services
-                .AddIdentity<Entity.Models.Usuario, Entity.Models.Rol>(config =>
+                .AddIdentity<Entity.Models.ApplicationUser, Entity.Models.ApplicationRole>(config =>
                 {
                     //config.Tokens.PasswordResetTokenProvider = ResetPasswordTokenProvider.ProviderKey;
                     config.SignIn.RequireConfirmedEmail = false;

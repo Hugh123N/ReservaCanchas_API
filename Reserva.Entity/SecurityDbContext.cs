@@ -9,7 +9,7 @@ using Reserva.Entity.Models;
 
 namespace Reserva.Entity
 {
-    public class SecurityDbContext : IdentityDbContext<Models.Usuario, Models.Rol, Guid>
+    public class SecurityDbContext : IdentityDbContext<Models.ApplicationUser, Models.ApplicationRole, Guid>
     {
         public SecurityDbContext(DbContextOptions<SecurityDbContext> options) : base(options)
         {

@@ -11,10 +11,10 @@ services:
       ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_RUNNING_IN_CONTAINER: "true"
-      DOTNET_VERSION: 6.0
-      ASPNET_VERSION: 6.0
+      DOTNET_VERSION: 8.0
+      ASPNET_VERSION: 8.0
       LOGGING__CONSOLE__FORMATTERNAME: Json
-      CN_RESERVA_CANCHA: "Data Source=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;"
+      CN_CONECTION: "Data Source=10.147.18.177;Initial Catalog=ReservaCanchas;User ID=sa;Password=Basamea1;TrustServerCertificate=True"
       TZ: America/Lima
       DOTNET_gcServer: "0"
       DOTNET_GCHeapCount: "c"

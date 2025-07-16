@@ -46,8 +46,8 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
             }
             */
 
-            if (filters?.IdProveedor.HasValue == true)
-                filter = filter.And(x => x.IdProveedor == filters.IdProveedor);
+            if (filters?.IdUsuario.HasValue == true)
+                filter = filter.And(x => x.IdUsuario == filters.IdUsuario);
 
             var sorts = new List<SortExpression<Entity.Models.Proveedor>>();
 

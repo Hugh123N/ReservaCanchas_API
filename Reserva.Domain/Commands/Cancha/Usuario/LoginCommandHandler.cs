@@ -16,8 +16,8 @@ namespace Reserva.Domain.Commands.User
     {
         private readonly IConfiguration _configuration;
         private readonly IRepository<Entity.Models.Usuario> _usuarioRepository;
-        private readonly UserManager<Entity.Models.Usuario> _userManager;
-        private readonly SignInManager<Entity.Models.Usuario> _signInManager;
+        private readonly UserManager<Entity.Models.ApplicationUser> _userManager;
+        private readonly SignInManager<Entity.Models.ApplicationUser> _signInManager;
         private readonly IRepository<Entity.Models.Rol> _rolRepository;
         
 
@@ -28,8 +28,8 @@ namespace Reserva.Domain.Commands.User
             LoginCommandValidator validator,
             IConfiguration configuration,
             IRepository<Entity.Models.Usuario> usuarioRepository,
-            UserManager<Entity.Models.Usuario> userManager,
-            SignInManager<Entity.Models.Usuario> signInManager,
+            UserManager<Entity.Models.ApplicationUser> userManager,
+            SignInManager<Entity.Models.ApplicationUser> signInManager,
         IRepository<Entity.Models.Rol> rolRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
@@ -50,7 +50,7 @@ namespace Reserva.Domain.Commands.User
             var user = await _userManager.FindByNameAsync(request.LoginDto.UserName);
             user ??= await _userManager.FindByEmailAsync(request.LoginDto.UserName);
 
-            var result = await _signInManager.PasswordSignInAsync(user.Nombre, request.LoginDto.Password, request.LoginDto.RememberMe, lockoutOnFailure: lockoutOnFailure);
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, request.LoginDto.Password, request.LoginDto.RememberMe, lockoutOnFailure: lockoutOnFailure);
 
             if (result.Succeeded)
             {

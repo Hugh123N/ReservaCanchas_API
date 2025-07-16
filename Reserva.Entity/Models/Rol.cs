@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Reserva.Entity.Models;
 
-public partial class Rol : IdentityRole<Guid>
+public partial class Rol
 {
     public int IdRol { get; set; }
 

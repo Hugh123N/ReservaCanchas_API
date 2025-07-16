@@ -48,14 +48,15 @@ namespace Reserva.Domain.Commands.Token
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, usuario.Email ?? usuario.Nombre),
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.Email ?? usuario.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, now.ToString(), ClaimValueTypes.String),
                 new Claim(JwtRegisteredClaimNames.Email, usuario.Email ?? ""),
-                new Claim("UserId", usuario.IdUsuario.ToString()),
-                new Claim("DisplayName", $"{usuario.Nombre} {usuario.Apellidos}" ?? ""),
-                new Claim("UserName", usuario.Nombre ?? ""),
-                new Claim(ClaimTypes.Role, usuario.IdRolNavigation?.Nombre ?? "SinRol")
+                new Claim("UserId", usuario.Id.ToString()),
+                new Claim("DisplayName", $"{usuario.UserName} {usuario.LastName}" ?? ""),
+                new Claim("UserName", usuario.UserName ?? "")
+                //new Claim(ClaimTypes.Role, usuario.?.Nombre ?? "SinRol)"
+                
             };
 
             var jwt = new JwtSecurityToken(

@@ -22,10 +22,10 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
     internal class CreateGoogleCommandHandler : CommandHandlerBase<CreateGoogleCommand, LoginResultDto>
     {
         private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
-        private readonly UserManager<Entity.Models.Usuario> _UsuarioManager;
+        private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
         private readonly IRepository<Entity.Models.Rol> _RolRepository;
         private readonly IConfiguration _configuration;
-
+        private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
 
         public CreateGoogleCommandHandler(
             IUnitOfWork unitOfWork,
@@ -33,7 +33,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IMediator mediator,
             //CreateUsuarioCommandValidator validator,
             IRepository<Entity.Models.Usuario> UsuarioRepository,
-            UserManager<Entity.Models.Usuario> userManager,
+            UserManager<Entity.Models.ApplicationUser> userManager,
+            IRepository<Entity.Models.ApplicationUser> ApplicationUserRepository,
             IRepository<Entity.Models.Rol> RolRepository,
             IConfiguration configuration
         ) : base(unitOfWork, mapper, mediator)
@@ -42,6 +43,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             _UsuarioManager = userManager;
             _configuration = configuration;
             _RolRepository = RolRepository;
+            _applicationUserRepository = ApplicationUserRepository;
         }
 
 
@@ -72,21 +74,21 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             }
 
             // Crear nuevo usuario con los datos de Google
-            var nuevoUsuario = new Entity.Models.Usuario
+            var nuevoUsuario = new Entity.Models.ApplicationUser
             {
                 Email = payload.Email,
-                Nombre = payload.Name,
-                Apellidos = payload.FamilyName,
-                Imagen = payload.Picture,
-                Telefono = "",
-                IdRol = 1,
-                IdEstadoUsuario = 1,
-                Password = "", // No se usa para Google
+                UserName = payload.Name,
+                LastName = payload.FamilyName,
+                //I = payload.Picture,
+                //PhoneNumber = "",
+               // IdRol = 1,
+               // IdEstadoUsuario = 1,
+               // Password = "", // No se usa para Google
                 //Proveedor = "Google",
             };
 
-             _UsuarioRepository.UpdateAuditTrails(nuevoUsuario);
-             await _UsuarioRepository.SaveAsync();
+            _applicationUserRepository.UpdateAuditTrails(nuevoUsuario);
+             await _UsuarioManager.CreateAsync(nuevoUsuario, "");
 
             var accessToken = await _mediator.Send(new GenerateTokenCommand(nuevoUsuario), cancellationToken)!;
 

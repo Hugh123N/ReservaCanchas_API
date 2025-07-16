@@ -11,7 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 //conexion a base de datos desde secretos de usuario
-builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(configuration["ConexionString"]));
+var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim() ?? configuration["ConexionString"];
+
+builder.Services.AddDbContext<ReservaCanchasContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Controllers
 builder.Services.AddControllers();
