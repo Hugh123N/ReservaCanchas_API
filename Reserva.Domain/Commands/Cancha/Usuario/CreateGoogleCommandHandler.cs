@@ -83,11 +83,10 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 Email = payload.Email,
                 UserName = payload.Name,
                 LastName = payload.FamilyName,
-                IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario
-                //I = payload.Picture,
+                IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario,
+                Imagen = payload.Picture
                 //PhoneNumber = "",
                // IdRol = 1,
-               // IdEstadoUsuario = 1,
                // Password = "", // No se usa para Google
                 //Proveedor = "Google",
             };
