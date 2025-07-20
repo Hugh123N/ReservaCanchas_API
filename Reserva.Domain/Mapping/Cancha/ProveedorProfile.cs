@@ -1,5 +1,6 @@
 using AutoMapper;
 using Reserva.Dto.Cancha.Proveedor;
+using Reserva.Dto.Cancha.Usuario;
 
 namespace Reserva.Domain.Mapping.Proveedor
 {
@@ -26,6 +27,8 @@ namespace Reserva.Domain.Mapping.Proveedor
                 .ReverseMap();
 
             CreateMap<Entity.Models.Proveedor, SearchProveedorDto>()
+                .ReverseMap();
+            CreateMap<Entity.Models.Proveedor, CreateUsuarioProveedorDto>()
                 .ReverseMap();
         }
     }

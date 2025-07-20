@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class UpdateUsuarioCommandHandler : CommandHandlerBase<UpdateUsuarioCommand, GetUsuarioDto>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
+        private readonly IRepository<Entity.Models.AspNetUser> _UsuarioRepository;
 
         public UpdateUsuarioCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateUsuarioCommandValidator validator,
-            IRepository<Entity.Models.Usuario> UsuarioRepository
+            IRepository<Entity.Models.AspNetUser> UsuarioRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _UsuarioRepository = UsuarioRepository;
@@ -24,7 +24,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
         public override async Task<ResponseDto<GetUsuarioDto>> HandleCommand(UpdateUsuarioCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetUsuarioDto>();
-            var Usuario = await _UsuarioRepository.GetByAsync(x => x.IdUsuario == request.UpdateDto.IdUsuario);
+            var Usuario = await _UsuarioRepository.GetByAsync(x => x.Id == request.UpdateDto.Id);
 
             if (Usuario != null)
             {

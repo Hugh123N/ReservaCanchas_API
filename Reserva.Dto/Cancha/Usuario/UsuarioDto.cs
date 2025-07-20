@@ -5,13 +5,18 @@ namespace Reserva.Dto.Cancha.Usuario
 {
     public class UsuarioDto
     {
-        public string Nombre { get; set; } = null!;
-        public string? Apellidos { get; set; }
-        public string? Email { get; set; }
-        public string? Password { get; set; }
-        public string? Telefono { get; set; }
-        public string? Imagen { get; set; }
-        public int IdRol { get; set; }
-        public int IdEstadoUsuario { get; set; }
+        public string FirstName { get; set; } = null!;
+        public string LastName { get; set; } = null!;
+        public string? UserName { get; set; } = null!;
+        public string? NormalizedUserName { get; set; } = null!;
+        public string? Email { get; set; } = null!;
+        public string? NormalizedEmail { get; set; } = null!;
+        public bool EmailConfirmed { get; set; }
+        public string? PhoneNumber { get; set; } = null!;
+        public bool PhoneNumberConfirmed { get; set; }
+        public bool TwoFactorEnabled { get; set; }
+        public DateTimeOffset? LockoutEnd { get; set; } = null!;
+        public bool LockoutEnabled { get; set; }
+        public int AccessFailedCount { get; set; }
     }
 }

@@ -22,9 +22,9 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
                 });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(GetProveedorQuery command, int id, ValidationContext<GetProveedorQuery> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(GetProveedorQuery command, Guid id, ValidationContext<GetProveedorQuery> context, CancellationToken cancellationToken)
         {
-            var exists = await _ProveedorRepository.FindAll().Where(x => x.IdUsuario == id).AnyAsync(cancellationToken);
+            var exists = await _ProveedorRepository.FindAll().Where(x => x.IdProveedor == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
             return true;
         }

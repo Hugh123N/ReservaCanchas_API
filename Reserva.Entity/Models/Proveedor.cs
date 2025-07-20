@@ -5,7 +5,7 @@ namespace Reserva.Entity.Models;
 
 public partial class Proveedor
 {
-    public int IdUsuario { get; set; }
+    public Guid IdProveedor { get; set; }
 
     public string? RazonSocial { get; set; }
 
@@ -25,9 +25,13 @@ public partial class Proveedor
 
     public bool Activo { get; set; }
 
+    public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
+
+    public virtual ICollection<GananciaProveedor> GananciaProveedors { get; set; } = new List<GananciaProveedor>();
+
     public virtual EstadoProveedor IdEstadoProveedorNavigation { get; set; } = null!;
 
-    public virtual TipoProveedor IdTipoProveedorNavigation { get; set; } = null!;
+    public virtual AspNetUser IdProveedorNavigation { get; set; } = null!;
 
-    public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
+    public virtual TipoProveedor IdTipoProveedorNavigation { get; set; } = null!;
 }

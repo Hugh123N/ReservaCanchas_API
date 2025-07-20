@@ -4,7 +4,7 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
 {
     public class DeleteProveedorCommand : CommandBase
     {
-        public DeleteProveedorCommand(int id) => Id = id;
-        public int Id { get; set; }
+        public DeleteProveedorCommand(Guid id) => Id = id;
+        public Guid Id { get; set; }
     }
 }

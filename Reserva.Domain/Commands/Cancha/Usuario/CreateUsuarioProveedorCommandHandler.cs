@@ -1,19 +1,22 @@
-using AutoMapper;
+﻿using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
-using Reserva.Entity.Models;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Reserva.Domain.Commands.Cancha.Usuario
 {
-    public class CreateUsuarioCommandHandler : CommandHandlerBase<CreateUsuarioCommand, GetUsuarioDto>
+    internal class CreateUsuarioProveedorCommandHandler : CommandHandlerBase<CreateUsuarioProveedorCommand, GetUsuarioDto>
     {
         private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
         private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
@@ -21,22 +24,22 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
         private readonly IConfiguration _configuration;
         private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
         private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Models.EstadoProveedor> _EstadoProveedorRepository;
         private readonly IRepository<Entity.Models.EstadoUsuario> _EstadoUsuarioRepository;
 
-
-        public CreateUsuarioCommandHandler(
+        public CreateUsuarioProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
-            CreateUsuarioCommandValidator validator,
             IRepository<Entity.Models.Usuario> UsuarioRepository,
             UserManager<Entity.Models.ApplicationUser> userManager,
             IRepository<Entity.Models.AspNetRole> RolRepository,
             IConfiguration configuration,
             IRepository<Entity.Models.ApplicationUser> applicationUserRepository,
             IRepository<Entity.Models.Proveedor> ProveedorRepository,
+            IRepository<Entity.Models.EstadoProveedor> EstadoProveedorRepository,
             IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository
-        ) : base(unitOfWork, mapper, mediator, validator)
+        ) : base(unitOfWork, mapper, mediator)
         {
             _UsuarioRepository = UsuarioRepository;
             _UsuarioManager = userManager;
@@ -44,12 +47,14 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             _RolRepository = RolRepository;
             _applicationUserRepository = applicationUserRepository;
             _ProveedorRepository = ProveedorRepository;
+            _EstadoProveedorRepository = EstadoProveedorRepository;
             _EstadoUsuarioRepository = EstadoUsuarioRepository;
         }
 
-        public override async Task<ResponseDto<GetUsuarioDto>> HandleCommand(CreateUsuarioCommand request, CancellationToken cancellationToken)
+        public override async Task<ResponseDto<GetUsuarioDto>> HandleCommand(CreateUsuarioProveedorCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetUsuarioDto>();
+            var estadoProveedor = await _EstadoProveedorRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_PROVEEDOR.Pendiente));
             var estadoUsuario = await _EstadoUsuarioRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
 
             var applicationUser = _mapper?.Map<Entity.Models.ApplicationUser>(request.CreateDto);
@@ -57,7 +62,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             if (applicationUser != null)
             {
                 applicationUser.EmailConfirmed = true;
-                applicationUser.IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario;
+                applicationUser.IdEstadoUsuario = estadoUsuario.IdEstadoUsuario;
 
                 _applicationUserRepository.UpdateAuditTrails(applicationUser);
                 var result = await _UsuarioManager.CreateAsync(applicationUser, request.CreateDto.Password);
@@ -71,12 +76,17 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 
                     return response;
                 }
-
-                var role = await _RolRepository.GetByAsync(x => x.NormalizedName.Equals(Constants.Role.Cliente));
-
-                if (role != null)
+                var normalizedRoleNames = new List<string>
                 {
-                    var roleResult = await _UsuarioManager.AddToRoleAsync(applicationUser, role.NormalizedName);
+                    Constants.Role.Proveedor.ToUpper(),
+                    Constants.Role.Cliente.ToUpper()
+                };
+
+                var roles = await _RolRepository.FindByAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
+
+                if (roles.Any())
+                {
+                    var roleResult = await _UsuarioManager.AddToRolesAsync(applicationUser, roles.Select(x => x.NormalizedName));
                     if (!roleResult.Succeeded)
                     {
                         roleResult.Errors.ToList().ForEach(e =>
@@ -89,31 +99,31 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 }
                 else
                 {
-                    response.AddErrorResult("Rol no encontrado o inv�lido.");
+                    response.AddErrorResult("Rol no encontrado o inválido.");
                     await _UsuarioManager.DeleteAsync(applicationUser);
                     return response;
                 }
 
-                /*if (roles.Any(x => x.NormalizedName.Equals(Constants.Role.Proveedor)))
+                var proveedor = _mapper?.Map<Entity.Models.Proveedor>(request.CreateDto);
+                if (proveedor != null)
                 {
-                    var proveedor = _mapper?.Map<Entity.Models.Proveedor>(request.CreateDto);
-                    if (proveedor != null)
+                    proveedor.IdProveedor = applicationUser.Id;
+                    //proveedor.RazonSocial = request.CreateDto.RazonSocial;
+                    //proveedor.Ruc = request.CreateDto.Ruc;
+                    proveedor.IdEstadoProveedor = estadoProveedor.IdEstadoProveedor;
+                    //proveedor.IdTipoProveedor = request.CreateDto.IdTipoProveedor;
+                    try
                     {
-                        proveedor.IdProveedor = applicationUser.Id;
-
-                        try
-                        {
-                            await _ProveedorRepository.AddAsync(proveedor);
-                            await _ProveedorRepository.SaveAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            response.AddErrorResult($"Error al crear proveedor: {ex.Message}");
-                            await _UsuarioManager.DeleteAsync(applicationUser);
-                            return response;
-                        }
+                        await _ProveedorRepository.AddAsync(proveedor);
+                        await _ProveedorRepository.SaveAsync();
                     }
-                }*/
+                    catch (Exception ex)
+                    {
+                        response.AddErrorResult($"Error al crear proveedor: {ex.Message}");
+                        await _UsuarioManager.DeleteAsync(applicationUser);
+                        return response;
+                    }
+                }
             }
 
             var UsuarioDto = _mapper?.Map<GetUsuarioDto>(applicationUser);
@@ -123,30 +133,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 
             return await Task.FromResult(response);
         }
-
-        /*public async Task SendCreationEmail(CreateUsuarioCommand request)
-        {
-            var sendMail = _configuration.GetValue<bool>("SignInOptions:SendMailOnSignUp");
-            if (sendMail)
-            {
-                var application = _configuration.GetValue<string>("ApiOptions:Name");
-                var frontUrlLogo = _configuration.GetValue<string>("SecurityOptions:FrontUrlLogo");
-
-                var emailDto = new SendEmailDto
-                {
-                    EmailCode = Constants.Email.User.Registration,
-                    ToEmails = new List<string> { request.CreateDto?.Email ?? string.Empty },
-                    BodyParams = new Dictionary<string, string>
-                    {
-                        { "{APPLICATION}", application },
-                        { "{LOGO}", frontUrlLogo },
-                        { "{USER}", request.CreateDto?.UserName! },
-                        { "{PASSWORD}", request.CreateDto?.Password! }
-                    }
-                };
-
-                await _mediator!.Send(new SendEmailCommand(emailDto));
-            }
-        }*/
+    
     }
 }

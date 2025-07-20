@@ -13,7 +13,7 @@ namespace Reserva.Dto.Cancha.Cancha
         public decimal? Longitud { get; set; }
         public string? Direccion { get; set; }
         public decimal? PrecioHora { get; set; }
-        public int? IdProveedor { get; set; }
+        public Guid? IdProveedor { get; set; }
         public string? CodigoUbigeo { get; set; }
         public int IdEstadoCancha { get; set; }
     }

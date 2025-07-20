@@ -5,7 +5,7 @@ namespace Reserva.Dto.Cancha.Reserva
 {
     public class ReservaDto
     {
-        public int IdUsuario { get; set; }
+        public Guid IdUsuario { get; set; }
         public int IdCancha { get; set; }
         public DateTime Fecha { get; set; }
         public TimeSpan HoraInicio { get; set; }

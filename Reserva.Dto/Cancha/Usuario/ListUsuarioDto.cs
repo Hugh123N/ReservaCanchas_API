@@ -1,7 +1,7 @@
 
 namespace Reserva.Dto.Cancha.Usuario
 {
-    public class ListUsuarioDto: UsuarioDto
+    public class ListUsuarioDto: GetUsuarioDto
     {
     }
 }

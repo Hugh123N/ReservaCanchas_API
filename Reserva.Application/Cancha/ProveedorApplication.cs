@@ -19,11 +19,11 @@ namespace Reserva.Application.Cancha
             => await _mediator.Send(new CreateProveedorCommand(createDto));
         public async Task<ResponseDto<GetProveedorDto>> Update(UpdateProveedorDto updateDto)
             => await _mediator.Send(new UpdateProveedorCommand(updateDto));
-        public async Task<ResponseDto> Delete(int id)
+        public async Task<ResponseDto> Delete(Guid id)
             => await _mediator.Send(new DeleteProveedorCommand(id));
-        public async Task<ResponseDto<GetProveedorDto>> Get(int id)
+        public async Task<ResponseDto<GetProveedorDto>> Get(Guid id)
             => await _mediator.Send(new GetProveedorQuery(id));
-        public async Task<ResponseDto<IEnumerable<ListProveedorDto>>> List(int id)
+        public async Task<ResponseDto<IEnumerable<ListProveedorDto>>> List(Guid id)
             => await _mediator.Send(new ListProveedorQuery(id));
         public async Task<ResponseDto<SearchResultDto<SearchProveedorDto>>> Search(SearchParamsDto<SearchProveedorFilterDto> searchParams)
             => await _mediator.Send(new SearchProveedorQuery(searchParams));

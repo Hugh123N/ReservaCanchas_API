@@ -9,10 +9,10 @@ namespace Reserva.Domain.Commands.User
 {
     public class LoginCommandValidator : CommandValidatorBase<LoginCommand>
     {
-        private readonly IRepository<Entity.Models.Usuario> _usuarioRepository;
+        private readonly IRepository<Entity.Models.AspNetUser> _usuarioRepository;
 
         public LoginCommandValidator(
-            IRepository<Entity.Models.Usuario> usuarioRepository
+            IRepository<Entity.Models.AspNetUser> usuarioRepository
         )
         {
             _usuarioRepository = usuarioRepository;
@@ -33,7 +33,7 @@ namespace Reserva.Domain.Commands.User
             var usuario = await _usuarioRepository
                 .FindByAsNoTrackingAsync(x =>
                     x.Activo &&
-                    (x.Email == userName || x.Nombre == userName)
+                    (x.Email == userName || x.UserName == userName)
                 );
 
             return usuario != null;

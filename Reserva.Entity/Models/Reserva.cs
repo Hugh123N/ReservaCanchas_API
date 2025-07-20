@@ -7,7 +7,7 @@ public partial class Reserva
 {
     public int IdReserva { get; set; }
 
-    public int IdUsuario { get; set; }
+    public Guid IdUsuario { get; set; }
 
     public int IdCancha { get; set; }
 
@@ -35,5 +35,5 @@ public partial class Reserva
 
     public virtual EstadoReserva IdEstadoReservaNavigation { get; set; } = null!;
 
-    public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
+    public virtual AspNetUser IdUsuarioNavigation { get; set; } = null!;
 }

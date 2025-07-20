@@ -7,7 +7,7 @@ public partial class IntentoLogin
 {
     public long IdIntentoLogin { get; set; }
 
-    public int? IdUsuario { get; set; }
+    public Guid? IdUsuario { get; set; }
 
     public DateTimeOffset FechaIntento { get; set; }
 
@@ -15,5 +15,5 @@ public partial class IntentoLogin
 
     public bool Activo { get; set; }
 
-    public virtual Usuario? IdUsuarioNavigation { get; set; }
+    public virtual AspNetUser? IdUsuarioNavigation { get; set; }
 }

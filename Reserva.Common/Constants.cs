@@ -12,26 +12,22 @@ namespace Reserva.Common
 
         public struct Role
         {
-            public const string Admin = "Admin";
+            public const string Admin = "ADMIN";
+            public const string Proveedor = "PROVEEDOR";
+            public const string Cliente = "CLIENTE";
+        }
+        public struct ESTADO_PROVEEDOR
+        {
+            public const string Pendiente = "01";
+            public const string Aprobado = "02";
+            public const string Rechazado = "03";
+        }
+        public struct ESTADO_USUARIO
+        {
+            public const string Activo = "01";
+            public const string Inactivo = "02";
+            public const string Suspendido = "03";
         }
 
-        public struct CODIGO_RANDOM_OPERACION
-        {
-            public const string REMUESTREO = "REM";
-            public const string REENSAYO = "RFC";
-        }
-
-        public struct LIQUIDACION_ESTADO
-        {
-            public const string EN_PROCESO = "01";
-            public const string COMPLETADO = "02";
-            public const string ANULADO = "03";
-        }
-
-        public struct LIQUIDACION_TIPO
-        {
-            public const string COMPRA = "01";
-            public const string REINTEGRO = "02";
-        }
     }
 }

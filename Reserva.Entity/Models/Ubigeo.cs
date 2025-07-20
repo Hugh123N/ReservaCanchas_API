@@ -14,4 +14,6 @@ public partial class Ubigeo
     public string? Distrito { get; set; }
 
     public bool Activo { get; set; }
+
+    public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
 }

@@ -12,6 +12,9 @@ namespace Reserva.Entity.Models
         [Required]
         [MaxLength(100)]
         public string? LastName { get; set; }
+        public string? Imagen { get; set; }
+
+        public int IdEstadoUsuario { get; set; }
 
         [Required]
         [MaxLength(64)]

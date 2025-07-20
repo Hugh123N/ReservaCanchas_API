@@ -7,28 +7,28 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class UpdateUsuarioCommandValidator : CommandValidatorBase<UpdateUsuarioCommand>
     {
-        private readonly IRepository<Entity.Models.Usuario> _repositoryBase;
-        public UpdateUsuarioCommandValidator(IRepository<Entity.Models.Usuario> repositoryBase)
+        private readonly IRepository<Entity.Models.AspNetUser> _repositoryBase;
+        public UpdateUsuarioCommandValidator(IRepository<Entity.Models.AspNetUser> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 
-            RequiredInformation(x => x.UpdateDto).DependentRules(() =>
+            /*RequiredInformation(x => x.UpdateDto).DependentRules(() =>
             {
-                RequiredField(x => x.UpdateDto.IdUsuario, Resources.Cancha.Usuario.IdUsuario)
+                RequiredField(x => x.UpdateDto.Id, Resources.Cancha.Usuario.IdUsuario)
                     .DependentRules(() =>
                     {
-                        RuleFor(x => x.UpdateDto.IdUsuario)
+                        RuleFor(x => x.UpdateDto.Id)
                             .MustAsync(ValidateExistenceAsync)
                             .WithCustomValidationMessage();
                     });
                 //RequiredString(x => x.UpdateDto.Codigo, Resources.Cancha.Usuario.Codigo, 5, 10);
                 //RequiredField(x => x.UpdateDto.FechaIngreso, Resources.Cancha.Usuario.FechaIngreso);
-            });
+            });*/
         }
 
-        protected async Task<bool> ValidateExistenceAsync(UpdateUsuarioCommand command, int id, ValidationContext<UpdateUsuarioCommand> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(UpdateUsuarioCommand command, Guid id, ValidationContext<UpdateUsuarioCommand> context, CancellationToken cancellationToken)
         {
-            var exists = await _repositoryBase.FindAll().Where(x => x.IdUsuario == id).AnyAsync(cancellationToken);
+            var exists = await _repositoryBase.FindAll().Where(x => x.Id == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.UpdateRecordNotFound);
             return true;
         }

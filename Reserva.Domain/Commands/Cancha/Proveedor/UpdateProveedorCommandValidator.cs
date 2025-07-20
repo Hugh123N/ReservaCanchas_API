@@ -14,10 +14,10 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
 
             RequiredInformation(x => x.UpdateDto).DependentRules(() =>
             {
-                RequiredField(x => x.UpdateDto.IdUsuario, Resources.Cancha.Proveedor.IdProveedor)
+                RequiredField(x => x.UpdateDto.IdProveedor, Resources.Cancha.Proveedor.IdProveedor)
                     .DependentRules(() =>
                     {
-                        RuleFor(x => x.UpdateDto.IdUsuario)
+                        RuleFor(x => x.UpdateDto.IdProveedor)
                             .MustAsync(ValidateExistenceAsync)
                             .WithCustomValidationMessage();
                     });
@@ -26,9 +26,9 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
             });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(UpdateProveedorCommand command, int id, ValidationContext<UpdateProveedorCommand> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(UpdateProveedorCommand command, Guid id, ValidationContext<UpdateProveedorCommand> context, CancellationToken cancellationToken)
         {
-            var exists = await _repositoryBase.FindAll().Where(x => x.IdUsuario == id).AnyAsync(cancellationToken);
+            var exists = await _repositoryBase.FindAll().Where(x => x.IdProveedor == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.UpdateRecordNotFound);
             return true;
         }

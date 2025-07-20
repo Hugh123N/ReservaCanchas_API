@@ -13,5 +13,5 @@ public partial class EstadoUsuario
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();
+    public virtual ICollection<AspNetUser> AspNetUsers { get; set; } = new List<AspNetUser>();
 }

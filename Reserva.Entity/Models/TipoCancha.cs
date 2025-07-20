@@ -10,4 +10,6 @@ public partial class TipoCancha
     public string? Nombre { get; set; }
 
     public bool Activo { get; set; }
+
+    public virtual ICollection<Cancha> Canchas { get; set; } = new List<Cancha>();
 }

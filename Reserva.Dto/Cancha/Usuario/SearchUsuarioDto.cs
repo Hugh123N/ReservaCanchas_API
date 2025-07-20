@@ -3,6 +3,7 @@ namespace Reserva.Dto.Cancha.Usuario
 {
     public class SearchUsuarioDto: UsuarioDto
     {
-        public int? IdUsuario { get; set; }
+        public Guid Id { get; set; }
+        public bool Activo { get; set; }
     }
 }

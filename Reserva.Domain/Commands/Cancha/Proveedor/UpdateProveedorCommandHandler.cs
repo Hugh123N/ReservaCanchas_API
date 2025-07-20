@@ -24,7 +24,7 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
         public override async Task<ResponseDto<GetProveedorDto>> HandleCommand(UpdateProveedorCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetProveedorDto>();
-            var Proveedor = await _ProveedorRepository.GetByAsync(x => x.IdUsuario == request.UpdateDto.IdUsuario);
+            var Proveedor = await _ProveedorRepository.GetByAsync(x => x.IdProveedor == request.UpdateDto.IdProveedor);
 
             if (Proveedor != null)
             {

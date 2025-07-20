@@ -28,6 +28,7 @@ namespace Reserva.Domain.Mapping.Usuario
             CreateMap<Entity.Models.ApplicationUser, GetUsuarioDto>().ReverseMap();
             CreateMap<Entity.Models.ApplicationUser, ListUsuarioDto>().ReverseMap();
             CreateMap<Entity.Models.ApplicationUser, SearchUsuarioDto>().ReverseMap();
+            CreateMap<Entity.Models.ApplicationUser, CreateUsuarioProveedorDto>().ReverseMap();
         }
     }
 }

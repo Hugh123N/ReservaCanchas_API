@@ -19,6 +19,8 @@ namespace Reserva.Application.Cancha
 
         public async Task<ResponseDto<GetUsuarioDto>> Create(CreateUsuarioDto createDto)
             => await _mediator.Send(new CreateUsuarioCommand(createDto));
+        public async  Task<ResponseDto<GetUsuarioDto>>CreateProveedor(CreateUsuarioProveedorDto createDto)
+            => await _mediator.Send(new CreateUsuarioProveedorCommand(createDto));
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
             => await _mediator.Send(new UpdateUsuarioCommand(updateDto));
         public async Task<ResponseDto> Delete(int id)

@@ -2,7 +2,9 @@ namespace Reserva.Dto.Cancha.Usuario
 {
     public class GetUsuarioDto : UsuarioDto
     {
-        public int IdUsuario { get; set; }
+        public Guid Id { get; set; }
+        public int? IdEstadoUsuario { get; set; }
+        public IEnumerable<Guid> RoleIds { get; set; } = Array.Empty<Guid>();
         public bool Activo { get; set; }
     }
 }

@@ -5,7 +5,7 @@ namespace Reserva.Entity.Models;
 
 public partial class CanchaFavorita
 {
-    public int IdUsuario { get; set; }
+    public Guid IdUsuario { get; set; }
 
     public int IdCancha { get; set; }
 
@@ -15,5 +15,5 @@ public partial class CanchaFavorita
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 
-    public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
+    public virtual AspNetUser IdUsuarioNavigation { get; set; } = null!;
 }

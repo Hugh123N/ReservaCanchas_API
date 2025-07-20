@@ -7,7 +7,7 @@ public partial class Pago
 {
     public int IdPago { get; set; }
 
-    public int IdUsuario { get; set; }
+    public Guid IdUsuario { get; set; }
 
     public decimal Monto { get; set; }
 
@@ -29,5 +29,5 @@ public partial class Pago
 
     public virtual MetodoPago? IdMetodoPagoNavigation { get; set; }
 
-    public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
+    public virtual AspNetUser IdUsuarioNavigation { get; set; } = null!;
 }

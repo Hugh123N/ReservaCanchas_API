@@ -22,7 +22,7 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
         protected override async Task<ResponseDto<GetProveedorDto>> HandleQuery(GetProveedorQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetProveedorDto>();
-            var Proveedor = await _ProveedorRepository.GetByAsync(x => x.IdUsuario == request.Id);
+            var Proveedor = await _ProveedorRepository.GetByAsync(x => x.IdProveedor == request.Id);
             var ProveedorDto = _mapper?.Map<GetProveedorDto>(Proveedor);
 
             if (Proveedor != null && ProveedorDto != null)

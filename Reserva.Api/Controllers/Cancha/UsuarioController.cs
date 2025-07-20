@@ -16,9 +16,12 @@ namespace Reserva.Api.Controllers.Cancha
         public UsuarioController(IUsuarioApplication UsuarioApplication)
             => _UsuarioApplication = UsuarioApplication;
 
-        [HttpPost]
+        [HttpPost("register/cliente")]
         public async Task<ResponseDto<GetUsuarioDto>> Create(CreateUsuarioDto createDto)
             => await _UsuarioApplication.Create(createDto);
+        [HttpPost("register/proveedor")]
+        public async Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto)
+            => await _UsuarioApplication.CreateProveedor(createDto);
         [HttpPut]
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
             => await _UsuarioApplication.Update(updateDto);

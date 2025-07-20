@@ -9,7 +9,7 @@ public partial class GananciaProveedor
 
     public int IdReserva { get; set; }
 
-    public int IdProveedor { get; set; }
+    public Guid IdProveedor { get; set; }
 
     public decimal MontoTotal { get; set; }
 

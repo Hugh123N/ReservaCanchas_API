@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Token;
 using Reserva.Dto.Base;
@@ -21,22 +22,24 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     internal class CreateGoogleCommandHandler : CommandHandlerBase<CreateGoogleCommand, LoginResultDto>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
+        private readonly IRepository<Entity.Models.AspNetUser> _UsuarioRepository;
         private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
         private readonly IRepository<Entity.Models.Rol> _RolRepository;
         private readonly IConfiguration _configuration;
         private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
+        private readonly IRepository<Entity.Models.EstadoUsuario> _EstadoUsuarioRepository;
 
         public CreateGoogleCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             //CreateUsuarioCommandValidator validator,
-            IRepository<Entity.Models.Usuario> UsuarioRepository,
+            IRepository<Entity.Models.AspNetUser> UsuarioRepository,
             UserManager<Entity.Models.ApplicationUser> userManager,
             IRepository<Entity.Models.ApplicationUser> ApplicationUserRepository,
             IRepository<Entity.Models.Rol> RolRepository,
-            IConfiguration configuration
+            IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository,
+        IConfiguration configuration
         ) : base(unitOfWork, mapper, mediator)
         {
             _UsuarioRepository = UsuarioRepository;
@@ -44,16 +47,17 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             _configuration = configuration;
             _RolRepository = RolRepository;
             _applicationUserRepository = ApplicationUserRepository;
+            _EstadoUsuarioRepository = EstadoUsuarioRepository;
         }
 
 
         public override async Task<ResponseDto<LoginResultDto>> HandleCommand(CreateGoogleCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<LoginResultDto>();
+            var estadoUsuario = await _EstadoUsuarioRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
             GoogleJsonWebSignature.Payload payload;
             try
             {
-                // Validamos el token recibido usando la librería oficial de Google
                 payload = await GoogleJsonWebSignature.ValidateAsync(request.CreateDto.IdToken, new GoogleJsonWebSignature.ValidationSettings
                 {
                     // En producción: valida el client_id también
@@ -79,6 +83,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 Email = payload.Email,
                 UserName = payload.Name,
                 LastName = payload.FamilyName,
+                IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario
                 //I = payload.Picture,
                 //PhoneNumber = "",
                // IdRol = 1,

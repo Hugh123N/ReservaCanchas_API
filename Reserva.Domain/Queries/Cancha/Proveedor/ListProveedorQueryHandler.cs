@@ -21,7 +21,7 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
         protected override async Task<ResponseDto<IEnumerable<ListProveedorDto>>> HandleQuery(ListProveedorQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<IEnumerable<ListProveedorDto>>();
-            var list = await _repository.FindByAsNoTrackingAsync(x => x.IdUsuario == request.Id);
+            var list = await _repository.FindByAsNoTrackingAsync(x => x.IdProveedor == request.Id);
             var listDtos = _mapper?.Map<IEnumerable<ListProveedorDto>>(list);
 
             response.UpdateData(listDtos ?? new List<ListProveedorDto>());
