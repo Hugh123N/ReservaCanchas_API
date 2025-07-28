@@ -30,6 +30,8 @@ namespace Reserva.Domain.Mapping.Proveedor
                 .ReverseMap();
             CreateMap<Entity.Models.Proveedor, CreateUsuarioProveedorDto>()
                 .ReverseMap();
+            CreateMap<Entity.Models.Proveedor, UpgradeToProveedorDto>()
+                .ReverseMap();
         }
     }
 }

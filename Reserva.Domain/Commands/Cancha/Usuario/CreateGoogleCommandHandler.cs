@@ -88,7 +88,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 //PhoneNumber = "",
                // IdRol = 1,
                // Password = "", // No se usa para Google
-                //Proveedor = "Google",
             };
 
             _applicationUserRepository.UpdateAuditTrails(nuevoUsuario);

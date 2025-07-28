@@ -22,6 +22,10 @@ namespace Reserva.Api.Controllers.Cancha
         [HttpPost("register/proveedor")]
         public async Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto)
             => await _UsuarioApplication.CreateProveedor(createDto);
+        [HttpPut("{userId}/upgrade-to-proveedor")]
+        [Authorize]
+        public async Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, [FromBody] UpgradeToProveedorDto upgradeDto)
+            => await _UsuarioApplication.UpgradeToProveedor(userId, upgradeDto);
         [HttpPut]
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
             => await _UsuarioApplication.Update(updateDto);

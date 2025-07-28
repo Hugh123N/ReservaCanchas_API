@@ -17,6 +17,7 @@ namespace Reserva.Application.Abstractions.Cancha
         Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto);
         Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto);
         Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto);
+        Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, UpgradeToProveedorDto upgradeDto);
     }
 }
 
