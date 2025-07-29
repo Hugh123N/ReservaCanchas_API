@@ -10,6 +10,7 @@ using Reserva.Domain.Commands.Token;
 using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
 using Reserva.Dto.User;
+using Reserva.Entity.Models;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using System;
@@ -24,7 +25,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
     {
         private readonly IRepository<Entity.Models.AspNetUser> _UsuarioRepository;
         private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
-        private readonly IRepository<Entity.Models.Rol> _RolRepository;
+        private readonly IRepository<Entity.Models.AspNetRole> _RolRepository;
         private readonly IConfiguration _configuration;
         private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
         private readonly IRepository<Entity.Models.EstadoUsuario> _EstadoUsuarioRepository;
@@ -37,7 +38,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IRepository<Entity.Models.AspNetUser> UsuarioRepository,
             UserManager<Entity.Models.ApplicationUser> userManager,
             IRepository<Entity.Models.ApplicationUser> ApplicationUserRepository,
-            IRepository<Entity.Models.Rol> RolRepository,
+            IRepository<Entity.Models.AspNetRole> RolRepository,
             IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository,
         IConfiguration configuration
         ) : base(unitOfWork, mapper, mediator)
@@ -74,7 +75,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             if (usuarioExistente != null)
             {
                 response.AddErrorResult("Este correo ya está registrado.");
-                return response;
+                return response; 
             }
 
             // Crear nuevo usuario con los datos de Google
@@ -86,14 +87,42 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario,
                 Imagen = payload.Picture
                 //PhoneNumber = "",
-               // IdRol = 1,
-               // Password = "", // No se usa para Google
+                // IdRol = 1,
+                // Password = "", // No se usa para Google
             };
 
             _applicationUserRepository.UpdateAuditTrails(nuevoUsuario);
              await _UsuarioManager.CreateAsync(nuevoUsuario, "");
 
-            var accessToken = await _mediator.Send(new GenerateTokenCommand(nuevoUsuario), cancellationToken)!;
+            var normalizedRoleNames = new List<string>
+                {
+                    Constants.Role.Cliente.ToUpper()
+                };
+
+            var roles = await _RolRepository.FindByAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
+            if (roles.Any())
+            {
+                var roleResult = await _UsuarioManager.AddToRolesAsync(nuevoUsuario, roles.Select(x => x.NormalizedName));
+                if (!roleResult.Succeeded)
+                {
+                    roleResult.Errors.ToList().ForEach(e =>
+                    {
+                        response.AddErrorResult($"Error al asignar rol: {e.Code}: {e.Description}");
+                    });
+                    await _UsuarioManager.DeleteAsync(nuevoUsuario);
+                    return response;
+                }
+            }
+            else
+            {
+                response.AddErrorResult("Rol no encontrado o inválido.");
+                await _UsuarioManager.DeleteAsync(nuevoUsuario);
+                return response;
+            }
+
+            var rols = await _UsuarioManager.GetRolesAsync(nuevoUsuario);
+
+            var accessToken = await _mediator.Send(new GenerateTokenCommand(nuevoUsuario, rols), cancellationToken)!;
 
             if (accessToken?.Data == null)
             {

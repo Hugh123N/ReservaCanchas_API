@@ -79,7 +79,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 var normalizedRoleNames = new List<string>
                 {
                     Constants.Role.Proveedor.ToUpper(),
-                    Constants.Role.Cliente.ToUpper()
+                    Constants.Role.Cliente.ToUpper(),
+                    Constants.Role.Operador.ToUpper()
                 };
 
                 var roles = await _RolRepository.FindByAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
@@ -108,10 +109,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 if (proveedor != null)
                 {
                     proveedor.IdProveedor = applicationUser.Id;
-                    //proveedor.RazonSocial = request.CreateDto.RazonSocial;
-                    //proveedor.Ruc = request.CreateDto.Ruc;
                     proveedor.IdEstadoProveedor = estadoProveedor.IdEstadoProveedor;
-                    //proveedor.IdTipoProveedor = request.CreateDto.IdTipoProveedor;
+
                     try
                     {
                         await _ProveedorRepository.AddAsync(proveedor);

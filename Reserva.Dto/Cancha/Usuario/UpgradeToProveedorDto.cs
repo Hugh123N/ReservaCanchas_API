@@ -9,15 +9,8 @@ namespace Reserva.Dto.Cancha.Usuario
 {
     public class UpgradeToProveedorDto
     {
-        [Required]
-        [MaxLength(255)]
         public string? RazonSocial { get; set; }
-
-        [Required]
-        [MaxLength(20)]
         public string? Ruc { get; set; }
-
-        [Required]
         public int IdTipoProveedor { get; set; }
     }
 }

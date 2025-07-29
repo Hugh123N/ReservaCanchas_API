@@ -56,8 +56,11 @@ namespace Reserva.Domain.Commands.Token
                 new Claim("DisplayName", $"{usuario.UserName} {usuario.LastName}" ?? ""),
                 new Claim("UserName", usuario.UserName ?? "")
                 //new Claim(ClaimTypes.Role, usuario.?.Nombre ?? "SinRol)"
-                
             };
+            foreach (var role in request.Roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var jwt = new JwtSecurityToken(
                 issuer: issuer,

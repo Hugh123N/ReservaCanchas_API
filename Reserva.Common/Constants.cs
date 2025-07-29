@@ -15,6 +15,7 @@ namespace Reserva.Common
             public const string Admin = "ADMIN";
             public const string Proveedor = "PROVEEDOR";
             public const string Cliente = "CLIENTE";
+            public const string Operador = "OPERADOR";
         }
         public struct ESTADO_PROVEEDOR
         {

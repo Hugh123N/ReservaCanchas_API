@@ -50,11 +50,19 @@ namespace Reserva.Domain.Commands.User
             var user = await _userManager.FindByNameAsync(request.LoginDto.UserName);
             user ??= await _userManager.FindByEmailAsync(request.LoginDto.UserName);
 
+            if (user.IdEstadoUsuario == 3) 
+            {
+                response.AddErrorResult("Tu cuenta ha sido suspendida. Por favor, contacta al soporte.");
+                return response;
+            }
+
             var result = await _signInManager.PasswordSignInAsync(user.UserName, request.LoginDto.Password, request.LoginDto.RememberMe, lockoutOnFailure: lockoutOnFailure);
 
             if (result.Succeeded)
             {
-                var accessToken = await _mediator.Send(new GenerateTokenCommand(user), cancellationToken)!;
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var accessToken = await _mediator.Send(new GenerateTokenCommand(user, roles), cancellationToken)!;
 
                 if (accessToken?.Data == null)
                 {
@@ -64,6 +72,17 @@ namespace Reserva.Domain.Commands.User
 
                 response.UpdateData(new LoginResultDto { AccessToken = accessToken.Data });
                 response.AddOkResult("Login exitoso.");
+            }else if (result.IsLockedOut)
+            {
+                response.AddErrorResult("Usuario bloqueado temporalmente por múltiples intentos fallidos.");
+            }
+            else if (result.IsNotAllowed)
+            {
+                response.AddErrorResult("El usuario no está permitido para iniciar sesión.");
+            }
+            else
+            {
+                response.AddErrorResult("Credenciales inválidas.");
             }
             return response;
         }

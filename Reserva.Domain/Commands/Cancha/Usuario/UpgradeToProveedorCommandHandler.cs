@@ -55,23 +55,31 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 response.AddErrorResult("El usuario ya es un proveedor.");
                 return response;
             }
+            var normalizedRoleNames = new List<string>
+                {
+                    Constants.Role.Proveedor.ToUpper(),
+                    Constants.Role.Operador.ToUpper()
+                };
 
             using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var proveedorRole = await _RolRepository.GetByAsync(x => x.NormalizedName.Equals(Constants.Role.Proveedor));
-                if (proveedorRole == null)
+                
+
+                var roles = await _RolRepository.FindByAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
+
+                if (!roles.Any())
                 {
-                    response.AddErrorResult("El rol 'Proveedor' no existe en el sistema.");
+                    response.AddErrorResult("Roles no encontrados o inválido.");
                     transaction?.Rollback();
                     return response;
                 }
 
-                var addRoleResult = await _UsuarioManager.AddToRoleAsync(applicationUser, proveedorRole.NormalizedName!);
+                var addRoleResult = await _UsuarioManager.AddToRolesAsync(applicationUser, roles.Select(x => x.NormalizedName));
                 if (!addRoleResult.Succeeded)
                 {
-                    addRoleResult.Errors.ToList().ForEach(e => response.AddErrorResult($"Error al asignar rol de Proveedor: {e.Code}: {e.Description}"));
+                    addRoleResult.Errors.ToList().ForEach(e => response.AddErrorResult($"Error al asignar rol: {e.Code}: {e.Description}"));
                     transaction?.Rollback();
                     return response;
                 }
@@ -80,7 +88,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 if (proveedor == null)
                 {
                     response.AddErrorResult("No se pudo mapear la información del proveedor.");
-                    await _UsuarioManager.RemoveFromRoleAsync(applicationUser, proveedorRole.NormalizedName!); // Rollback del rol
+                    await _UsuarioManager.RemoveFromRolesAsync(applicationUser, roles.Select(x => x.NormalizedName)); // Rollback del rol
                     transaction?.Rollback();
                     return response;
                 }
@@ -99,8 +107,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             catch (Exception ex)
             {
                 transaction?.Rollback(); 
-                await _UsuarioManager.RemoveFromRoleAsync(applicationUser, Constants.Role.Proveedor); // Si ya se asignó el rol
-                response.AddErrorResult($"Error al actualizar a proveedor: {ex.Message}");
+                await _UsuarioManager.RemoveFromRolesAsync(applicationUser, normalizedRoleNames); // Si ya se asignó el rol
+                response.AddErrorResult($"Error al actualizar rol: {ex.Message}");
                 return response;
             }
 

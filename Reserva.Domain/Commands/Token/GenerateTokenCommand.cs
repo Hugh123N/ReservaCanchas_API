@@ -7,11 +7,13 @@ namespace Reserva.Domain.Commands.Token
 {
     public class GenerateTokenCommand : CommandBase<AccessTokenDto>
     {
-        public GenerateTokenCommand(ApplicationUser user)
+        public GenerateTokenCommand(ApplicationUser user, IList<string> roles)
         {
             Usuario = user;
+            Roles = roles;
         }
 
         public ApplicationUser Usuario { get; set; }
+        public IList<string> Roles { get; set; }
     }
 }
