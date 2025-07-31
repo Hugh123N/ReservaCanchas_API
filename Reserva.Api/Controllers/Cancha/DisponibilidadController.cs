@@ -7,7 +7,7 @@ namespace Reserva.Api.Controllers.Cancha
 {
     [ApiController]
     [Route("api/Disponibilidad")]
-    public class DisponibilidadController : IDisponibilidadApplication
+    public class DisponibilidadController
     {
         private readonly IDisponibilidadApplication _DisponibilidadApplication;
 
@@ -38,6 +38,8 @@ namespace Reserva.Api.Controllers.Cancha
         [HttpPost("select")]
         public async Task<ResponseDto<SearchResultDto<SelectDisponibilidadDto>>> Select(SearchParamsDto<SelectDisponibilidadFilterDto> searchParams)
             => await _DisponibilidadApplication.Select(searchParams);
-
+        [HttpPost("horarioDisponible")]
+        public async Task<ResponseDto<List<string>>> HorarioDisponible(GetHorarioDisponible horarioDisponible)
+            => await _DisponibilidadApplication.HorarioDisponible(horarioDisponible.Fecha, horarioDisponible.IdCancha);
     }
 }

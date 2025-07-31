@@ -67,7 +67,11 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
                 sorts,
                 filter,
                 x => x.IdTipoCanchaNavigation,
-                x => x.ImagenCanchas.Where(i => i.EsPrincipal == true)
+                x => x.ImagenCanchas.Where(i => i.EsPrincipal == true),
+                x => x.IdEstadoCanchaNavigation,
+                x => x.CanchaFavorita.Where(x => x.Activo),
+                x => x.CodigoUbigeoNavigation!
+                //x => x.Disponibilidads.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
             );
 
             var CanchaDtos = _mapper?.Map<IEnumerable<SearchCanchaDto>>(Canchas.Items);

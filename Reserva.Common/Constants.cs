@@ -30,5 +30,13 @@ namespace Reserva.Common
             public const string Suspendido = "03";
         }
 
+        public struct ESTADO_CANCHA
+        {
+            public const string Aprobado = "01";
+            public const string Pendiente = "02";
+            public const string Rechazado = "03";
+            public const string Suspendido = "04";
+            public const string Mantenimiento = "05";
+        }
     }
 }

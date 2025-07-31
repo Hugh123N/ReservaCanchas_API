@@ -43,18 +43,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             var response = new ResponseDto<GetUsuarioDto>();
 
             var applicationUser = await _UsuarioManager.FindByIdAsync(request.UserId.ToString());
-            if (applicationUser == null)
-            {
-                response.AddErrorResult("Usuario no encontrado.");
-                return response;
-            }
-
-            var isProveedor = await _UsuarioManager.IsInRoleAsync(applicationUser, Constants.Role.Proveedor);
-            if (isProveedor)
-            {
-                response.AddErrorResult("El usuario ya es un proveedor.");
-                return response;
-            }
+            
             var normalizedRoleNames = new List<string>
                 {
                     Constants.Role.Proveedor.ToUpper(),
@@ -67,14 +56,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             {
                 
 
-                var roles = await _RolRepository.FindByAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
-
-                if (!roles.Any())
-                {
-                    response.AddErrorResult("Roles no encontrados o inválido.");
-                    transaction?.Rollback();
-                    return response;
-                }
+                var roles = await _RolRepository.FindByAsNoTrackingAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
 
                 var addRoleResult = await _UsuarioManager.AddToRolesAsync(applicationUser, roles.Select(x => x.NormalizedName));
                 if (!addRoleResult.Succeeded)

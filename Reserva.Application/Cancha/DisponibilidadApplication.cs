@@ -31,6 +31,7 @@ namespace Reserva.Application.Cancha
             => await _mediator.Send(new SelectComboDisponibilidadQuery());
         public async Task<ResponseDto<SearchResultDto<SelectDisponibilidadDto>>> Select(SearchParamsDto<SelectDisponibilidadFilterDto> searchParams)
              => await _mediator.Send(new SelectDisponibilidadQuery(searchParams));
-
+        public async Task<ResponseDto<List<string>>> HorarioDisponible(DateTime fecha, int idCancha)
+            => await _mediator.Send(new GetCanchaByFechaQuery(fecha,idCancha));
     }
 }

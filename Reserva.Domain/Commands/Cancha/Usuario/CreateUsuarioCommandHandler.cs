@@ -15,7 +15,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class CreateUsuarioCommandHandler : CommandHandlerBase<CreateUsuarioCommand, GetUsuarioDto>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
         private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
         private readonly IRepository<Entity.Models.AspNetRole> _RolRepository;
         private readonly IConfiguration _configuration;
@@ -29,7 +28,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IMapper mapper,
             IMediator mediator,
             CreateUsuarioCommandValidator validator,
-            IRepository<Entity.Models.Usuario> UsuarioRepository,
             UserManager<Entity.Models.ApplicationUser> userManager,
             IRepository<Entity.Models.AspNetRole> RolRepository,
             IConfiguration configuration,
@@ -38,7 +36,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
-            _UsuarioRepository = UsuarioRepository;
             _UsuarioManager = userManager;
             _configuration = configuration;
             _RolRepository = RolRepository;
@@ -51,7 +48,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
         {
             var response = new ResponseDto<GetUsuarioDto>();
             var estadoUsuario = await _EstadoUsuarioRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
-
+             
             var applicationUser = _mapper?.Map<Entity.Models.ApplicationUser>(request.CreateDto);
 
             if (applicationUser != null)

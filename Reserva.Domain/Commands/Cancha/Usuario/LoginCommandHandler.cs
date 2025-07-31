@@ -47,43 +47,34 @@ namespace Reserva.Domain.Commands.User
             var lockoutOnFailure = _configuration.GetValue<bool>("SignInOptions:LockoutEnabled");
             var login = request.LoginDto;
 
-            var user = await _userManager.FindByNameAsync(request.LoginDto.UserName);
-            user ??= await _userManager.FindByEmailAsync(request.LoginDto.UserName);
-
-            if (user.IdEstadoUsuario == 3) 
-            {
-                response.AddErrorResult("Tu cuenta ha sido suspendida. Por favor, contacta al soporte.");
-                return response;
-            }
+            var user = await _userManager.FindByNameAsync(login.UserName)
+               ?? await _userManager.FindByEmailAsync(login.UserName);
 
             var result = await _signInManager.PasswordSignInAsync(user.UserName, request.LoginDto.Password, request.LoginDto.RememberMe, lockoutOnFailure: lockoutOnFailure);
 
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-
-                var accessToken = await _mediator.Send(new GenerateTokenCommand(user, roles), cancellationToken)!;
-
-                if (accessToken?.Data == null)
-                {
-                    response.AddErrorResult("Error al generar token.");
-                    return response;
-                }
-
-                response.UpdateData(new LoginResultDto { AccessToken = accessToken.Data });
-                response.AddOkResult("Login exitoso.");
-            }else if (result.IsLockedOut)
-            {
-                response.AddErrorResult("Usuario bloqueado temporalmente por múltiples intentos fallidos.");
+                if (result.IsLockedOut)
+                    response.AddErrorResult("Usuario bloqueado temporalmente por múltiples intentos fallidos.");
+                else if (result.IsNotAllowed)
+                    response.AddErrorResult("El usuario no está permitido para iniciar sesión.");
+                else
+                    response.AddErrorResult("No se pudo iniciar sesión.");
+                return response;
             }
-            else if (result.IsNotAllowed)
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var accessToken = await _mediator.Send(new GenerateTokenCommand(user, roles), cancellationToken)!;
+
+            if (accessToken?.Data == null)
             {
-                response.AddErrorResult("El usuario no está permitido para iniciar sesión.");
+                response.AddErrorResult("Error al generar token.");
+                return response;
             }
-            else
-            {
-                response.AddErrorResult("Credenciales inválidas.");
-            }
+
+            response.UpdateData(new LoginResultDto { AccessToken = accessToken.Data });
+            response.AddOkResult("Login exitoso.");
             return response;
         }
     }

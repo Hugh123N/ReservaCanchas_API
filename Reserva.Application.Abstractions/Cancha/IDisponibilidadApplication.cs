@@ -13,7 +13,7 @@ namespace Reserva.Application.Abstractions.Cancha
         Task<ResponseDto<SearchResultDto<SearchDisponibilidadDto>>> Search(SearchParamsDto<SearchDisponibilidadFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboDisponibilidadDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectDisponibilidadDto>>> Select(SearchParamsDto<SelectDisponibilidadFilterDto> searchParams);
-
+        Task<ResponseDto<List<string>>> HorarioDisponible(DateTime fecha, int idCancha);
     }
 }
 

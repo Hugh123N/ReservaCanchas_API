@@ -1,42 +1,76 @@
 ﻿using FluentValidation;
-using Reserva.Domain.Commands.Base;
-using Reserva.Dto.User;
-using Reserva.Repository.Abstractions.Base;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Reserva.Domain.Commands.Base;
+using Reserva.Dto.User;
+using Reserva.Entity.Models;
+using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Commands.User
 {
     public class LoginCommandValidator : CommandValidatorBase<LoginCommand>
     {
-        private readonly IRepository<Entity.Models.AspNetUser> _usuarioRepository;
+        UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         public LoginCommandValidator(
-            IRepository<Entity.Models.AspNetUser> usuarioRepository
+             UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager
         )
         {
-            _usuarioRepository = usuarioRepository;
+
+            _userManager = userManager;
+            _signInManager = signInManager;
 
             RequiredInformation(x => x.LoginDto).DependentRules(() =>
             {
-                RequiredString(x => x.LoginDto.UserName, "El nombre de usuario o email es requerido.", default, 256);
-                RequiredString(x => x.LoginDto.Password, "La contraseña es requerida.", default, 256);
-
                 RuleFor(x => x.LoginDto.UserName)
-                    .MustAsync(ValidateUsuarioActivo)
-                    .WithMessage("El usuario no existe o está inactivo.");
+                .NotEmpty().WithMessage("El nombre de usuario o email es requerido.")
+                .MaximumLength(256).WithMessage("El nombre de usuario no puede superar los 256 caracteres.");
+
+                RuleFor(x => x.LoginDto.Password)
+                    .NotEmpty().WithMessage("La contraseña es requerida.")
+                    .MaximumLength(256).WithMessage("La contraseña no puede superar los 256 caracteres.");
+
+                RuleFor(x => x.LoginDto)
+                .MustAsync(UsuarioExisteYActivo)
+                .WithMessage("El usuario no existe o está inactivo.");
+
+                RuleFor(x => x.LoginDto)
+                    .MustAsync(PasswordEsValida)
+                    .WithMessage("Credenciales inválidas.");
+
+                RuleFor(x => x.LoginDto)
+                    .MustAsync(UsuarioNoSuspendido)
+                    .WithMessage("Tu cuenta ha sido suspendida. Por favor, contacta al soporte.");
             });
         }
 
-        private async Task<bool> ValidateUsuarioActivo(string userName, CancellationToken cancellationToken)
+        private async Task<bool> UsuarioExisteYActivo(LoginDto dto, CancellationToken cancellationToken)
         {
-            var usuario = await _usuarioRepository
-                .FindByAsNoTrackingAsync(x =>
-                    x.Activo &&
-                    (x.Email == userName || x.UserName == userName)
-                );
+            var user = await _userManager.FindByNameAsync(dto.UserName)
+                       ?? await _userManager.FindByEmailAsync(dto.UserName);
 
-            return usuario != null;
+            return user != null && user.IdEstadoUsuario != 3; 
+        }
+
+        private async Task<bool> PasswordEsValida(LoginDto dto, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.FindByNameAsync(dto.UserName)
+                       ?? await _userManager.FindByEmailAsync(dto.UserName);
+
+            if (user == null) return false;
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, lockoutOnFailure: false);
+            return result.Succeeded;
+        }
+
+        private async Task<bool> UsuarioNoSuspendido(LoginDto dto, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.FindByNameAsync(dto.UserName)
+                       ?? await _userManager.FindByEmailAsync(dto.UserName);
+
+            return user == null || user.IdEstadoUsuario != 3;
         }
     }
 }
