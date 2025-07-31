@@ -17,11 +17,17 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
 
+    public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; }
+
     public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+
+    public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
+
+    public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
 
     public virtual DbSet<Cancha> Canchas { get; set; }
 
-    public virtual DbSet<CanchaFavorita> CanchaFavorita { get; set; }
+    public virtual DbSet<CanchaFavoritum> CanchaFavorita { get; set; }
 
     public virtual DbSet<Comision> Comisions { get; set; }
 
@@ -91,6 +97,16 @@ public partial class ReservaCanchasContext : DbContext
                 .HasColumnName("userNameUpdate");
         });
 
+        modelBuilder.Entity<AspNetRoleClaim>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__AspNetRo__3214EC07BA518D3D");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.AspNetRoleClaims)
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__AspNetRol__RoleI__18EBB532");
+        });
+
         modelBuilder.Entity<AspNetUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__AspNetUs__3214EC07019DAC5B");
@@ -148,6 +164,26 @@ public partial class ReservaCanchasContext : DbContext
                         j.HasKey("UserId", "RoleId");
                         j.ToTable("AspNetUserRoles");
                     });
+        });
+
+        modelBuilder.Entity<AspNetUserClaim>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__AspNetUs__3214EC076083AA75");
+
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserClaims)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__AspNetUse__UserI__160F4887");
+        });
+
+        modelBuilder.Entity<AspNetUserLogin>(entity =>
+        {
+            entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
+
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserLogins)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__AspNetUse__UserI__3C34F16F");
         });
 
         modelBuilder.Entity<Cancha>(entity =>
@@ -221,7 +257,7 @@ public partial class ReservaCanchasContext : DbContext
                 .HasConstraintName("FK__Cancha__idTipoCa__5441852A");
         });
 
-        modelBuilder.Entity<CanchaFavorita>(entity =>
+        modelBuilder.Entity<CanchaFavoritum>(entity =>
         {
             entity.HasKey(e => new { e.IdUsuario, e.IdCancha }).HasName("PK__CanchaFa__93BBF2388150CBEC");
 

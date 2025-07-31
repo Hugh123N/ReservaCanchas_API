@@ -53,7 +53,11 @@ public partial class AspNetUser
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; } = new List<CanchaFavorita>();
+    public virtual ICollection<AspNetUserClaim> AspNetUserClaims { get; set; } = new List<AspNetUserClaim>();
+
+    public virtual ICollection<AspNetUserLogin> AspNetUserLogins { get; set; } = new List<AspNetUserLogin>();
+
+    public virtual ICollection<CanchaFavoritum> CanchaFavorita { get; set; } = new List<CanchaFavoritum>();
 
     public virtual EstadoUsuario IdEstadoUsuarioNavigation { get; set; } = null!;
 

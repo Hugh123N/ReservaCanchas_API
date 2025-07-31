@@ -39,7 +39,7 @@ public partial class Cancha
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; } = new List<CanchaFavorita>();
+    public virtual ICollection<CanchaFavoritum> CanchaFavorita { get; set; } = new List<CanchaFavoritum>();
 
     public virtual Ubigeo? CodigoUbigeoNavigation { get; set; }
 

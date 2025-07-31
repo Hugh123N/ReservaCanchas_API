@@ -56,9 +56,9 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             {
                 
 
-                var roles = await _RolRepository.FindByAsNoTrackingAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
+                //var roles = await _RolRepository.FindByAsNoTrackingAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
 
-                var addRoleResult = await _UsuarioManager.AddToRolesAsync(applicationUser, roles.Select(x => x.NormalizedName));
+                var addRoleResult = await _UsuarioManager.AddToRolesAsync(applicationUser, normalizedRoleNames);
                 if (!addRoleResult.Succeeded)
                 {
                     addRoleResult.Errors.ToList().ForEach(e => response.AddErrorResult($"Error al asignar rol: {e.Code}: {e.Description}"));
@@ -70,7 +70,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 if (proveedor == null)
                 {
                     response.AddErrorResult("No se pudo mapear la información del proveedor.");
-                    await _UsuarioManager.RemoveFromRolesAsync(applicationUser, roles.Select(x => x.NormalizedName)); // Rollback del rol
+                    await _UsuarioManager.RemoveFromRolesAsync(applicationUser, normalizedRoleNames); // Rollback del rol
                     transaction?.Rollback();
                     return response;
                 }
