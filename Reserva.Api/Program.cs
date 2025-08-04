@@ -42,6 +42,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//configuracion TkenProvider para resetear contraseña
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+{
+    opt.TokenLifespan = TimeSpan.FromHours(1); // válido por 1 horas
+});
+
 
 var app = builder.Build();
 
