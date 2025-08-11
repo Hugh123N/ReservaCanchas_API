@@ -1,9 +1,11 @@
 using AutoMapper;
-using Reserva.Dto.Base;
+using MediatR;
 using Reserva.Domain.Queries.Base;
+using Reserva.Domain.Queries.Cancha.Disponibilidad;
+using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Cancha;
 using Reserva.Repository.Abstractions.Base;
-using Reserva.Domain.Queries.Cancha.Disponibilidad;
+using Reserva.Repository.Abstractions.Transactions;
 
 namespace Reserva.Domain.Queries.Cancha.Cancha
 {
@@ -13,9 +15,10 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
 
         public GetCanchaQueryHandler(
             IMapper mapper,
+            IMediator mediator,
             GetCanchaQueryValidator validator,
             IRepository<Entity.Models.Cancha> CanchaRepository
-        ) : base(mapper, validator)
+        ) : base(mapper, mediator, validator)
         {
             _CanchaRepository = CanchaRepository;
         }
@@ -31,7 +34,7 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
                 x => x.CodigoUbigeoNavigation!);
 
             var CanchaDto = _mapper?.Map<GetCanchaDto>(Cancha);
-            var disponibilidad = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, request.Id), cancellationToken)! ?? new ResponseDto<List<string>> { Data = new List<string>() };
+            var disponibilidad = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, request.Id), cancellationToken)!;
 
             CanchaDto.Disponibilidad = disponibilidad.Data;
                 

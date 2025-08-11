@@ -15,6 +15,8 @@ public partial class Disponibilidad
 
     public TimeOnly HoraFin { get; set; }
 
+    public bool? Disponible { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }

@@ -4,6 +4,7 @@ using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,9 +33,12 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
                 Data = new List<string>()
             };
 
-            var diaSemana = request.Fecha.DayOfWeek.ToString().ToLowerInvariant();
+            var diaSemana = request.Fecha.ToString("dddd", new CultureInfo("es-ES")).ToLowerInvariant();
 
             var disponibilidad = await _DisponibilidadRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.CanchaId && x.IdDiaSemanaNavigation.Nombre.Contains(diaSemana));
+
+            if (disponibilidad == null)
+                return response;
 
             var requestFechaDateOnly = DateOnly.FromDateTime(request.Fecha);
             var reservas = await _ReservaRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.CanchaId && x.Fecha == requestFechaDateOnly && x.Activo);

@@ -21,8 +21,23 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
                             .MustAsync(ValidateExistenceAsync)
                             .WithCustomValidationMessage();
                     });
-                //RequiredString(x => x.UpdateDto.Codigo, Resources.Cancha.Cancha.Codigo, 5, 10);
-                //RequiredField(x => x.UpdateDto.FechaIngreso, Resources.Cancha.Cancha.FechaIngreso);
+
+                RequiredString(x => x.UpdateDto.Nombre, "El nombre de la cancha", 3, 100);
+                RequiredString(x => x.UpdateDto.Ubicacion, "La ubicación de la cancha", 5, 200);
+
+                RequiredField(x => x.UpdateDto.PrecioHora, "El precio de la cancha")
+                    .GreaterThan(0).WithMessage("El precio debe ser mayor a 0");
+
+                RuleFor(x => x.UpdateDto.Disponibilidades)
+                    .NotNull().WithMessage("Debe proporcionar al menos una disponibilidad.")
+                    .Must(d => d.Any()).WithMessage("Debe proporcionar al menos una disponibilidad.");
+
+                RuleForEach(x => x.UpdateDto.Disponibilidades).ChildRules(dis =>
+                {
+                    dis.RuleFor(d => d.HoraInicio)
+                       .LessThan(d => d.HoraFin)
+                       .WithMessage("La hora de inicio debe ser menor a la hora de fin.");
+                });
             });
         }
 

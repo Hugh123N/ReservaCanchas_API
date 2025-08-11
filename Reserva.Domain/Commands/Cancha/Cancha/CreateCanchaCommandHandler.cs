@@ -34,7 +34,7 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(CreateCanchaCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetCanchaDto>();
-            var estadoCancha = await _EstadoCanchaRepository.GetAsync(Constants.ESTADO_CANCHA.Pendiente);
+            var estadoCancha = await _EstadoCanchaRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(Constants.ESTADO_CANCHA.Pendiente));
 
             var Cancha = _mapper?.Map<Entity.Models.Cancha>(request.CreateDto);
             
