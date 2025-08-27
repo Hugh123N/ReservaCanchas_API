@@ -7,19 +7,19 @@ namespace Reserva.Domain.Mapping.Usuario
     {
         public UsuarioProfile()
         {
-            CreateMap<Entity.Models.Usuario, UsuarioDto>()
+            CreateMap<Entity.AspNetUsers, UsuarioDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Usuario, CreateUsuarioDto>()
+            CreateMap<Entity.AspNetUsers, CreateUsuarioDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Usuario, UpdateUsuarioDto>()
+            CreateMap<Entity.AspNetUsers, UpdateUsuarioDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Usuario, GetUsuarioDto>()
+            CreateMap<Entity.AspNetUsers, GetUsuarioDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Usuario, ListUsuarioDto>()
+            CreateMap<Entity.AspNetUsers, ListUsuarioDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Usuario, SelectComboUsuarioDto>()
+            CreateMap<Entity.AspNetUsers, SelectComboUsuarioDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Usuario, SearchUsuarioDto>()
+            CreateMap<Entity.AspNetUsers, SearchUsuarioDto>()
                 .ReverseMap();
 
             CreateMap<Entity.Models.ApplicationUser, UsuarioDto>().ReverseMap();

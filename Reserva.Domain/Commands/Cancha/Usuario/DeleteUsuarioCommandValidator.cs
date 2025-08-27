@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class DeleteUsuarioCommandValidator : CommandValidatorBase<DeleteUsuarioCommand>
     {
-        private readonly IRepository<Entity.Models.Usuario> _repositoryBase;
-        public DeleteUsuarioCommandValidator(IRepository<Entity.Models.Usuario> repositoryBase)
+        private readonly IRepository<Entity.AspNetUsers> _repositoryBase;
+        public DeleteUsuarioCommandValidator(IRepository<Entity.AspNetUsers> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 
@@ -21,9 +21,9 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                 });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(DeleteUsuarioCommand command, int id, ValidationContext<DeleteUsuarioCommand> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(DeleteUsuarioCommand command, Guid id, ValidationContext<DeleteUsuarioCommand> context, CancellationToken cancellationToken)
         {
-            var exists = await _repositoryBase.FindAll().Where(x => x.IdUsuario == id).AnyAsync(cancellationToken);
+            var exists = await _repositoryBase.FindAll().Where(x => x.Id == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.DeleteRecordNotFound);
             return true;
         }

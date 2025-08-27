@@ -5,7 +5,7 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
 {
     public class GetUsuarioQuery : QueryBase<GetUsuarioDto>
     {
-        public GetUsuarioQuery(int id) => Id = id;
-        public int Id { get; set; }
+        public GetUsuarioQuery(Guid id) => Id = id;
+        public Guid Id { get; set; }
     }
 }

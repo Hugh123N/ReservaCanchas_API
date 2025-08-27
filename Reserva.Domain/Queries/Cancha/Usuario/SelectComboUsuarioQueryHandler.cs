@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
 {
     public class SelectComboUsuarioQueryHandler : QueryHandlerBase<SelectComboUsuarioQuery, IEnumerable<SelectComboUsuarioDto>>
     {
-        private readonly IRepository<Entity.Models.Usuario> _repository;
+        private readonly IRepository<Entity.AspNetUsers> _repository;
 
         public SelectComboUsuarioQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Usuario> repository
+            IRepository<Entity.AspNetUsers> repository
         ) : base(mapper)
         {
             _repository = repository;

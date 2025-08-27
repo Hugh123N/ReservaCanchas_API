@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
 {
     public class ListUsuarioQueryHandler : QueryHandlerBase<ListUsuarioQuery, IEnumerable<ListUsuarioDto>>
     {
-        private readonly IRepository<Entity.Models.Usuario> _repository;
+        private readonly IRepository<Entity.AspNetUsers> _repository;
 
         public ListUsuarioQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Usuario> repository
+            IRepository<Entity.AspNetUsers> repository
         ) : base(mapper)
         {
             _repository = repository;
@@ -21,7 +21,7 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
         protected override async Task<ResponseDto<IEnumerable<ListUsuarioDto>>> HandleQuery(ListUsuarioQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<IEnumerable<ListUsuarioDto>>();
-            var list = await _repository.FindByAsNoTrackingAsync(x => x.IdUsuario == request.Id);
+            var list = await _repository.FindByAsNoTrackingAsync(x => x.Id == request.Id);
             var listDtos = _mapper?.Map<IEnumerable<ListUsuarioDto>>(list);
 
             response.UpdateData(listDtos ?? new List<ListUsuarioDto>());

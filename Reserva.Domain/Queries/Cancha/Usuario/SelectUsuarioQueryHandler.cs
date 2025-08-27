@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
 {
     public class SelectUsuarioQueryHandler : SearchQueryHandlerBase<SelectUsuarioQuery, SelectUsuarioFilterDto, SelectUsuarioDto>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
+        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
 
         public SelectUsuarioQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Usuario> UsuarioRepository
+            IRepository<Entity.AspNetUsers> UsuarioRepository
         ) : base(mapper)
         {
             _UsuarioRepository = UsuarioRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
         {
             var response = new ResponseDto<SearchResultDto<SelectUsuarioDto>>();
 
-            Expression<Func<Entity.Models.Usuario, bool>> filter = x => true;
+            Expression<Func<Entity.AspNetUsers, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -46,16 +46,14 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
             }
             */
 
-            if (filters?.IdUsuario.HasValue == true)
-                filter = filter.And(x => x.IdUsuario == filters.IdUsuario);
-
-            var sorts = new List<SortExpression<Entity.Models.Usuario>>();
+           
+            var sorts = new List<SortExpression<Entity.AspNetUsers>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Usuario>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.AspNetUsers>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

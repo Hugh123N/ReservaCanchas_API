@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
 {
     public class GetUsuarioQueryHandler : QueryHandlerBase<GetUsuarioQuery, GetUsuarioDto>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
+        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
 
         public GetUsuarioQueryHandler(
             IMapper mapper,
             GetUsuarioQueryValidator validator,
-            IRepository<Entity.Models.Usuario> UsuarioRepository
+            IRepository<Entity.AspNetUsers> UsuarioRepository
         ) : base(mapper, validator)
         {
             _UsuarioRepository = UsuarioRepository;
@@ -22,7 +22,7 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
         protected override async Task<ResponseDto<GetUsuarioDto>> HandleQuery(GetUsuarioQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetUsuarioDto>();
-            var Usuario = await _UsuarioRepository.GetByAsync(x => x.IdUsuario == request.Id);
+            var Usuario = await _UsuarioRepository.GetByAsync(x => x.Id == request.Id);
             var UsuarioDto = _mapper?.Map<GetUsuarioDto>(Usuario);
 
             if (Usuario != null && UsuarioDto != null)

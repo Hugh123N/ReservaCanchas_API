@@ -15,10 +15,8 @@ namespace Reserva.Domain.Commands.User
     public class LoginCommandHandler : CommandHandlerBase<LoginCommand, LoginResultDto>
     {
         private readonly IConfiguration _configuration;
-        private readonly IRepository<Entity.Models.Usuario> _usuarioRepository;
         private readonly UserManager<Entity.Models.ApplicationUser> _userManager;
         private readonly SignInManager<Entity.Models.ApplicationUser> _signInManager;
-        private readonly IRepository<Entity.Models.Rol> _rolRepository;
         
 
         public LoginCommandHandler(
@@ -27,15 +25,11 @@ namespace Reserva.Domain.Commands.User
             IMediator mediator,
             LoginCommandValidator validator,
             IConfiguration configuration,
-            IRepository<Entity.Models.Usuario> usuarioRepository,
             UserManager<Entity.Models.ApplicationUser> userManager,
-            SignInManager<Entity.Models.ApplicationUser> signInManager,
-        IRepository<Entity.Models.Rol> rolRepository
+            SignInManager<Entity.Models.ApplicationUser> signInManager
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _configuration = configuration;
-            _usuarioRepository = usuarioRepository;
-            _rolRepository = rolRepository;
             _signInManager = signInManager;
             _userManager = userManager;
         }

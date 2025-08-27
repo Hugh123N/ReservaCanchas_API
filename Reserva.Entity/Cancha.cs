@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Reserva.Entity.Models;
+namespace Reserva.Entity;
 
 public partial class Cancha
 {
@@ -43,7 +43,7 @@ public partial class Cancha
 
     public virtual Ubigeo? CodigoUbigeoNavigation { get; set; }
 
-    public virtual ICollection<Disponibilidad> Disponibilidads { get; set; } = new List<Disponibilidad>();
+    public virtual ICollection<Disponibilidad> Disponibilidad { get; set; } = new List<Disponibilidad>();
 
     public virtual EstadoCancha IdEstadoCanchaNavigation { get; set; } = null!;
 
@@ -51,7 +51,7 @@ public partial class Cancha
 
     public virtual TipoCancha IdTipoCanchaNavigation { get; set; } = null!;
 
-    public virtual ICollection<ImagenCancha> ImagenCanchas { get; set; } = new List<ImagenCancha>();
+    public virtual ICollection<ImagenCancha> ImagenCancha { get; set; } = new List<ImagenCancha>();
 
-    public virtual ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
+    public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
 }

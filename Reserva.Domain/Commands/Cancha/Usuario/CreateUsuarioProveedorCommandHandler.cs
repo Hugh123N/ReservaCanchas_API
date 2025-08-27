@@ -18,7 +18,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     internal class CreateUsuarioProveedorCommandHandler : CommandHandlerBase<CreateUsuarioProveedorCommand, GetUsuarioDto>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
         private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
         private readonly IRepository<Entity.Models.AspNetRole> _RolRepository;
         private readonly IConfiguration _configuration;
@@ -31,7 +30,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
-            IRepository<Entity.Models.Usuario> UsuarioRepository,
             UserManager<Entity.Models.ApplicationUser> userManager,
             IRepository<Entity.Models.AspNetRole> RolRepository,
             IConfiguration configuration,
@@ -41,7 +39,6 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository
         ) : base(unitOfWork, mapper, mediator)
         {
-            _UsuarioRepository = UsuarioRepository;
             _UsuarioManager = userManager;
             _configuration = configuration;
             _RolRepository = RolRepository;

@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class DeleteUsuarioCommandHandler : CommandHandlerBase<DeleteUsuarioCommand>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
+        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
 
         public DeleteUsuarioCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteUsuarioCommandValidator validator,
-            IRepository<Entity.Models.Usuario> UsuarioRepository
+            IRepository<Entity.AspNetUsers> UsuarioRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _UsuarioRepository = UsuarioRepository;
@@ -23,7 +23,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
         public override async Task<ResponseDto> HandleCommand(DeleteUsuarioCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto();
-            var Usuario = await _UsuarioRepository.GetByAsync(x => x.IdUsuario == request.Id);
+            var Usuario = await _UsuarioRepository.GetByAsync(x => x.Id == request.Id);
 
             if (Usuario != null)
             {

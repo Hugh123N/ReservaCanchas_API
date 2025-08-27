@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Reserva.Entity;
+
+public partial class EstadoProveedor
+{
+    public int IdEstadoProveedor { get; set; }
+
+    public string Codigo { get; set; } = null!;
+
+    public string? Nombre { get; set; }
+
+    public bool Activo { get; set; }
+
+    public virtual ICollection<Proveedor> Proveedor { get; set; } = new List<Proveedor>();
+}

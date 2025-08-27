@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
 {
     public class GetUsuarioQueryValidator : QueryValidatorBase<GetUsuarioQuery>
     {
-        private readonly IRepository<Entity.Models.Usuario> _UsuarioRepository;
+        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
 
-        public GetUsuarioQueryValidator(IRepository<Entity.Models.Usuario> UsuarioRepository)
+        public GetUsuarioQueryValidator(IRepository<Entity.AspNetUsers> UsuarioRepository)
         {
             _UsuarioRepository = UsuarioRepository;
 
@@ -22,9 +22,9 @@ namespace Reserva.Domain.Queries.Cancha.Usuario
                 });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(GetUsuarioQuery command, int id, ValidationContext<GetUsuarioQuery> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(GetUsuarioQuery command, Guid id, ValidationContext<GetUsuarioQuery> context, CancellationToken cancellationToken)
         {
-            var exists = await _UsuarioRepository.FindAll().Where(x => x.IdUsuario == id).AnyAsync(cancellationToken);
+            var exists = await _UsuarioRepository.FindAll().Where(x => x.Id == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
             return true;
         }

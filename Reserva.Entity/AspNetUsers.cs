@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Reserva.Entity.Models;
+namespace Reserva.Entity;
 
-public partial class AspNetUser
+public partial class AspNetUsers
 {
     public Guid Id { get; set; }
 
@@ -53,23 +53,23 @@ public partial class AspNetUser
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<AspNetUserClaim> AspNetUserClaims { get; set; } = new List<AspNetUserClaim>();
+    public virtual ICollection<AspNetUserClaims> AspNetUserClaims { get; set; } = new List<AspNetUserClaims>();
 
-    public virtual ICollection<AspNetUserLogin> AspNetUserLogins { get; set; } = new List<AspNetUserLogin>();
+    public virtual ICollection<AspNetUserLogins> AspNetUserLogins { get; set; } = new List<AspNetUserLogins>();
 
     public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; } = new List<CanchaFavorita>();
 
     public virtual EstadoUsuario IdEstadoUsuarioNavigation { get; set; } = null!;
 
-    public virtual ICollection<IntentoLogin> IntentoLogins { get; set; } = new List<IntentoLogin>();
+    public virtual ICollection<IntentoLogin> IntentoLogin { get; set; } = new List<IntentoLogin>();
 
-    public virtual ICollection<Notificacion> Notificacions { get; set; } = new List<Notificacion>();
+    public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
 
-    public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
+    public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
 
     public virtual Proveedor? Proveedor { get; set; }
 
-    public virtual ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
+    public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
 
-    public virtual ICollection<AspNetRole> Roles { get; set; } = new List<AspNetRole>();
+    public virtual ICollection<AspNetRoles> Role { get; set; } = new List<AspNetRoles>();
 }
