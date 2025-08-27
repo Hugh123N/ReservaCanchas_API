@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
 {
     public class GetDisponibilidadQueryHandler : QueryHandlerBase<GetDisponibilidadQuery, GetDisponibilidadDto>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
 
         public GetDisponibilidadQueryHandler(
             IMapper mapper,
             GetDisponibilidadQueryValidator validator,
-            IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository
+            IRepository<Entity.Disponibilidad> DisponibilidadRepository
         ) : base(mapper, validator)
         {
             _DisponibilidadRepository = DisponibilidadRepository;

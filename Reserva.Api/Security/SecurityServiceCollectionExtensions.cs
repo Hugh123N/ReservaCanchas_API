@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Reserva.Entity;
-using Reserva.Entity.Models;
 using Reserva.Repository.Security;
 using System.Text;
 
@@ -54,7 +53,7 @@ namespace Reserva.Api.Security
 
             #region Identity
             services
-                .AddIdentity<Entity.Models.ApplicationUser, Entity.Models.ApplicationRole>(config =>
+                .AddIdentity<Entity.ApplicationUser, Entity.ApplicationRole>(config =>
                 {
                     //config.Tokens.PasswordResetTokenProvider = ResetPasswordTokenProvider.ProviderKey;
                     config.SignIn.RequireConfirmedEmail = false;

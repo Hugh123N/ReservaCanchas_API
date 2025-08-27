@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
 {
     public class UpdateProveedorCommandValidator : CommandValidatorBase<UpdateProveedorCommand>
     {
-        private readonly IRepository<Entity.Models.Proveedor> _repositoryBase;
-        public UpdateProveedorCommandValidator(IRepository<Entity.Models.Proveedor> repositoryBase)
+        private readonly IRepository<Entity.Proveedor> _repositoryBase;
+        public UpdateProveedorCommandValidator(IRepository<Entity.Proveedor> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

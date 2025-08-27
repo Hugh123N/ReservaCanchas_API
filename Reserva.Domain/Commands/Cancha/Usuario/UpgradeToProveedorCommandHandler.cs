@@ -5,9 +5,10 @@ using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Repository.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,15 +21,15 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
     {
         private readonly UserManager<ApplicationUser> _UsuarioManager;
         private readonly IRepository<ApplicationRole> _RolRepository;
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
-        private readonly Entity.Models.ReservaCanchasContext _dbContext;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly ReservaCanchasContext _dbContext;
 
         public UpgradeToProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UserManager<ApplicationUser> userManager,
             IRepository<ApplicationRole> rolRepository,
-            IRepository<Entity.Models.Proveedor> proveedorRepository,
+            IRepository<Entity.Proveedor> proveedorRepository,
             ReservaCanchasContext dbContext
         ) : base(unitOfWork, mapper)
         {
@@ -66,7 +67,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                     return response;
                 }
 
-                var proveedor = _mapper?.Map<Entity.Models.Proveedor>(request.UpgradeDto);
+                var proveedor = _mapper?.Map<Entity.Proveedor>(request.UpgradeDto);
                 if (proveedor == null)
                 {
                     response.AddErrorResult("No se pudo mapear la información del proveedor.");

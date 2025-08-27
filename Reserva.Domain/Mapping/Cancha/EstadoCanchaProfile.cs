@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.EstadoCancha
     {
         public EstadoCanchaProfile()
         {
-            CreateMap<Entity.Models.EstadoCancha, EstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, EstadoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoCancha, CreateEstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, CreateEstadoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoCancha, UpdateEstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, UpdateEstadoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoCancha, GetEstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, GetEstadoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoCancha, ListEstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, ListEstadoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoCancha, SelectComboEstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, SelectComboEstadoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoCancha, SearchEstadoCanchaDto>()
+            CreateMap<Entity.EstadoCancha, SearchEstadoCanchaDto>()
                 .ReverseMap();
         }
     }

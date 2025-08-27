@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Org.BouncyCastle.Crypto.Generators;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using System;

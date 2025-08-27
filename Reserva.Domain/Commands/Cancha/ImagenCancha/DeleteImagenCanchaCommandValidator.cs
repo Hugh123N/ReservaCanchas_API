@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.ImagenCancha
 {
     public class DeleteImagenCanchaCommandValidator : CommandValidatorBase<DeleteImagenCanchaCommand>
     {
-        private readonly IRepository<Entity.Models.ImagenCancha> _repositoryBase;
-        public DeleteImagenCanchaCommandValidator(IRepository<Entity.Models.ImagenCancha> repositoryBase)
+        private readonly IRepository<Entity.ImagenCancha> _repositoryBase;
+        public DeleteImagenCanchaCommandValidator(IRepository<Entity.ImagenCancha> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

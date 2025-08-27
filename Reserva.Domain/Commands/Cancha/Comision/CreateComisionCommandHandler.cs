@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Comision
 {
     public class CreateComisionCommandHandler : CommandHandlerBase<CreateComisionCommand, GetComisionDto>
     {
-        private readonly IRepository<Entity.Models.Comision> _ComisionRepository;
+        private readonly IRepository<Entity.Comision> _ComisionRepository;
 
         public CreateComisionCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateComisionCommandValidator validator,
-            IRepository<Entity.Models.Comision> ComisionRepository
+            IRepository<Entity.Comision> ComisionRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ComisionRepository = ComisionRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Comision
         {
             var response = new ResponseDto<GetComisionDto>();
 
-            var Comision = _mapper?.Map<Entity.Models.Comision>(request.CreateDto);
+            var Comision = _mapper?.Map<Entity.Comision>(request.CreateDto);
 
             if (Comision != null)
             {

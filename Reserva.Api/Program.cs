@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Reserva.Api.Security;
 using Reserva.Application.Extensions;
 using Reserva.Domain.Extensions;
-using Reserva.Entity.Models;
+using Reserva.Entity;
+using Reserva.Repository.Data;
 using Reserva.Repository.Extensions;
 using Reserva.Repository.Security;
 
@@ -15,6 +16,14 @@ var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim(
 
 builder.Services.AddDbContext<ReservaCanchasContext>(options =>
     options.UseSqlServer(connectionString));
+
+// Cors
+builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
+{
+    builder.WithOrigins(configuration.GetValue<string>("AllowedHosts"))
+           .AllowAnyMethod()
+           .AllowAnyHeader();
+}));
 
 // Controllers
 builder.Services.AddControllers();

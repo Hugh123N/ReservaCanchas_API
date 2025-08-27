@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
-namespace Reserva.Entity.Models
+namespace Reserva.Entity
 {
     public class ApplicationUser : IdentityUser<Guid>
     {

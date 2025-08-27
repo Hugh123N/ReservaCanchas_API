@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.EstadoPago
     {
         public EstadoPagoProfile()
         {
-            CreateMap<Entity.Models.EstadoPago, EstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, EstadoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoPago, CreateEstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, CreateEstadoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoPago, UpdateEstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, UpdateEstadoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoPago, GetEstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, GetEstadoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoPago, ListEstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, ListEstadoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoPago, SelectComboEstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, SelectComboEstadoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoPago, SearchEstadoPagoDto>()
+            CreateMap<Entity.EstadoPago, SearchEstadoPagoDto>()
                 .ReverseMap();
         }
     }

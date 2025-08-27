@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Notificacion
 {
     public class CreateNotificacionCommandHandler : CommandHandlerBase<CreateNotificacionCommand, GetNotificacionDto>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _NotificacionRepository;
+        private readonly IRepository<Entity.Notificacion> _NotificacionRepository;
 
         public CreateNotificacionCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateNotificacionCommandValidator validator,
-            IRepository<Entity.Models.Notificacion> NotificacionRepository
+            IRepository<Entity.Notificacion> NotificacionRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _NotificacionRepository = NotificacionRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Notificacion
         {
             var response = new ResponseDto<GetNotificacionDto>();
 
-            var Notificacion = _mapper?.Map<Entity.Models.Notificacion>(request.CreateDto);
+            var Notificacion = _mapper?.Map<Entity.Notificacion>(request.CreateDto);
 
             if (Notificacion != null)
             {

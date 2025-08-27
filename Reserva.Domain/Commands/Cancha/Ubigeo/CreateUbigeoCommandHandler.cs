@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Ubigeo
 {
     public class CreateUbigeoCommandHandler : CommandHandlerBase<CreateUbigeoCommand, GetUbigeoDto>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _UbigeoRepository;
+        private readonly IRepository<Entity.Ubigeo> _UbigeoRepository;
 
         public CreateUbigeoCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateUbigeoCommandValidator validator,
-            IRepository<Entity.Models.Ubigeo> UbigeoRepository
+            IRepository<Entity.Ubigeo> UbigeoRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _UbigeoRepository = UbigeoRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Ubigeo
         {
             var response = new ResponseDto<GetUbigeoDto>();
 
-            var Ubigeo = _mapper?.Map<Entity.Models.Ubigeo>(request.CreateDto);
+            var Ubigeo = _mapper?.Map<Entity.Ubigeo>(request.CreateDto);
 
             if (Ubigeo != null)
             {

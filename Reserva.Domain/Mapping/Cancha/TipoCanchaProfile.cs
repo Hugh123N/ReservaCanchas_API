@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.TipoCancha
     {
         public TipoCanchaProfile()
         {
-            CreateMap<Entity.Models.TipoCancha, TipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, TipoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoCancha, CreateTipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, CreateTipoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoCancha, UpdateTipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, UpdateTipoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoCancha, GetTipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, GetTipoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoCancha, ListTipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, ListTipoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoCancha, SelectComboTipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, SelectComboTipoCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoCancha, SearchTipoCanchaDto>()
+            CreateMap<Entity.TipoCancha, SearchTipoCanchaDto>()
                 .ReverseMap();
         }
     }

@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.TipoProveedor
 {
     public class UpdateTipoProveedorCommandHandler : CommandHandlerBase<UpdateTipoProveedorCommand, GetTipoProveedorDto>
     {
-        private readonly IRepository<Entity.Models.TipoProveedor> _TipoProveedorRepository;
+        private readonly IRepository<Entity.TipoProveedor> _TipoProveedorRepository;
 
         public UpdateTipoProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateTipoProveedorCommandValidator validator,
-            IRepository<Entity.Models.TipoProveedor> TipoProveedorRepository
+            IRepository<Entity.TipoProveedor> TipoProveedorRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _TipoProveedorRepository = TipoProveedorRepository;

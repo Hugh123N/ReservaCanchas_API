@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.Pago
 {
     public class GetPagoQueryHandler : QueryHandlerBase<GetPagoQuery, GetPagoDto>
     {
-        private readonly IRepository<Entity.Models.Pago> _PagoRepository;
+        private readonly IRepository<Entity.Pago> _PagoRepository;
 
         public GetPagoQueryHandler(
             IMapper mapper,
             GetPagoQueryValidator validator,
-            IRepository<Entity.Models.Pago> PagoRepository
+            IRepository<Entity.Pago> PagoRepository
         ) : base(mapper, validator)
         {
             _PagoRepository = PagoRepository;

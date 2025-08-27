@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Reserva.Domain.Commands.Base;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 
 namespace Reserva.Domain.Commands.Cancha.Usuario
 {

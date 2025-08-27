@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.GananciaProveedor
 {
     public class DeleteGananciaProveedorCommandHandler : CommandHandlerBase<DeleteGananciaProveedorCommand>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _GananciaProveedorRepository;
+        private readonly IRepository<Entity.GananciaProveedor> _GananciaProveedorRepository;
 
         public DeleteGananciaProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteGananciaProveedorCommandValidator validator,
-            IRepository<Entity.Models.GananciaProveedor> GananciaProveedorRepository
+            IRepository<Entity.GananciaProveedor> GananciaProveedorRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _GananciaProveedorRepository = GananciaProveedorRepository;

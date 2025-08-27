@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
 {
     public class SelectComboDiaSemanaQueryHandler : QueryHandlerBase<SelectComboDiaSemanaQuery, IEnumerable<SelectComboDiaSemanaDto>>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _repository;
+        private readonly IRepository<Entity.DiaSemana> _repository;
 
         public SelectComboDiaSemanaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.DiaSemana> repository
+            IRepository<Entity.DiaSemana> repository
         ) : base(mapper)
         {
             _repository = repository;

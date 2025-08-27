@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using System;
 using System.Collections.Generic;
@@ -16,12 +16,12 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository<ApplicationRole> _rolRepository;
-        private readonly IRepository<Entity.Models.Proveedor> _proveedorRepository;
+        private readonly IRepository<Entity.Proveedor> _proveedorRepository;
 
         public UpgradeToProveedorCommandValidator(
             UserManager<ApplicationUser> userManager,
             IRepository<ApplicationRole> rolRepository,
-            IRepository<Entity.Models.Proveedor> proveedorRepository)
+            IRepository<Entity.Proveedor> proveedorRepository)
         {
             _userManager = userManager;
             _rolRepository = rolRepository;

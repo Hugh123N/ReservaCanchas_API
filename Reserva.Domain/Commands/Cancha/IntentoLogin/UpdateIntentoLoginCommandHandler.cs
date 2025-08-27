@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.IntentoLogin
 {
     public class UpdateIntentoLoginCommandHandler : CommandHandlerBase<UpdateIntentoLoginCommand, GetIntentoLoginDto>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _IntentoLoginRepository;
+        private readonly IRepository<Entity.IntentoLogin> _IntentoLoginRepository;
 
         public UpdateIntentoLoginCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateIntentoLoginCommandValidator validator,
-            IRepository<Entity.Models.IntentoLogin> IntentoLoginRepository
+            IRepository<Entity.IntentoLogin> IntentoLoginRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _IntentoLoginRepository = IntentoLoginRepository;

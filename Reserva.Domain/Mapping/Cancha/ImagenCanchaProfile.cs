@@ -7,26 +7,26 @@ namespace Reserva.Domain.Mapping.ImagenCancha
     {
         public ImagenCanchaProfile()
         {
-            CreateMap<Entity.Models.ImagenCancha, ImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, ImagenCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ImagenCancha, CreateImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, CreateImagenCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ImagenCancha, UpdateImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, UpdateImagenCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ImagenCancha, GetImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, GetImagenCanchaDto>()
                 //.ForMember(x => x.Cancha, opt => opt.MapFrom(x => x.IdCanchaNavigation))
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ImagenCancha, ListImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, ListImagenCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ImagenCancha, SelectComboImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, SelectComboImagenCanchaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ImagenCancha, SearchImagenCanchaDto>()
+            CreateMap<Entity.ImagenCancha, SearchImagenCanchaDto>()
                 .ReverseMap();
         }
     }

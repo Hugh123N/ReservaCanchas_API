@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
 {
     public class SelectDiaSemanaQueryHandler : SearchQueryHandlerBase<SelectDiaSemanaQuery, SelectDiaSemanaFilterDto, SelectDiaSemanaDto>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _DiaSemanaRepository;
+        private readonly IRepository<Entity.DiaSemana> _DiaSemanaRepository;
 
         public SelectDiaSemanaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.DiaSemana> DiaSemanaRepository
+            IRepository<Entity.DiaSemana> DiaSemanaRepository
         ) : base(mapper)
         {
             _DiaSemanaRepository = DiaSemanaRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
         {
             var response = new ResponseDto<SearchResultDto<SelectDiaSemanaDto>>();
 
-            Expression<Func<Entity.Models.DiaSemana, bool>> filter = x => true;
+            Expression<Func<Entity.DiaSemana, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
             if (filters?.IdDiaSemana.HasValue == true)
                 filter = filter.And(x => x.IdDiaSemana == filters.IdDiaSemana);
 
-            var sorts = new List<SortExpression<Entity.Models.DiaSemana>>();
+            var sorts = new List<SortExpression<Entity.DiaSemana>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.DiaSemana>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.DiaSemana>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

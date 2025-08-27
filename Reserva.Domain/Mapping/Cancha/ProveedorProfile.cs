@@ -8,29 +8,29 @@ namespace Reserva.Domain.Mapping.Proveedor
     {
         public ProveedorProfile()
         {
-            CreateMap<Entity.Models.Proveedor, ProveedorDto>()
+            CreateMap<Entity.Proveedor, ProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Proveedor, CreateProveedorDto>()
+            CreateMap<Entity.Proveedor, CreateProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Proveedor, UpdateProveedorDto>()
+            CreateMap<Entity.Proveedor, UpdateProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Proveedor, GetProveedorDto>()
+            CreateMap<Entity.Proveedor, GetProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Proveedor, ListProveedorDto>()
+            CreateMap<Entity.Proveedor, ListProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Proveedor, SelectComboProveedorDto>()
+            CreateMap<Entity.Proveedor, SelectComboProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Proveedor, SearchProveedorDto>()
+            CreateMap<Entity.Proveedor, SearchProveedorDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Proveedor, CreateUsuarioProveedorDto>()
+            CreateMap<Entity.Proveedor, CreateUsuarioProveedorDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.Proveedor, UpgradeToProveedorDto>()
+            CreateMap<Entity.Proveedor, UpgradeToProveedorDto>()
                 .ReverseMap();
         }
     }

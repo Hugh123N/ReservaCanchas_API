@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.Notificacion
 {
     public class ListNotificacionQueryHandler : QueryHandlerBase<ListNotificacionQuery, IEnumerable<ListNotificacionDto>>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _repository;
+        private readonly IRepository<Entity.Notificacion> _repository;
 
         public ListNotificacionQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Notificacion> repository
+            IRepository<Entity.Notificacion> repository
         ) : base(mapper)
         {
             _repository = repository;

@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 
 namespace Reserva.Entity
 {
-    public class SecurityDbContext : IdentityDbContext<Models.ApplicationUser, Models.ApplicationRole, Guid>
+    public class SecurityDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public SecurityDbContext(DbContextOptions<SecurityDbContext> options) : base(options)
         {

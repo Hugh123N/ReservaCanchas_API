@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.DetallePago
 {
     public class UpdateDetallePagoCommandValidator : CommandValidatorBase<UpdateDetallePagoCommand>
     {
-        private readonly IRepository<Entity.Models.DetallePago> _repositoryBase;
-        public UpdateDetallePagoCommandValidator(IRepository<Entity.Models.DetallePago> repositoryBase)
+        private readonly IRepository<Entity.DetallePago> _repositoryBase;
+        public UpdateDetallePagoCommandValidator(IRepository<Entity.DetallePago> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

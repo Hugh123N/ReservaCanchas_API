@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.CanchaFavorita
     {
         public CanchaFavoritaProfile()
         {
-            CreateMap<Entity.Models.CanchaFavorita, CanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, CanchaFavoritaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.CanchaFavorita, CreateCanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, CreateCanchaFavoritaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.CanchaFavorita, UpdateCanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, UpdateCanchaFavoritaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.CanchaFavorita, GetCanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, GetCanchaFavoritaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.CanchaFavorita, ListCanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, ListCanchaFavoritaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.CanchaFavorita, SelectComboCanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, SelectComboCanchaFavoritaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.CanchaFavorita, SearchCanchaFavoritaDto>()
+            CreateMap<Entity.CanchaFavorita, SearchCanchaFavoritaDto>()
                 .ReverseMap();
         }
     }

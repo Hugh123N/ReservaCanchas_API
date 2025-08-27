@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.TipoProveedor
     {
         public TipoProveedorProfile()
         {
-            CreateMap<Entity.Models.TipoProveedor, TipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, TipoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoProveedor, CreateTipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, CreateTipoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoProveedor, UpdateTipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, UpdateTipoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoProveedor, GetTipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, GetTipoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoProveedor, ListTipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, ListTipoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoProveedor, SelectComboTipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, SelectComboTipoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.TipoProveedor, SearchTipoProveedorDto>()
+            CreateMap<Entity.TipoProveedor, SearchTipoProveedorDto>()
                 .ReverseMap();
         }
     }

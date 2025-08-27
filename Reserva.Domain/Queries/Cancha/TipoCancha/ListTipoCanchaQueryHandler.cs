@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.TipoCancha
 {
     public class ListTipoCanchaQueryHandler : QueryHandlerBase<ListTipoCanchaQuery, IEnumerable<ListTipoCanchaDto>>
     {
-        private readonly IRepository<Entity.Models.TipoCancha> _repository;
+        private readonly IRepository<Entity.TipoCancha> _repository;
 
         public ListTipoCanchaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.TipoCancha> repository
+            IRepository<Entity.TipoCancha> repository
         ) : base(mapper)
         {
             _repository = repository;

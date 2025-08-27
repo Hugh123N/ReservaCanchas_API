@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
 {
     public class ListDiaSemanaQueryHandler : QueryHandlerBase<ListDiaSemanaQuery, IEnumerable<ListDiaSemanaDto>>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _repository;
+        private readonly IRepository<Entity.DiaSemana> _repository;
 
         public ListDiaSemanaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.DiaSemana> repository
+            IRepository<Entity.DiaSemana> repository
         ) : base(mapper)
         {
             _repository = repository;

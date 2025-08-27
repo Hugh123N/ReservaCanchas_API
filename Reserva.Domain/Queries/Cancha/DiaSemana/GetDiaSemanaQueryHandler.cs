@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
 {
     public class GetDiaSemanaQueryHandler : QueryHandlerBase<GetDiaSemanaQuery, GetDiaSemanaDto>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _DiaSemanaRepository;
+        private readonly IRepository<Entity.DiaSemana> _DiaSemanaRepository;
 
         public GetDiaSemanaQueryHandler(
             IMapper mapper,
             GetDiaSemanaQueryValidator validator,
-            IRepository<Entity.Models.DiaSemana> DiaSemanaRepository
+            IRepository<Entity.DiaSemana> DiaSemanaRepository
         ) : base(mapper, validator)
         {
             _DiaSemanaRepository = DiaSemanaRepository;

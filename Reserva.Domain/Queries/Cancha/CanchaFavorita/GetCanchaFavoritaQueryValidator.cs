@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.CanchaFavorita
 {
     public class GetCanchaFavoritaQueryValidator : QueryValidatorBase<GetCanchaFavoritaQuery>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _CanchaFavoritaRepository;
+        private readonly IRepository<Entity.CanchaFavorita> _CanchaFavoritaRepository;
 
-        public GetCanchaFavoritaQueryValidator(IRepository<Entity.Models.CanchaFavorita> CanchaFavoritaRepository)
+        public GetCanchaFavoritaQueryValidator(IRepository<Entity.CanchaFavorita> CanchaFavoritaRepository)
         {
             _CanchaFavoritaRepository = CanchaFavoritaRepository;
 

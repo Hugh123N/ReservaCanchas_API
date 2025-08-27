@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.IntentoLogin
 {
     public class GetIntentoLoginQueryHandler : QueryHandlerBase<GetIntentoLoginQuery, GetIntentoLoginDto>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _IntentoLoginRepository;
+        private readonly IRepository<Entity.IntentoLogin> _IntentoLoginRepository;
 
         public GetIntentoLoginQueryHandler(
             IMapper mapper,
             GetIntentoLoginQueryValidator validator,
-            IRepository<Entity.Models.IntentoLogin> IntentoLoginRepository
+            IRepository<Entity.IntentoLogin> IntentoLoginRepository
         ) : base(mapper, validator)
         {
             _IntentoLoginRepository = IntentoLoginRepository;

@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Reserva
 {
     public class UpdateReservaCommandHandler : CommandHandlerBase<UpdateReservaCommand, GetReservaDto>
     {
-        private readonly IRepository<Entity.Models.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.Reserva> _ReservaRepository;
 
         public UpdateReservaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateReservaCommandValidator validator,
-            IRepository<Entity.Models.Reserva> ReservaRepository
+            IRepository<Entity.Reserva> ReservaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _ReservaRepository = ReservaRepository;

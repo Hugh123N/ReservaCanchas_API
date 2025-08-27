@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.GananciaProveedor
     {
         public GananciaProveedorProfile()
         {
-            CreateMap<Entity.Models.GananciaProveedor, GananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, GananciaProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.GananciaProveedor, CreateGananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, CreateGananciaProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.GananciaProveedor, UpdateGananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, UpdateGananciaProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.GananciaProveedor, GetGananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, GetGananciaProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.GananciaProveedor, ListGananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, ListGananciaProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.GananciaProveedor, SelectComboGananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, SelectComboGananciaProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.GananciaProveedor, SearchGananciaProveedorDto>()
+            CreateMap<Entity.GananciaProveedor, SearchGananciaProveedorDto>()
                 .ReverseMap();
         }
     }

@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class UpdateUsuarioCommandValidator : CommandValidatorBase<UpdateUsuarioCommand>
     {
-        private readonly IRepository<Entity.Models.AspNetUser> _repositoryBase;
-        public UpdateUsuarioCommandValidator(IRepository<Entity.Models.AspNetUser> repositoryBase)
+        private readonly IRepository<Entity.AspNetUsers> _repositoryBase;
+        public UpdateUsuarioCommandValidator(IRepository<Entity.AspNetUsers> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

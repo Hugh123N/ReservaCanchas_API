@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.Notificacion
     {
         public NotificacionProfile()
         {
-            CreateMap<Entity.Models.Notificacion, NotificacionDto>()
+            CreateMap<Entity.Notificacion, NotificacionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Notificacion, CreateNotificacionDto>()
+            CreateMap<Entity.Notificacion, CreateNotificacionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Notificacion, UpdateNotificacionDto>()
+            CreateMap<Entity.Notificacion, UpdateNotificacionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Notificacion, GetNotificacionDto>()
+            CreateMap<Entity.Notificacion, GetNotificacionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Notificacion, ListNotificacionDto>()
+            CreateMap<Entity.Notificacion, ListNotificacionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Notificacion, SelectComboNotificacionDto>()
+            CreateMap<Entity.Notificacion, SelectComboNotificacionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Notificacion, SearchNotificacionDto>()
+            CreateMap<Entity.Notificacion, SearchNotificacionDto>()
                 .ReverseMap();
         }
     }

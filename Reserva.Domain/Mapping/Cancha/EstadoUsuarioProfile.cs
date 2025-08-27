@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.EstadoUsuario
     {
         public EstadoUsuarioProfile()
         {
-            CreateMap<Entity.Models.EstadoUsuario, EstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, EstadoUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoUsuario, CreateEstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, CreateEstadoUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoUsuario, UpdateEstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, UpdateEstadoUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoUsuario, GetEstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, GetEstadoUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoUsuario, ListEstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, ListEstadoUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoUsuario, SelectComboEstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, SelectComboEstadoUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoUsuario, SearchEstadoUsuarioDto>()
+            CreateMap<Entity.EstadoUsuario, SearchEstadoUsuarioDto>()
                 .ReverseMap();
         }
     }

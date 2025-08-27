@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.Comision
 {
     public class ListComisionQueryHandler : QueryHandlerBase<ListComisionQuery, IEnumerable<ListComisionDto>>
     {
-        private readonly IRepository<Entity.Models.Comision> _repository;
+        private readonly IRepository<Entity.Comision> _repository;
 
         public ListComisionQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Comision> repository
+            IRepository<Entity.Comision> repository
         ) : base(mapper)
         {
             _repository = repository;

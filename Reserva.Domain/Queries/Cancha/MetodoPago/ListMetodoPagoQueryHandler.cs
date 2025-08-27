@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.MetodoPago
 {
     public class ListMetodoPagoQueryHandler : QueryHandlerBase<ListMetodoPagoQuery, IEnumerable<ListMetodoPagoDto>>
     {
-        private readonly IRepository<Entity.Models.MetodoPago> _repository;
+        private readonly IRepository<Entity.MetodoPago> _repository;
 
         public ListMetodoPagoQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.MetodoPago> repository
+            IRepository<Entity.MetodoPago> repository
         ) : base(mapper)
         {
             _repository = repository;

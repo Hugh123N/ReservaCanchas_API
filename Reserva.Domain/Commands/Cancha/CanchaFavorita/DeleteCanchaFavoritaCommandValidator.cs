@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.CanchaFavorita
 {
     public class DeleteCanchaFavoritaCommandValidator : CommandValidatorBase<DeleteCanchaFavoritaCommand>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _repositoryBase;
-        public DeleteCanchaFavoritaCommandValidator(IRepository<Entity.Models.CanchaFavorita> repositoryBase)
+        private readonly IRepository<Entity.CanchaFavorita> _repositoryBase;
+        public DeleteCanchaFavoritaCommandValidator(IRepository<Entity.CanchaFavorita> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

@@ -7,27 +7,27 @@ namespace Reserva.Domain.Mapping.DiaSemana
     {
         public DiaSemanaProfile()
         {
-            CreateMap<Entity.Models.DiaSemana, DiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, DiaSemanaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.DiaSemana, CreateDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, CreateDiaSemanaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.DiaSemana, UpdateDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, UpdateDiaSemanaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.DiaSemana, GetDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, GetDiaSemanaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.DiaSemana, ListDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, ListDiaSemanaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.DiaSemana, SelectComboDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, SelectComboDiaSemanaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.DiaSemana, SearchDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, SearchDiaSemanaDto>()
                 .ReverseMap();
-            CreateMap<Entity.Models.DiaSemana, SelectDiaSemanaDto>()
+            CreateMap<Entity.DiaSemana, SelectDiaSemanaDto>()
                 .ReverseMap();
         }
     }

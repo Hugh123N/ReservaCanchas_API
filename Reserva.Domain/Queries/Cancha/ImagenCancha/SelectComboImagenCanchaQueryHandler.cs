@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.ImagenCancha
 {
     public class SelectComboImagenCanchaQueryHandler : QueryHandlerBase<SelectComboImagenCanchaQuery, IEnumerable<SelectComboImagenCanchaDto>>
     {
-        private readonly IRepository<Entity.Models.ImagenCancha> _repository;
+        private readonly IRepository<Entity.ImagenCancha> _repository;
 
         public SelectComboImagenCanchaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.ImagenCancha> repository
+            IRepository<Entity.ImagenCancha> repository
         ) : base(mapper)
         {
             _repository = repository;

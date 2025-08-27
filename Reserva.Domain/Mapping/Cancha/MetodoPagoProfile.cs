@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.MetodoPago
     {
         public MetodoPagoProfile()
         {
-            CreateMap<Entity.Models.MetodoPago, MetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, MetodoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.MetodoPago, CreateMetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, CreateMetodoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.MetodoPago, UpdateMetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, UpdateMetodoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.MetodoPago, GetMetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, GetMetodoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.MetodoPago, ListMetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, ListMetodoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.MetodoPago, SelectComboMetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, SelectComboMetodoPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.MetodoPago, SearchMetodoPagoDto>()
+            CreateMap<Entity.MetodoPago, SearchMetodoPagoDto>()
                 .ReverseMap();
         }
     }

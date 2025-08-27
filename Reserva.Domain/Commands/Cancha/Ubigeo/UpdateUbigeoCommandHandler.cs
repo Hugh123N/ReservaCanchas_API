@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Ubigeo
 {
     public class UpdateUbigeoCommandHandler : CommandHandlerBase<UpdateUbigeoCommand, GetUbigeoDto>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _UbigeoRepository;
+        private readonly IRepository<Entity.Ubigeo> _UbigeoRepository;
 
         public UpdateUbigeoCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateUbigeoCommandValidator validator,
-            IRepository<Entity.Models.Ubigeo> UbigeoRepository
+            IRepository<Entity.Ubigeo> UbigeoRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _UbigeoRepository = UbigeoRepository;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Reserva.Domain.Commands.LoginExternalProvider
 {
-    public class ExternalProviderCommand : CommandBase<Entity.Models.ApplicationUser>
+    public class ExternalProviderCommand : CommandBase<Entity.ApplicationUser>
     {
         public ExternalProviderCommand(CreateAndLoginDto createAndLoginDto) => CreateDto = createAndLoginDto;
         public CreateAndLoginDto CreateDto { get; set; }

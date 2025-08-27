@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
 {
     public class GetUbigeoQueryValidator : QueryValidatorBase<GetUbigeoQuery>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _UbigeoRepository;
+        private readonly IRepository<Entity.Ubigeo> _UbigeoRepository;
 
-        public GetUbigeoQueryValidator(IRepository<Entity.Models.Ubigeo> UbigeoRepository)
+        public GetUbigeoQueryValidator(IRepository<Entity.Ubigeo> UbigeoRepository)
         {
             _UbigeoRepository = UbigeoRepository;
 

@@ -7,22 +7,22 @@ namespace Reserva.Domain.Mapping.IntentoLogin
     {
         public IntentoLoginProfile()
         {
-            CreateMap<Entity.Models.IntentoLogin, IntentoLoginDto>()
+            CreateMap<Entity.IntentoLogin, IntentoLoginDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.IntentoLogin, CreateIntentoLoginDto>()
+            CreateMap<Entity.IntentoLogin, CreateIntentoLoginDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.IntentoLogin, UpdateIntentoLoginDto>()
+            CreateMap<Entity.IntentoLogin, UpdateIntentoLoginDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.IntentoLogin, GetIntentoLoginDto>()
+            CreateMap<Entity.IntentoLogin, GetIntentoLoginDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.IntentoLogin, ListIntentoLoginDto>()
+            CreateMap<Entity.IntentoLogin, ListIntentoLoginDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.IntentoLogin, SearchIntentoLoginDto>()
+            CreateMap<Entity.IntentoLogin, SearchIntentoLoginDto>()
                 .ReverseMap();
         }
     }

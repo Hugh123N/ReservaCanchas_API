@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.CanchaFavorita
 {
     public class GetCanchaFavoritaQueryHandler : QueryHandlerBase<GetCanchaFavoritaQuery, GetCanchaFavoritaDto>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _CanchaFavoritaRepository;
+        private readonly IRepository<Entity.CanchaFavorita> _CanchaFavoritaRepository;
 
         public GetCanchaFavoritaQueryHandler(
             IMapper mapper,
             GetCanchaFavoritaQueryValidator validator,
-            IRepository<Entity.Models.CanchaFavorita> CanchaFavoritaRepository
+            IRepository<Entity.CanchaFavorita> CanchaFavoritaRepository
         ) : base(mapper, validator)
         {
             _CanchaFavoritaRepository = CanchaFavoritaRepository;

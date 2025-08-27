@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.ImagenCancha
 {
     public class DeleteImagenCanchaCommandHandler : CommandHandlerBase<DeleteImagenCanchaCommand>
     {
-        private readonly IRepository<Entity.Models.ImagenCancha> _ImagenCanchaRepository;
+        private readonly IRepository<Entity.ImagenCancha> _ImagenCanchaRepository;
 
         public DeleteImagenCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteImagenCanchaCommandValidator validator,
-            IRepository<Entity.Models.ImagenCancha> ImagenCanchaRepository
+            IRepository<Entity.ImagenCancha> ImagenCanchaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _ImagenCanchaRepository = ImagenCanchaRepository;

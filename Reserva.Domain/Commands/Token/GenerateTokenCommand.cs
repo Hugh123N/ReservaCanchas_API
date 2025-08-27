@@ -1,7 +1,7 @@
 ﻿using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Token;
 using Reserva.Entity;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 
 namespace Reserva.Domain.Commands.Token
 {

@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Notificacion
 {
     public class DeleteNotificacionCommandHandler : CommandHandlerBase<DeleteNotificacionCommand>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _NotificacionRepository;
+        private readonly IRepository<Entity.Notificacion> _NotificacionRepository;
 
         public DeleteNotificacionCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteNotificacionCommandValidator validator,
-            IRepository<Entity.Models.Notificacion> NotificacionRepository
+            IRepository<Entity.Notificacion> NotificacionRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _NotificacionRepository = NotificacionRepository;

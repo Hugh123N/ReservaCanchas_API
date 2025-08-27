@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
 {
     public class UpdateCanchaCommandValidator : CommandValidatorBase<UpdateCanchaCommand>
     {
-        private readonly IRepository<Entity.Models.Cancha> _repositoryBase;
-        public UpdateCanchaCommandValidator(IRepository<Entity.Models.Cancha> repositoryBase)
+        private readonly IRepository<Entity.Cancha> _repositoryBase;
+        public UpdateCanchaCommandValidator(IRepository<Entity.Cancha> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

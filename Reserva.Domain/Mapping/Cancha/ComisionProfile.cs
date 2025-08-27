@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.Comision
     {
         public ComisionProfile()
         {
-            CreateMap<Entity.Models.Comision, ComisionDto>()
+            CreateMap<Entity.Comision, ComisionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Comision, CreateComisionDto>()
+            CreateMap<Entity.Comision, CreateComisionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Comision, UpdateComisionDto>()
+            CreateMap<Entity.Comision, UpdateComisionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Comision, GetComisionDto>()
+            CreateMap<Entity.Comision, GetComisionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Comision, ListComisionDto>()
+            CreateMap<Entity.Comision, ListComisionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Comision, SelectComboComisionDto>()
+            CreateMap<Entity.Comision, SelectComboComisionDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Comision, SearchComisionDto>()
+            CreateMap<Entity.Comision, SearchComisionDto>()
                 .ReverseMap();
         }
     }

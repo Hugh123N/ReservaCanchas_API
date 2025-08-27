@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.CanchaFavorita
 {
     public class UpdateCanchaFavoritaCommandValidator : CommandValidatorBase<UpdateCanchaFavoritaCommand>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _repositoryBase;
-        public UpdateCanchaFavoritaCommandValidator(IRepository<Entity.Models.CanchaFavorita> repositoryBase)
+        private readonly IRepository<Entity.CanchaFavorita> _repositoryBase;
+        public UpdateCanchaFavoritaCommandValidator(IRepository<Entity.CanchaFavorita> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

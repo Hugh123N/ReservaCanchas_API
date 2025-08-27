@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.DiaSemana
 {
     public class DeleteDiaSemanaCommandValidator : CommandValidatorBase<DeleteDiaSemanaCommand>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _repositoryBase;
-        public DeleteDiaSemanaCommandValidator(IRepository<Entity.Models.DiaSemana> repositoryBase)
+        private readonly IRepository<Entity.DiaSemana> _repositoryBase;
+        public DeleteDiaSemanaCommandValidator(IRepository<Entity.DiaSemana> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

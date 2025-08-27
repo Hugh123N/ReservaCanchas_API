@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
 {
     public class GetDisponibilidadQueryValidator : QueryValidatorBase<GetDisponibilidadQuery>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
 
-        public GetDisponibilidadQueryValidator(IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository)
+        public GetDisponibilidadQueryValidator(IRepository<Entity.Disponibilidad> DisponibilidadRepository)
         {
             _DisponibilidadRepository = DisponibilidadRepository;
 

@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.ImagenCancha
 {
     public class CreateImagenCanchaCommandHandler : CommandHandlerBase<CreateImagenCanchaCommand, GetImagenCanchaDto>
     {
-        private readonly IRepository<Entity.Models.ImagenCancha> _ImagenCanchaRepository;
+        private readonly IRepository<Entity.ImagenCancha> _ImagenCanchaRepository;
 
         public CreateImagenCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateImagenCanchaCommandValidator validator,
-            IRepository<Entity.Models.ImagenCancha> ImagenCanchaRepository
+            IRepository<Entity.ImagenCancha> ImagenCanchaRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ImagenCanchaRepository = ImagenCanchaRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.ImagenCancha
         {
             var response = new ResponseDto<GetImagenCanchaDto>();
 
-            var ImagenCancha = _mapper?.Map<Entity.Models.ImagenCancha>(request.CreateDto);
+            var ImagenCancha = _mapper?.Map<Entity.ImagenCancha>(request.CreateDto);
 
             if (ImagenCancha != null)
             {

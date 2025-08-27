@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Reserva
 {
     public class GetReservaQueryValidator : QueryValidatorBase<GetReservaQuery>
     {
-        private readonly IRepository<Entity.Models.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.Reserva> _ReservaRepository;
 
-        public GetReservaQueryValidator(IRepository<Entity.Models.Reserva> ReservaRepository)
+        public GetReservaQueryValidator(IRepository<Entity.Reserva> ReservaRepository)
         {
             _ReservaRepository = ReservaRepository;
 

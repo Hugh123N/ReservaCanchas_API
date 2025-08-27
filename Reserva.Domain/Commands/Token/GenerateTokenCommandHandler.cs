@@ -22,14 +22,14 @@ namespace Reserva.Domain.Commands.Token
     public class GenerateTokenCommandHandler : CommandHandlerBase<GenerateTokenCommand, AccessTokenDto>
     {
         private readonly IConfiguration _configuration;
-        private readonly UserManager<Entity.Models.ApplicationUser> _userManager;
+        private readonly UserManager<Entity.ApplicationUser> _userManager;
 
         public GenerateTokenCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             IConfiguration configuration,
-            UserManager<Entity.Models.ApplicationUser> userManager
+            UserManager<Entity.ApplicationUser> userManager
         ) : base(unitOfWork, mapper, mediator)
         {
             _configuration = configuration;

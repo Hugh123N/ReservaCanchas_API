@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.IntentoLogin
 {
     public class UpdateIntentoLoginCommandValidator : CommandValidatorBase<UpdateIntentoLoginCommand>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _repositoryBase;
-        public UpdateIntentoLoginCommandValidator(IRepository<Entity.Models.IntentoLogin> repositoryBase)
+        private readonly IRepository<Entity.IntentoLogin> _repositoryBase;
+        public UpdateIntentoLoginCommandValidator(IRepository<Entity.IntentoLogin> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

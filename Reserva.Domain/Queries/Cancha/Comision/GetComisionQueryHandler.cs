@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.Comision
 {
     public class GetComisionQueryHandler : QueryHandlerBase<GetComisionQuery, GetComisionDto>
     {
-        private readonly IRepository<Entity.Models.Comision> _ComisionRepository;
+        private readonly IRepository<Entity.Comision> _ComisionRepository;
 
         public GetComisionQueryHandler(
             IMapper mapper,
             GetComisionQueryValidator validator,
-            IRepository<Entity.Models.Comision> ComisionRepository
+            IRepository<Entity.Comision> ComisionRepository
         ) : base(mapper, validator)
         {
             _ComisionRepository = ComisionRepository;

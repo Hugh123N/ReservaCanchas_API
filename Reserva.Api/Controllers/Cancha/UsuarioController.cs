@@ -30,13 +30,13 @@ namespace Reserva.Api.Controllers.Cancha
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
             => await _UsuarioApplication.Update(updateDto);
         [HttpDelete("{id}")]
-        public async Task<ResponseDto> Delete(int id)
+        public async Task<ResponseDto> Delete(Guid id)
             => await _UsuarioApplication.Delete(id);
         [HttpGet("{id}")]
-        public async Task<ResponseDto<GetUsuarioDto>> Get(int id)
+        public async Task<ResponseDto<GetUsuarioDto>> Get(Guid id)
             => await _UsuarioApplication.Get(id);
         [HttpPost("list")]
-        public async Task<ResponseDto<IEnumerable<ListUsuarioDto>>> List(int id)
+        public async Task<ResponseDto<IEnumerable<ListUsuarioDto>>> List(Guid id)
             => await _UsuarioApplication.List(id);
         [HttpPost("search")]
         public async Task<ResponseDto<SearchResultDto<SearchUsuarioDto>>> Search(SearchParamsDto<SearchUsuarioFilterDto> searchParams)

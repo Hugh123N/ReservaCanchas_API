@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.GananciaProveedor
 {
     public class GetGananciaProveedorQueryHandler : QueryHandlerBase<GetGananciaProveedorQuery, GetGananciaProveedorDto>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _GananciaProveedorRepository;
+        private readonly IRepository<Entity.GananciaProveedor> _GananciaProveedorRepository;
 
         public GetGananciaProveedorQueryHandler(
             IMapper mapper,
             GetGananciaProveedorQueryValidator validator,
-            IRepository<Entity.Models.GananciaProveedor> GananciaProveedorRepository
+            IRepository<Entity.GananciaProveedor> GananciaProveedorRepository
         ) : base(mapper, validator)
         {
             _GananciaProveedorRepository = GananciaProveedorRepository;

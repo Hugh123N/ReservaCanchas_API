@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
 {
     public class SelectComboDisponibilidadQueryHandler : QueryHandlerBase<SelectComboDisponibilidadQuery, IEnumerable<SelectComboDisponibilidadDto>>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _repository;
+        private readonly IRepository<Entity.Disponibilidad> _repository;
 
         public SelectComboDisponibilidadQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Disponibilidad> repository
+            IRepository<Entity.Disponibilidad> repository
         ) : base(mapper)
         {
             _repository = repository;

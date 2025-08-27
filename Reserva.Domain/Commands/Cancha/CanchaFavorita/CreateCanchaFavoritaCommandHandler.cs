@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.CanchaFavorita
 {
     public class CreateCanchaFavoritaCommandHandler : CommandHandlerBase<CreateCanchaFavoritaCommand, GetCanchaFavoritaDto>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _CanchaFavoritaRepository;
+        private readonly IRepository<Entity.CanchaFavorita> _CanchaFavoritaRepository;
 
         public CreateCanchaFavoritaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateCanchaFavoritaCommandValidator validator,
-            IRepository<Entity.Models.CanchaFavorita> CanchaFavoritaRepository
+            IRepository<Entity.CanchaFavorita> CanchaFavoritaRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _CanchaFavoritaRepository = CanchaFavoritaRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.CanchaFavorita
         {
             var response = new ResponseDto<GetCanchaFavoritaDto>();
 
-            var CanchaFavorita = _mapper?.Map<Entity.Models.CanchaFavorita>(request.CreateDto);
+            var CanchaFavorita = _mapper?.Map<Entity.CanchaFavorita>(request.CreateDto);
 
             if (CanchaFavorita != null)
             {

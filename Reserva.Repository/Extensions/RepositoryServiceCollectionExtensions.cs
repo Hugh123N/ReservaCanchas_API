@@ -9,8 +9,7 @@ using Reserva.Repository.Transactions;
 using Reserva.Repository.Utils;
 using System.Reflection;
 using System.Linq.Expressions;
-using Reserva.Entity;
-using Reserva.Entity.Models;
+using Reserva.Repository.Data;
 
 namespace Reserva.Repository.Extensions
 {
@@ -46,16 +45,6 @@ namespace Reserva.Repository.Extensions
             };
 
             services.AddSingleton(timezoneInfoData);
-
-            //Audit
-            //services.UseAuditServices(new ServiceOptions
-            //{
-            //    BaseUrl = urlAuditService
-            //}, config =>
-            //{
-            //    config.LogTrace= true;
-            //    config.AuditEntity(Array.Empty<Expression<Func<Lote, object>>>());
-            //});
 
             return services;
         }

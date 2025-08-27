@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.IntentoLogin
 {
     public class DeleteIntentoLoginCommandValidator : CommandValidatorBase<DeleteIntentoLoginCommand>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _repositoryBase;
-        public DeleteIntentoLoginCommandValidator(IRepository<Entity.Models.IntentoLogin> repositoryBase)
+        private readonly IRepository<Entity.IntentoLogin> _repositoryBase;
+        public DeleteIntentoLoginCommandValidator(IRepository<Entity.IntentoLogin> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

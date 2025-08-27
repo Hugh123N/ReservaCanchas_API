@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.IntentoLogin
 {
     public class SearchIntentoLoginQueryHandler : SearchQueryHandlerBase<SearchIntentoLoginQuery, SearchIntentoLoginFilterDto, SearchIntentoLoginDto>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _IntentoLoginRepository;
+        private readonly IRepository<Entity.IntentoLogin> _IntentoLoginRepository;
 
         public SearchIntentoLoginQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.IntentoLogin> IntentoLoginRepository
+            IRepository<Entity.IntentoLogin> IntentoLoginRepository
         ) : base(mapper)
         {
             _IntentoLoginRepository = IntentoLoginRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.IntentoLogin
         {
             var response = new ResponseDto<SearchResultDto<SearchIntentoLoginDto>>();
 
-            Expression<Func<Entity.Models.IntentoLogin, bool>> filter = x => true;
+            Expression<Func<Entity.IntentoLogin, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,13 +47,13 @@ namespace Reserva.Domain.Queries.Cancha.IntentoLogin
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.Models.IntentoLogin>>();
+            var sorts = new List<SortExpression<Entity.IntentoLogin>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.IntentoLogin>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.IntentoLogin>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

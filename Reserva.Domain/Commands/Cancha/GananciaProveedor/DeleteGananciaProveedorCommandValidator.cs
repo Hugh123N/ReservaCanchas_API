@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.GananciaProveedor
 {
     public class DeleteGananciaProveedorCommandValidator : CommandValidatorBase<DeleteGananciaProveedorCommand>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _repositoryBase;
-        public DeleteGananciaProveedorCommandValidator(IRepository<Entity.Models.GananciaProveedor> repositoryBase)
+        private readonly IRepository<Entity.GananciaProveedor> _repositoryBase;
+        public DeleteGananciaProveedorCommandValidator(IRepository<Entity.GananciaProveedor> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

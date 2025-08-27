@@ -11,7 +11,7 @@ using Reserva.Domain.Commands.Token;
 using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
 using Reserva.Dto.User;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using System;
@@ -24,13 +24,13 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     internal class CreateAndLoginCommandHandler : CommandHandlerBase<CreateAndLoginCommand, LoginResultDto>
     {
-        private readonly IRepository<Entity.Models.AspNetUser> _UsuarioRepository;
-        private readonly UserManager<Entity.Models.ApplicationUser> _UserManager;
-        private readonly SignInManager<Entity.Models.ApplicationUser> _SignInManager;
-        private readonly IRepository<Entity.Models.AspNetRole> _RolRepository;
+        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
+        private readonly UserManager<Entity.ApplicationUser> _UserManager;
+        private readonly SignInManager<Entity.ApplicationUser> _SignInManager;
+        private readonly IRepository<AspNetRoles> _RolRepository;
         private readonly IConfiguration _configuration;
-        private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
-        private readonly IRepository<Entity.Models.EstadoUsuario> _EstadoUsuarioRepository;
+        private readonly IRepository<Entity.ApplicationUser> _applicationUserRepository;
+        private readonly IRepository<Entity.EstadoUsuario> _EstadoUsuarioRepository;
 
 
         public CreateAndLoginCommandHandler(
@@ -38,11 +38,11 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IMapper mapper,
             IMediator mediator,
             //CreateUsuarioCommandValidator validator,
-            IRepository<Entity.Models.AspNetUser> UsuarioRepository,
-            UserManager<Entity.Models.ApplicationUser> userManager,
-            IRepository<Entity.Models.ApplicationUser> ApplicationUserRepository,
-            IRepository<Entity.Models.AspNetRole> RolRepository,
-            IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository,
+            IRepository<Entity.AspNetUsers> UsuarioRepository,
+            UserManager<Entity.ApplicationUser> userManager,
+            IRepository<Entity.ApplicationUser> ApplicationUserRepository,
+            IRepository<Entity.AspNetRoles> RolRepository,
+            IRepository<Entity.EstadoUsuario> EstadoUsuarioRepository,
         IConfiguration configuration
         ) : base(unitOfWork, mapper, mediator)
         {
@@ -58,7 +58,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
         public override async Task<ResponseDto<LoginResultDto>> HandleCommand(CreateAndLoginCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<LoginResultDto>();
-            var nuevoUsuario = new Entity.Models.ApplicationUser();
+            var nuevoUsuario = new Entity.ApplicationUser();
             var estadoUsuario = await _EstadoUsuarioRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
 
             var lockoutOnFailure = _configuration.GetValue<bool>("SignInOptions:LockoutEnabled");

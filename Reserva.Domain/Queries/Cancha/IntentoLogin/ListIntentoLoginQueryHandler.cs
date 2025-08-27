@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.IntentoLogin
 {
     public class ListIntentoLoginQueryHandler : QueryHandlerBase<ListIntentoLoginQuery, IEnumerable<ListIntentoLoginDto>>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _repository;
+        private readonly IRepository<Entity.IntentoLogin> _repository;
 
         public ListIntentoLoginQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.IntentoLogin> repository
+            IRepository<Entity.IntentoLogin> repository
         ) : base(mapper)
         {
             _repository = repository;

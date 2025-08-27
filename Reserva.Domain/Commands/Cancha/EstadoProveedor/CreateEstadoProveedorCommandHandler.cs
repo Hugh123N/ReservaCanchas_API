@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.EstadoProveedor
 {
     public class CreateEstadoProveedorCommandHandler : CommandHandlerBase<CreateEstadoProveedorCommand, GetEstadoProveedorDto>
     {
-        private readonly IRepository<Entity.Models.EstadoProveedor> _EstadoProveedorRepository;
+        private readonly IRepository<Entity.EstadoProveedor> _EstadoProveedorRepository;
 
         public CreateEstadoProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateEstadoProveedorCommandValidator validator,
-            IRepository<Entity.Models.EstadoProveedor> EstadoProveedorRepository
+            IRepository<Entity.EstadoProveedor> EstadoProveedorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _EstadoProveedorRepository = EstadoProveedorRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.EstadoProveedor
         {
             var response = new ResponseDto<GetEstadoProveedorDto>();
 
-            var EstadoProveedor = _mapper?.Map<Entity.Models.EstadoProveedor>(request.CreateDto);
+            var EstadoProveedor = _mapper?.Map<Entity.EstadoProveedor>(request.CreateDto);
 
             if (EstadoProveedor != null)
             {

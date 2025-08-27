@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.IntentoLogin
 {
     public class CreateIntentoLoginCommandHandler : CommandHandlerBase<CreateIntentoLoginCommand, GetIntentoLoginDto>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _IntentoLoginRepository;
+        private readonly IRepository<Entity.IntentoLogin> _IntentoLoginRepository;
 
         public CreateIntentoLoginCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateIntentoLoginCommandValidator validator,
-            IRepository<Entity.Models.IntentoLogin> IntentoLoginRepository
+            IRepository<Entity.IntentoLogin> IntentoLoginRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _IntentoLoginRepository = IntentoLoginRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.IntentoLogin
         {
             var response = new ResponseDto<GetIntentoLoginDto>();
 
-            var IntentoLogin = _mapper?.Map<Entity.Models.IntentoLogin>(request.CreateDto);
+            var IntentoLogin = _mapper?.Map<Entity.IntentoLogin>(request.CreateDto);
 
             if (IntentoLogin != null)
             {

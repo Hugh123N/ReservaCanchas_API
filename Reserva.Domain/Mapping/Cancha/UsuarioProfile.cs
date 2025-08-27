@@ -22,13 +22,13 @@ namespace Reserva.Domain.Mapping.Usuario
             CreateMap<Entity.AspNetUsers, SearchUsuarioDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.ApplicationUser, UsuarioDto>().ReverseMap();
-            CreateMap<Entity.Models.ApplicationUser, CreateUsuarioDto>().ReverseMap();
-            CreateMap<Entity.Models.ApplicationUser, UpdateUsuarioDto>().ReverseMap();
-            CreateMap<Entity.Models.ApplicationUser, GetUsuarioDto>().ReverseMap();
-            CreateMap<Entity.Models.ApplicationUser, ListUsuarioDto>().ReverseMap();
-            CreateMap<Entity.Models.ApplicationUser, SearchUsuarioDto>().ReverseMap();
-            CreateMap<Entity.Models.ApplicationUser, CreateUsuarioProveedorDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, UsuarioDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, CreateUsuarioDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, UpdateUsuarioDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, GetUsuarioDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, ListUsuarioDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, SearchUsuarioDto>().ReverseMap();
+            CreateMap<Entity.ApplicationUser, CreateUsuarioProveedorDto>().ReverseMap();
         }
     }
 }

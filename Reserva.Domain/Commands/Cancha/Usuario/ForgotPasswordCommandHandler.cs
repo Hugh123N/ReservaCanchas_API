@@ -8,7 +8,7 @@ using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Email;
 using Reserva.Dto.Base;
 using Reserva.Dto.Email;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using System;

@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
 {
     public class SelectComboProveedorQueryHandler : QueryHandlerBase<SelectComboProveedorQuery, IEnumerable<SelectComboProveedorDto>>
     {
-        private readonly IRepository<Entity.Models.Proveedor> _repository;
+        private readonly IRepository<Entity.Proveedor> _repository;
 
         public SelectComboProveedorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Proveedor> repository
+            IRepository<Entity.Proveedor> repository
         ) : base(mapper)
         {
             _repository = repository;

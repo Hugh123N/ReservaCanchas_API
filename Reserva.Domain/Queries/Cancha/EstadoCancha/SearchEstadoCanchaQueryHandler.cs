@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.EstadoCancha
 {
     public class SearchEstadoCanchaQueryHandler : SearchQueryHandlerBase<SearchEstadoCanchaQuery, SearchEstadoCanchaFilterDto, SearchEstadoCanchaDto>
     {
-        private readonly IRepository<Entity.Models.EstadoCancha> _EstadoCanchaRepository;
+        private readonly IRepository<Entity.EstadoCancha> _EstadoCanchaRepository;
 
         public SearchEstadoCanchaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.EstadoCancha> EstadoCanchaRepository
+            IRepository<Entity.EstadoCancha> EstadoCanchaRepository
         ) : base(mapper)
         {
             _EstadoCanchaRepository = EstadoCanchaRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.EstadoCancha
         {
             var response = new ResponseDto<SearchResultDto<SearchEstadoCanchaDto>>();
 
-            Expression<Func<Entity.Models.EstadoCancha, bool>> filter = x => true;
+            Expression<Func<Entity.EstadoCancha, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,13 +47,13 @@ namespace Reserva.Domain.Queries.Cancha.EstadoCancha
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.Models.EstadoCancha>>();
+            var sorts = new List<SortExpression<Entity.EstadoCancha>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.EstadoCancha>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.EstadoCancha>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

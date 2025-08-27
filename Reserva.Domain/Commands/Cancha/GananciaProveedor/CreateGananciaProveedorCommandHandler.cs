@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.GananciaProveedor
 {
     public class CreateGananciaProveedorCommandHandler : CommandHandlerBase<CreateGananciaProveedorCommand, GetGananciaProveedorDto>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _GananciaProveedorRepository;
+        private readonly IRepository<Entity.GananciaProveedor> _GananciaProveedorRepository;
 
         public CreateGananciaProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateGananciaProveedorCommandValidator validator,
-            IRepository<Entity.Models.GananciaProveedor> GananciaProveedorRepository
+            IRepository<Entity.GananciaProveedor> GananciaProveedorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _GananciaProveedorRepository = GananciaProveedorRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.GananciaProveedor
         {
             var response = new ResponseDto<GetGananciaProveedorDto>();
 
-            var GananciaProveedor = _mapper?.Map<Entity.Models.GananciaProveedor>(request.CreateDto);
+            var GananciaProveedor = _mapper?.Map<Entity.GananciaProveedor>(request.CreateDto);
 
             if (GananciaProveedor != null)
             {

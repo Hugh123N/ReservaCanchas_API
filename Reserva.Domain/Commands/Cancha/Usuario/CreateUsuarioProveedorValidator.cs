@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Reserva.Domain.Commands.Base;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using System;
 using System.Collections.Generic;
@@ -15,8 +15,8 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
     {
         public CreateUsuarioProveedorValidator(
             UserManager<ApplicationUser> applicationUserRepository,
-            IRepository<AspNetUser> usuarioRepository,
-            IRepository<Entity.Models.Proveedor> proveedorRepository)
+            IRepository<AspNetUsers> usuarioRepository,
+            IRepository<Entity.Proveedor> proveedorRepository)
         {
             RuleFor(x => x.CreateDto.UserName)
                 .NotEmpty().WithMessage("El nombre de usuario es obligatorio.")

@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Notificacion
 {
     public class SearchNotificacionQueryHandler : SearchQueryHandlerBase<SearchNotificacionQuery, SearchNotificacionFilterDto, SearchNotificacionDto>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _NotificacionRepository;
+        private readonly IRepository<Entity.Notificacion> _NotificacionRepository;
 
         public SearchNotificacionQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Notificacion> NotificacionRepository
+            IRepository<Entity.Notificacion> NotificacionRepository
         ) : base(mapper)
         {
             _NotificacionRepository = NotificacionRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Notificacion
         {
             var response = new ResponseDto<SearchResultDto<SearchNotificacionDto>>();
 
-            Expression<Func<Entity.Models.Notificacion, bool>> filter = x => true;
+            Expression<Func<Entity.Notificacion, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -46,13 +46,13 @@ namespace Reserva.Domain.Queries.Cancha.Notificacion
             }
             */
 
-            var sorts = new List<SortExpression<Entity.Models.Notificacion>>();
+            var sorts = new List<SortExpression<Entity.Notificacion>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Notificacion>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Notificacion>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

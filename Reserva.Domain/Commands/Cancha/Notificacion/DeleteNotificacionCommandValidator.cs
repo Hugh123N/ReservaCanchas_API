@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Notificacion
 {
     public class DeleteNotificacionCommandValidator : CommandValidatorBase<DeleteNotificacionCommand>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _repositoryBase;
-        public DeleteNotificacionCommandValidator(IRepository<Entity.Models.Notificacion> repositoryBase)
+        private readonly IRepository<Entity.Notificacion> _repositoryBase;
+        public DeleteNotificacionCommandValidator(IRepository<Entity.Notificacion> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

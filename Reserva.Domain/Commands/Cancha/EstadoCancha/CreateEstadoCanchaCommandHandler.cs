@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.EstadoCancha
 {
     public class CreateEstadoCanchaCommandHandler : CommandHandlerBase<CreateEstadoCanchaCommand, GetEstadoCanchaDto>
     {
-        private readonly IRepository<Entity.Models.EstadoCancha> _EstadoCanchaRepository;
+        private readonly IRepository<Entity.EstadoCancha> _EstadoCanchaRepository;
 
         public CreateEstadoCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateEstadoCanchaCommandValidator validator,
-            IRepository<Entity.Models.EstadoCancha> EstadoCanchaRepository
+            IRepository<Entity.EstadoCancha> EstadoCanchaRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _EstadoCanchaRepository = EstadoCanchaRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.EstadoCancha
         {
             var response = new ResponseDto<GetEstadoCanchaDto>();
 
-            var EstadoCancha = _mapper?.Map<Entity.Models.EstadoCancha>(request.CreateDto);
+            var EstadoCancha = _mapper?.Map<Entity.EstadoCancha>(request.CreateDto);
 
             if (EstadoCancha != null)
             {

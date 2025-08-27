@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.EstadoCancha
 {
     public class GetEstadoCanchaQueryHandler : QueryHandlerBase<GetEstadoCanchaQuery, GetEstadoCanchaDto>
     {
-        private readonly IRepository<Entity.Models.EstadoCancha> _EstadoCanchaRepository;
+        private readonly IRepository<Entity.EstadoCancha> _EstadoCanchaRepository;
 
         public GetEstadoCanchaQueryHandler(
             IMapper mapper,
             GetEstadoCanchaQueryValidator validator,
-            IRepository<Entity.Models.EstadoCancha> EstadoCanchaRepository
+            IRepository<Entity.EstadoCancha> EstadoCanchaRepository
         ) : base(mapper, validator)
         {
             _EstadoCanchaRepository = EstadoCanchaRepository;

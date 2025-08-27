@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
 {
     public class ListUbigeoQueryHandler : QueryHandlerBase<ListUbigeoQuery, IEnumerable<DepartamentoDto>>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _repository;
+        private readonly IRepository<Entity.Ubigeo> _repository;
 
         public ListUbigeoQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Ubigeo> repository
+            IRepository<Entity.Ubigeo> repository
         ) : base(mapper)
         {
             _repository = repository;

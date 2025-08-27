@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.DiaSemana
 {
     public class CreateDiaSemanaCommandHandler : CommandHandlerBase<CreateDiaSemanaCommand, GetDiaSemanaDto>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _DiaSemanaRepository;
+        private readonly IRepository<Entity.DiaSemana> _DiaSemanaRepository;
 
         public CreateDiaSemanaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateDiaSemanaCommandValidator validator,
-            IRepository<Entity.Models.DiaSemana> DiaSemanaRepository
+            IRepository<Entity.DiaSemana> DiaSemanaRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _DiaSemanaRepository = DiaSemanaRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.DiaSemana
         {
             var response = new ResponseDto<GetDiaSemanaDto>();
 
-            var DiaSemana = _mapper?.Map<Entity.Models.DiaSemana>(request.CreateDto);
+            var DiaSemana = _mapper?.Map<Entity.DiaSemana>(request.CreateDto);
 
             if (DiaSemana != null)
             {

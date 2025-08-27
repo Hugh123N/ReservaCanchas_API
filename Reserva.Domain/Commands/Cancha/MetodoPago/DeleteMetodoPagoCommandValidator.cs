@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.MetodoPago
 {
     public class DeleteMetodoPagoCommandValidator : CommandValidatorBase<DeleteMetodoPagoCommand>
     {
-        private readonly IRepository<Entity.Models.MetodoPago> _repositoryBase;
-        public DeleteMetodoPagoCommandValidator(IRepository<Entity.Models.MetodoPago> repositoryBase)
+        private readonly IRepository<Entity.MetodoPago> _repositoryBase;
+        public DeleteMetodoPagoCommandValidator(IRepository<Entity.MetodoPago> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

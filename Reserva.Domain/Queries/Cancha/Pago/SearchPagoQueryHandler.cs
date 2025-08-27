@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Pago
 {
     public class SearchPagoQueryHandler : SearchQueryHandlerBase<SearchPagoQuery, SearchPagoFilterDto, SearchPagoDto>
     {
-        private readonly IRepository<Entity.Models.Pago> _PagoRepository;
+        private readonly IRepository<Entity.Pago> _PagoRepository;
 
         public SearchPagoQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Pago> PagoRepository
+            IRepository<Entity.Pago> PagoRepository
         ) : base(mapper)
         {
             _PagoRepository = PagoRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Pago
         {
             var response = new ResponseDto<SearchResultDto<SearchPagoDto>>();
 
-            Expression<Func<Entity.Models.Pago, bool>> filter = x => true;
+            Expression<Func<Entity.Pago, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,13 +47,13 @@ namespace Reserva.Domain.Queries.Cancha.Pago
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.Models.Pago>>();
+            var sorts = new List<SortExpression<Entity.Pago>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Pago>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Pago>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

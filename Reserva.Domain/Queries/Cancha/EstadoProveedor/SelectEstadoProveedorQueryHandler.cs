@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.EstadoProveedor
 {
     public class SelectEstadoProveedorQueryHandler : SearchQueryHandlerBase<SelectEstadoProveedorQuery, SelectEstadoProveedorFilterDto, SelectEstadoProveedorDto>
     {
-        private readonly IRepository<Entity.Models.EstadoProveedor> _EstadoProveedorRepository;
+        private readonly IRepository<Entity.EstadoProveedor> _EstadoProveedorRepository;
 
         public SelectEstadoProveedorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.EstadoProveedor> EstadoProveedorRepository
+            IRepository<Entity.EstadoProveedor> EstadoProveedorRepository
         ) : base(mapper)
         {
             _EstadoProveedorRepository = EstadoProveedorRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.EstadoProveedor
         {
             var response = new ResponseDto<SearchResultDto<SelectEstadoProveedorDto>>();
 
-            Expression<Func<Entity.Models.EstadoProveedor, bool>> filter = x => true;
+            Expression<Func<Entity.EstadoProveedor, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.EstadoProveedor
             if (filters?.IdEstadoProveedor.HasValue == true)
                 filter = filter.And(x => x.IdEstadoProveedor == filters.IdEstadoProveedor);
 
-            var sorts = new List<SortExpression<Entity.Models.EstadoProveedor>>();
+            var sorts = new List<SortExpression<Entity.EstadoProveedor>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.EstadoProveedor>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.EstadoProveedor>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Pago
 {
     public class CreatePagoCommandHandler : CommandHandlerBase<CreatePagoCommand, GetPagoDto>
     {
-        private readonly IRepository<Entity.Models.Pago> _PagoRepository;
+        private readonly IRepository<Entity.Pago> _PagoRepository;
 
         public CreatePagoCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreatePagoCommandValidator validator,
-            IRepository<Entity.Models.Pago> PagoRepository
+            IRepository<Entity.Pago> PagoRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _PagoRepository = PagoRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Pago
         {
             var response = new ResponseDto<GetPagoDto>();
 
-            var Pago = _mapper?.Map<Entity.Models.Pago>(request.CreateDto);
+            var Pago = _mapper?.Map<Entity.Pago>(request.CreateDto);
 
             if (Pago != null)
             {

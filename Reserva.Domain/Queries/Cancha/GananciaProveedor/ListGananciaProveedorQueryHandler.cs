@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.GananciaProveedor
 {
     public class ListGananciaProveedorQueryHandler : QueryHandlerBase<ListGananciaProveedorQuery, IEnumerable<ListGananciaProveedorDto>>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _repository;
+        private readonly IRepository<Entity.GananciaProveedor> _repository;
 
         public ListGananciaProveedorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.GananciaProveedor> repository
+            IRepository<Entity.GananciaProveedor> repository
         ) : base(mapper)
         {
             _repository = repository;

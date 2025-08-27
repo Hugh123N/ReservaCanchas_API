@@ -7,7 +7,7 @@ using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Usuario;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 
@@ -15,12 +15,12 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class CreateUsuarioCommandHandler : CommandHandlerBase<CreateUsuarioCommand, GetUsuarioDto>
     {
-        private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
-        private readonly IRepository<Entity.Models.AspNetRole> _RolRepository;
+        private readonly UserManager<Entity.ApplicationUser> _UsuarioManager;
+        private readonly IRepository<Entity.AspNetRoles> _RolRepository;
         private readonly IConfiguration _configuration;
-        private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
-        private readonly IRepository<Entity.Models.EstadoUsuario> _EstadoUsuarioRepository;
+        private readonly IRepository<Entity.ApplicationUser> _applicationUserRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.EstadoUsuario> _EstadoUsuarioRepository;
 
 
         public CreateUsuarioCommandHandler(
@@ -28,12 +28,12 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             IMapper mapper,
             IMediator mediator,
             CreateUsuarioCommandValidator validator,
-            UserManager<Entity.Models.ApplicationUser> userManager,
-            IRepository<Entity.Models.AspNetRole> RolRepository,
+            UserManager<Entity.ApplicationUser> userManager,
+            IRepository<Entity.AspNetRoles> RolRepository,
             IConfiguration configuration,
-            IRepository<Entity.Models.ApplicationUser> applicationUserRepository,
-            IRepository<Entity.Models.Proveedor> ProveedorRepository,
-            IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository
+            IRepository<Entity.ApplicationUser> applicationUserRepository,
+            IRepository<Entity.Proveedor> ProveedorRepository,
+            IRepository<Entity.EstadoUsuario> EstadoUsuarioRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _UsuarioManager = userManager;
@@ -49,7 +49,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             var response = new ResponseDto<GetUsuarioDto>();
             var estadoUsuario = await _EstadoUsuarioRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
              
-            var applicationUser = _mapper?.Map<Entity.Models.ApplicationUser>(request.CreateDto);
+            var applicationUser = _mapper?.Map<Entity.ApplicationUser>(request.CreateDto);
 
             if (applicationUser != null)
             {
@@ -93,7 +93,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 
                 /*if (roles.Any(x => x.NormalizedName.Equals(Constants.Role.Proveedor)))
                 {
-                    var proveedor = _mapper?.Map<Entity.Models.Proveedor>(request.CreateDto);
+                    var proveedor = _mapper?.Map<Entity.Proveedor>(request.CreateDto);
                     if (proveedor != null)
                     {
                         proveedor.IdProveedor = applicationUser.Id;

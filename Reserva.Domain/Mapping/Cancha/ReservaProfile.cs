@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.Reserva
     {
         public ReservaProfile()
         {
-            CreateMap<Entity.Models.Reserva, ReservaDto>()
+            CreateMap<Entity.Reserva, ReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Reserva, CreateReservaDto>()
+            CreateMap<Entity.Reserva, CreateReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Reserva, UpdateReservaDto>()
+            CreateMap<Entity.Reserva, UpdateReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Reserva, GetReservaDto>()
+            CreateMap<Entity.Reserva, GetReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Reserva, ListReservaDto>()
+            CreateMap<Entity.Reserva, ListReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Reserva, SelectComboReservaDto>()
+            CreateMap<Entity.Reserva, SelectComboReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Reserva, SearchReservaDto>()
+            CreateMap<Entity.Reserva, SearchReservaDto>()
                 .ReverseMap();
         }
     }

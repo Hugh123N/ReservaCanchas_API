@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.CanchaFavorita
 {
     public class ListCanchaFavoritaQueryHandler : QueryHandlerBase<ListCanchaFavoritaQuery, IEnumerable<ListCanchaFavoritaDto>>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _repository;
+        private readonly IRepository<Entity.CanchaFavorita> _repository;
 
         public ListCanchaFavoritaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.CanchaFavorita> repository
+            IRepository<Entity.CanchaFavorita> repository
         ) : base(mapper)
         {
             _repository = repository;

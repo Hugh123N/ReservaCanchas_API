@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.GananciaProveedor
 {
     public class UpdateGananciaProveedorCommandHandler : CommandHandlerBase<UpdateGananciaProveedorCommand, GetGananciaProveedorDto>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _GananciaProveedorRepository;
+        private readonly IRepository<Entity.GananciaProveedor> _GananciaProveedorRepository;
 
         public UpdateGananciaProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateGananciaProveedorCommandValidator validator,
-            IRepository<Entity.Models.GananciaProveedor> GananciaProveedorRepository
+            IRepository<Entity.GananciaProveedor> GananciaProveedorRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _GananciaProveedorRepository = GananciaProveedorRepository;

@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.Notificacion
 {
     public class SelectComboNotificacionQueryHandler : QueryHandlerBase<SelectComboNotificacionQuery, IEnumerable<SelectComboNotificacionDto>>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _repository;
+        private readonly IRepository<Entity.Notificacion> _repository;
 
         public SelectComboNotificacionQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Notificacion> repository
+            IRepository<Entity.Notificacion> repository
         ) : base(mapper)
         {
             _repository = repository;

@@ -7,19 +7,19 @@ namespace Reserva.Domain.Mapping.Cancha
     {
         public UbigeoProfile()
         {
-            CreateMap<Entity.Models.Ubigeo, UbigeoDto>()
+            CreateMap<Entity.Ubigeo, UbigeoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Ubigeo, CreateUbigeoDto>()
+            CreateMap<Entity.Ubigeo, CreateUbigeoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Ubigeo, UpdateUbigeoDto>()
+            CreateMap<Entity.Ubigeo, UpdateUbigeoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Ubigeo, GetUbigeoDto>()
+            CreateMap<Entity.Ubigeo, GetUbigeoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Ubigeo, ListUbigeoDto>()
+            CreateMap<Entity.Ubigeo, ListUbigeoDto>()
                 .ReverseMap();
 
         }

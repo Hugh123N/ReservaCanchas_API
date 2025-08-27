@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.GananciaProveedor
 {
     public class UpdateGananciaProveedorCommandValidator : CommandValidatorBase<UpdateGananciaProveedorCommand>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _repositoryBase;
-        public UpdateGananciaProveedorCommandValidator(IRepository<Entity.Models.GananciaProveedor> repositoryBase)
+        private readonly IRepository<Entity.GananciaProveedor> _repositoryBase;
+        public UpdateGananciaProveedorCommandValidator(IRepository<Entity.GananciaProveedor> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

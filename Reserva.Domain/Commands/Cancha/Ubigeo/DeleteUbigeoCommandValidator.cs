@@ -8,8 +8,8 @@ namespace Reserva.Domain.Commands.Cancha.Ubigeo
 {
     public class DeleteUbigeoCommandValidator : CommandValidatorBase<DeleteUbigeoCommand>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _repositoryBase;
-        public DeleteUbigeoCommandValidator(IRepository<Entity.Models.Ubigeo> repositoryBase)
+        private readonly IRepository<Entity.Ubigeo> _repositoryBase;
+        public DeleteUbigeoCommandValidator(IRepository<Entity.Ubigeo> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

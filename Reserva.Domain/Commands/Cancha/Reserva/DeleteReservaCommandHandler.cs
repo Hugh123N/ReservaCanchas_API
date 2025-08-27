@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Reserva
 {
     public class DeleteReservaCommandHandler : CommandHandlerBase<DeleteReservaCommand>
     {
-        private readonly IRepository<Entity.Models.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.Reserva> _ReservaRepository;
 
         public DeleteReservaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteReservaCommandValidator validator,
-            IRepository<Entity.Models.Reserva> ReservaRepository
+            IRepository<Entity.Reserva> ReservaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _ReservaRepository = ReservaRepository;

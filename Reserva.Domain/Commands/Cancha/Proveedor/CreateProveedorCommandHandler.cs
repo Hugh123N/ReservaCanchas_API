@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
 {
     public class CreateProveedorCommandHandler : CommandHandlerBase<CreateProveedorCommand, GetProveedorDto>
     {
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
 
         public CreateProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateProveedorCommandValidator validator,
-            IRepository<Entity.Models.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ProveedorRepository = ProveedorRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Proveedor
         {
             var response = new ResponseDto<GetProveedorDto>();
 
-            var Proveedor = _mapper?.Map<Entity.Models.Proveedor>(request.CreateDto);
+            var Proveedor = _mapper?.Map<Entity.Proveedor>(request.CreateDto);
 
             if (Proveedor != null)
             {

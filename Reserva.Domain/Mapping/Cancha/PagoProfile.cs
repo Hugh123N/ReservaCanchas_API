@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.Pago
     {
         public PagoProfile()
         {
-            CreateMap<Entity.Models.Pago, PagoDto>()
+            CreateMap<Entity.Pago, PagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Pago, CreatePagoDto>()
+            CreateMap<Entity.Pago, CreatePagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Pago, UpdatePagoDto>()
+            CreateMap<Entity.Pago, UpdatePagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Pago, GetPagoDto>()
+            CreateMap<Entity.Pago, GetPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Pago, ListPagoDto>()
+            CreateMap<Entity.Pago, ListPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Pago, SelectComboPagoDto>()
+            CreateMap<Entity.Pago, SelectComboPagoDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Pago, SearchPagoDto>()
+            CreateMap<Entity.Pago, SearchPagoDto>()
                 .ReverseMap();
         }
     }

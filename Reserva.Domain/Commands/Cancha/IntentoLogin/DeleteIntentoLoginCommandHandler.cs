@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.IntentoLogin
 {
     public class DeleteIntentoLoginCommandHandler : CommandHandlerBase<DeleteIntentoLoginCommand>
     {
-        private readonly IRepository<Entity.Models.IntentoLogin> _IntentoLoginRepository;
+        private readonly IRepository<Entity.IntentoLogin> _IntentoLoginRepository;
 
         public DeleteIntentoLoginCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteIntentoLoginCommandValidator validator,
-            IRepository<Entity.Models.IntentoLogin> IntentoLoginRepository
+            IRepository<Entity.IntentoLogin> IntentoLoginRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _IntentoLoginRepository = IntentoLoginRepository;

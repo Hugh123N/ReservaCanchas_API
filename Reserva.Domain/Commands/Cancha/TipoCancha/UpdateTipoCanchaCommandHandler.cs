@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.TipoCancha
 {
     public class UpdateTipoCanchaCommandHandler : CommandHandlerBase<UpdateTipoCanchaCommand, GetTipoCanchaDto>
     {
-        private readonly IRepository<Entity.Models.TipoCancha> _TipoCanchaRepository;
+        private readonly IRepository<Entity.TipoCancha> _TipoCanchaRepository;
 
         public UpdateTipoCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateTipoCanchaCommandValidator validator,
-            IRepository<Entity.Models.TipoCancha> TipoCanchaRepository
+            IRepository<Entity.TipoCancha> TipoCanchaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _TipoCanchaRepository = TipoCanchaRepository;

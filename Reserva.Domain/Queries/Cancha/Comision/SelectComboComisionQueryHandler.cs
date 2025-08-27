@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.Comision
 {
     public class SelectComboComisionQueryHandler : QueryHandlerBase<SelectComboComisionQuery, IEnumerable<SelectComboComisionDto>>
     {
-        private readonly IRepository<Entity.Models.Comision> _repository;
+        private readonly IRepository<Entity.Comision> _repository;
 
         public SelectComboComisionQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Comision> repository
+            IRepository<Entity.Comision> repository
         ) : base(mapper)
         {
             _repository = repository;

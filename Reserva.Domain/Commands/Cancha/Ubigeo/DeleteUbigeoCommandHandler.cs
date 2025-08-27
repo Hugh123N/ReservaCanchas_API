@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Ubigeo
 {
     public class DeleteUbigeoCommandHandler : CommandHandlerBase<DeleteUbigeoCommand>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _UbigeoRepository;
+        private readonly IRepository<Entity.Ubigeo> _UbigeoRepository;
 
         public DeleteUbigeoCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteUbigeoCommandValidator validator,
-            IRepository<Entity.Models.Ubigeo> UbigeoRepository
+            IRepository<Entity.Ubigeo> UbigeoRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _UbigeoRepository = UbigeoRepository;

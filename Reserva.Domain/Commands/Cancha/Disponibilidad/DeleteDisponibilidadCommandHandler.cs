@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Disponibilidad
 {
     public class DeleteDisponibilidadCommandHandler : CommandHandlerBase<DeleteDisponibilidadCommand>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
 
         public DeleteDisponibilidadCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteDisponibilidadCommandValidator validator,
-            IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository
+            IRepository<Entity.Disponibilidad> DisponibilidadRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _DisponibilidadRepository = DisponibilidadRepository;

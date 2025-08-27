@@ -9,11 +9,11 @@ namespace Reserva.Domain.Queries.Cancha.EstadoCancha
 {
     public class SelectComboEstadoCanchaQueryHandler : QueryHandlerBase<SelectComboEstadoCanchaQuery, IEnumerable<SelectComboEstadoCanchaDto>>
     {
-        private readonly IRepository<Entity.Models.EstadoCancha> _repository;
+        private readonly IRepository<Entity.EstadoCancha> _repository;
 
         public SelectComboEstadoCanchaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.EstadoCancha> repository
+            IRepository<Entity.EstadoCancha> repository
         ) : base(mapper)
         {
             _repository = repository;

@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.TipoCancha
 {
     public class CreateTipoCanchaCommandHandler : CommandHandlerBase<CreateTipoCanchaCommand, GetTipoCanchaDto>
     {
-        private readonly IRepository<Entity.Models.TipoCancha> _TipoCanchaRepository;
+        private readonly IRepository<Entity.TipoCancha> _TipoCanchaRepository;
 
         public CreateTipoCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateTipoCanchaCommandValidator validator,
-            IRepository<Entity.Models.TipoCancha> TipoCanchaRepository
+            IRepository<Entity.TipoCancha> TipoCanchaRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _TipoCanchaRepository = TipoCanchaRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.TipoCancha
         {
             var response = new ResponseDto<GetTipoCanchaDto>();
 
-            var TipoCancha = _mapper?.Map<Entity.Models.TipoCancha>(request.CreateDto);
+            var TipoCancha = _mapper?.Map<Entity.TipoCancha>(request.CreateDto);
 
             if (TipoCancha != null)
             {

@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
 {
     public class SelectCanchaQueryHandler : SearchQueryHandlerBase<SelectCanchaQuery, SelectCanchaFilterDto, SelectCanchaDto>
     {
-        private readonly IRepository<Entity.Models.Cancha> _CanchaRepository;
+        private readonly IRepository<Entity.Cancha> _CanchaRepository;
 
         public SelectCanchaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Cancha> CanchaRepository
+            IRepository<Entity.Cancha> CanchaRepository
         ) : base(mapper)
         {
             _CanchaRepository = CanchaRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
         {
             var response = new ResponseDto<SearchResultDto<SelectCanchaDto>>();
 
-            Expression<Func<Entity.Models.Cancha, bool>> filter = x => true;
+            Expression<Func<Entity.Cancha, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
             if (filters?.IdCancha.HasValue == true)
                 filter = filter.And(x => x.IdCancha == filters.IdCancha);
 
-            var sorts = new List<SortExpression<Entity.Models.Cancha>>();
+            var sorts = new List<SortExpression<Entity.Cancha>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Cancha>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Cancha>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

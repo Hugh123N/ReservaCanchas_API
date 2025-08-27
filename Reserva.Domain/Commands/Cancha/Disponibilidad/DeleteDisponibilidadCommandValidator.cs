@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Disponibilidad
 {
     public class DeleteDisponibilidadCommandValidator : CommandValidatorBase<DeleteDisponibilidadCommand>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _repositoryBase;
-        public DeleteDisponibilidadCommandValidator(IRepository<Entity.Models.Disponibilidad> repositoryBase)
+        private readonly IRepository<Entity.Disponibilidad> _repositoryBase;
+        public DeleteDisponibilidadCommandValidator(IRepository<Entity.Disponibilidad> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

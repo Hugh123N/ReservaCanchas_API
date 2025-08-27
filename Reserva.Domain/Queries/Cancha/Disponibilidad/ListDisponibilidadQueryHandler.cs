@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
 {
     public class ListDisponibilidadQueryHandler : QueryHandlerBase<ListDisponibilidadQuery, IEnumerable<ListDisponibilidadDto>>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _repository;
+        private readonly IRepository<Entity.Disponibilidad> _repository;
 
         public ListDisponibilidadQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Disponibilidad> repository
+            IRepository<Entity.Disponibilidad> repository
         ) : base(mapper)
         {
             _repository = repository;

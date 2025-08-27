@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.User;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Commands.User

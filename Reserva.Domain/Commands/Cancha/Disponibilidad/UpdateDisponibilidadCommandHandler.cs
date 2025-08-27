@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Disponibilidad
 {
     public class UpdateDisponibilidadCommandHandler : CommandHandlerBase<UpdateDisponibilidadCommand, GetDisponibilidadDto>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
 
         public UpdateDisponibilidadCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateDisponibilidadCommandValidator validator,
-            IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository
+            IRepository<Entity.Disponibilidad> DisponibilidadRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _DisponibilidadRepository = DisponibilidadRepository;

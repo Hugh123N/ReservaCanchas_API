@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
 {
     public class GetProveedorQueryValidator : QueryValidatorBase<GetProveedorQuery>
     {
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
 
-        public GetProveedorQueryValidator(IRepository<Entity.Models.Proveedor> ProveedorRepository)
+        public GetProveedorQueryValidator(IRepository<Entity.Proveedor> ProveedorRepository)
         {
             _ProveedorRepository = ProveedorRepository;
 

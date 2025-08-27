@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.EstadoProveedor
     {
         public EstadoProveedorProfile()
         {
-            CreateMap<Entity.Models.EstadoProveedor, EstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, EstadoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoProveedor, CreateEstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, CreateEstadoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoProveedor, UpdateEstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, UpdateEstadoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoProveedor, GetEstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, GetEstadoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoProveedor, ListEstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, ListEstadoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoProveedor, SelectComboEstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, SelectComboEstadoProveedorDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoProveedor, SearchEstadoProveedorDto>()
+            CreateMap<Entity.EstadoProveedor, SearchEstadoProveedorDto>()
                 .ReverseMap();
         }
     }

@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.ImagenCancha
 {
     public class GetImagenCanchaQueryHandler : QueryHandlerBase<GetImagenCanchaQuery, GetImagenCanchaDto>
     {
-        private readonly IRepository<Entity.Models.ImagenCancha> _ImagenCanchaRepository;
+        private readonly IRepository<Entity.ImagenCancha> _ImagenCanchaRepository;
 
         public GetImagenCanchaQueryHandler(
             IMapper mapper,
             GetImagenCanchaQueryValidator validator,
-            IRepository<Entity.Models.ImagenCancha> ImagenCanchaRepository
+            IRepository<Entity.ImagenCancha> ImagenCanchaRepository
         ) : base(mapper, validator)
         {
             _ImagenCanchaRepository = ImagenCanchaRepository;

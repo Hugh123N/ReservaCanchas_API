@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.TipoProveedor
 {
     public class GetTipoProveedorQueryValidator : QueryValidatorBase<GetTipoProveedorQuery>
     {
-        private readonly IRepository<Entity.Models.TipoProveedor> _TipoProveedorRepository;
+        private readonly IRepository<Entity.TipoProveedor> _TipoProveedorRepository;
 
-        public GetTipoProveedorQueryValidator(IRepository<Entity.Models.TipoProveedor> TipoProveedorRepository)
+        public GetTipoProveedorQueryValidator(IRepository<Entity.TipoProveedor> TipoProveedorRepository)
         {
             _TipoProveedorRepository = TipoProveedorRepository;
 

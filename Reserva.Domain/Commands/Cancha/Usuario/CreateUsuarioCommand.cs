@@ -1,6 +1,6 @@
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Cancha.Usuario;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 
 namespace Reserva.Domain.Commands.Cancha.Usuario
 {

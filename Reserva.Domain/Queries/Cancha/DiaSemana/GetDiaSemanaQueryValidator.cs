@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.DiaSemana
 {
     public class GetDiaSemanaQueryValidator : QueryValidatorBase<GetDiaSemanaQuery>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _DiaSemanaRepository;
+        private readonly IRepository<Entity.DiaSemana> _DiaSemanaRepository;
 
-        public GetDiaSemanaQueryValidator(IRepository<Entity.Models.DiaSemana> DiaSemanaRepository)
+        public GetDiaSemanaQueryValidator(IRepository<Entity.DiaSemana> DiaSemanaRepository)
         {
             _DiaSemanaRepository = DiaSemanaRepository;
 

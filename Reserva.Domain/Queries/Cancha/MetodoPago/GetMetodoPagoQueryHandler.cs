@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.MetodoPago
 {
     public class GetMetodoPagoQueryHandler : QueryHandlerBase<GetMetodoPagoQuery, GetMetodoPagoDto>
     {
-        private readonly IRepository<Entity.Models.MetodoPago> _MetodoPagoRepository;
+        private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
 
         public GetMetodoPagoQueryHandler(
             IMapper mapper,
             GetMetodoPagoQueryValidator validator,
-            IRepository<Entity.Models.MetodoPago> MetodoPagoRepository
+            IRepository<Entity.MetodoPago> MetodoPagoRepository
         ) : base(mapper, validator)
         {
             _MetodoPagoRepository = MetodoPagoRepository;

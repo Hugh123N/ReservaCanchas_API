@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.DiaSemana
 {
     public class UpdateDiaSemanaCommandValidator : CommandValidatorBase<UpdateDiaSemanaCommand>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _repositoryBase;
-        public UpdateDiaSemanaCommandValidator(IRepository<Entity.Models.DiaSemana> repositoryBase)
+        private readonly IRepository<Entity.DiaSemana> _repositoryBase;
+        public UpdateDiaSemanaCommandValidator(IRepository<Entity.DiaSemana> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

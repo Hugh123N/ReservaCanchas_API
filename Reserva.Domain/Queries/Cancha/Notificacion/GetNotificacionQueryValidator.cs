@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Notificacion
 {
     public class GetNotificacionQueryValidator : QueryValidatorBase<GetNotificacionQuery>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _NotificacionRepository;
+        private readonly IRepository<Entity.Notificacion> _NotificacionRepository;
 
-        public GetNotificacionQueryValidator(IRepository<Entity.Models.Notificacion> NotificacionRepository)
+        public GetNotificacionQueryValidator(IRepository<Entity.Notificacion> NotificacionRepository)
         {
             _NotificacionRepository = NotificacionRepository;
 

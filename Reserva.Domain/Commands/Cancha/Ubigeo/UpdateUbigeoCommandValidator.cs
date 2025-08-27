@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Ubigeo
 {
     public class UpdateUbigeoCommandValidator : CommandValidatorBase<UpdateUbigeoCommand>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _repositoryBase;
-        public UpdateUbigeoCommandValidator(IRepository<Entity.Models.Ubigeo> repositoryBase)
+        private readonly IRepository<Entity.Ubigeo> _repositoryBase;
+        public UpdateUbigeoCommandValidator(IRepository<Entity.Ubigeo> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

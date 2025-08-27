@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
 {
     public class SelectDisponibilidadQueryHandler : SearchQueryHandlerBase<SelectDisponibilidadQuery, SelectDisponibilidadFilterDto, SelectDisponibilidadDto>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
 
         public SelectDisponibilidadQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository
+            IRepository<Entity.Disponibilidad> DisponibilidadRepository
         ) : base(mapper)
         {
             _DisponibilidadRepository = DisponibilidadRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
         {
             var response = new ResponseDto<SearchResultDto<SelectDisponibilidadDto>>();
 
-            Expression<Func<Entity.Models.Disponibilidad, bool>> filter = x => true;
+            Expression<Func<Entity.Disponibilidad, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
             if (filters?.IdDisponibilidad.HasValue == true)
                 filter = filter.And(x => x.IdDisponibilidad == filters.IdDisponibilidad);
 
-            var sorts = new List<SortExpression<Entity.Models.Disponibilidad>>();
+            var sorts = new List<SortExpression<Entity.Disponibilidad>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Disponibilidad>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Disponibilidad>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

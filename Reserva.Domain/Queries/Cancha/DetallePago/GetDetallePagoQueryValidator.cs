@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.DetallePago
 {
     public class GetDetallePagoQueryValidator : QueryValidatorBase<GetDetallePagoQuery>
     {
-        private readonly IRepository<Entity.Models.DetallePago> _DetallePagoRepository;
+        private readonly IRepository<Entity.DetallePago> _DetallePagoRepository;
 
-        public GetDetallePagoQueryValidator(IRepository<Entity.Models.DetallePago> DetallePagoRepository)
+        public GetDetallePagoQueryValidator(IRepository<Entity.DetallePago> DetallePagoRepository)
         {
             _DetallePagoRepository = DetallePagoRepository;
 

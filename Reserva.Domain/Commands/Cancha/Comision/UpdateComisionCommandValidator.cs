@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Comision
 {
     public class UpdateComisionCommandValidator : CommandValidatorBase<UpdateComisionCommand>
     {
-        private readonly IRepository<Entity.Models.Comision> _repositoryBase;
-        public UpdateComisionCommandValidator(IRepository<Entity.Models.Comision> repositoryBase)
+        private readonly IRepository<Entity.Comision> _repositoryBase;
+        public UpdateComisionCommandValidator(IRepository<Entity.Comision> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

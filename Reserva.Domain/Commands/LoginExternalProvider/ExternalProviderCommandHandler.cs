@@ -12,16 +12,16 @@ using System.Threading.Tasks;
 
 namespace Reserva.Domain.Commands.LoginExternalProvider
 {
-    public class ExternalProviderCommandHandler : CommandHandlerBase<ExternalProviderCommand, Entity.Models.ApplicationUser>
+    public class ExternalProviderCommandHandler : CommandHandlerBase<ExternalProviderCommand, Entity.ApplicationUser>
     {
         public ExternalProviderCommandHandler(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
 
-        public override async Task<ResponseDto<Entity.Models.ApplicationUser>> HandleCommand(ExternalProviderCommand request, CancellationToken cancellationToken)
+        public override async Task<ResponseDto<Entity.ApplicationUser>> HandleCommand(ExternalProviderCommand request, CancellationToken cancellationToken)
         {
-            var response = new ResponseDto<Entity.Models.ApplicationUser>();
-            var nuevoUsuario = new Entity.Models.ApplicationUser();
+            var response = new ResponseDto<Entity.ApplicationUser>();
+            var nuevoUsuario = new Entity.ApplicationUser();
             try
             {
                 if (request.CreateDto.TypeValidation.Contains(Constants.TIPO_VALIDACION.GOOGLE))
@@ -42,7 +42,7 @@ namespace Reserva.Domain.Commands.LoginExternalProvider
                             return response;
                         }
 
-                        nuevoUsuario = new Entity.Models.ApplicationUser
+                        nuevoUsuario = new Entity.ApplicationUser
                         {
                             Email = payload.Email,
                             UserName = payload.Email,
@@ -84,7 +84,7 @@ namespace Reserva.Domain.Commands.LoginExternalProvider
                             response.AddErrorResult("No se recibió un correo válido desde Facebook.");
                             return response;
                         }
-                        nuevoUsuario = new Entity.Models.ApplicationUser
+                        nuevoUsuario = new Entity.ApplicationUser
                         {
                             Email = userInfo.email,
                             UserName = userInfo.email,

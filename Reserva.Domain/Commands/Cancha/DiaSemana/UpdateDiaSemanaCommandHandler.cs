@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.DiaSemana
 {
     public class UpdateDiaSemanaCommandHandler : CommandHandlerBase<UpdateDiaSemanaCommand, GetDiaSemanaDto>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _DiaSemanaRepository;
+        private readonly IRepository<Entity.DiaSemana> _DiaSemanaRepository;
 
         public UpdateDiaSemanaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateDiaSemanaCommandValidator validator,
-            IRepository<Entity.Models.DiaSemana> DiaSemanaRepository
+            IRepository<Entity.DiaSemana> DiaSemanaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _DiaSemanaRepository = DiaSemanaRepository;

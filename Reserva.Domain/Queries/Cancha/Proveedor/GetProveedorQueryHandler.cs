@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
 {
     public class GetProveedorQueryHandler : QueryHandlerBase<GetProveedorQuery, GetProveedorDto>
     {
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
 
         public GetProveedorQueryHandler(
             IMapper mapper,
             GetProveedorQueryValidator validator,
-            IRepository<Entity.Models.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository
         ) : base(mapper, validator)
         {
             _ProveedorRepository = ProveedorRepository;

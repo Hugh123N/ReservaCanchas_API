@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.DetallePago
 {
     public class UpdateDetallePagoCommandHandler : CommandHandlerBase<UpdateDetallePagoCommand, GetDetallePagoDto>
     {
-        private readonly IRepository<Entity.Models.DetallePago> _DetallePagoRepository;
+        private readonly IRepository<Entity.DetallePago> _DetallePagoRepository;
 
         public UpdateDetallePagoCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateDetallePagoCommandValidator validator,
-            IRepository<Entity.Models.DetallePago> DetallePagoRepository
+            IRepository<Entity.DetallePago> DetallePagoRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _DetallePagoRepository = DetallePagoRepository;

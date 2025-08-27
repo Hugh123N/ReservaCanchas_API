@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Comision
 {
     public class SearchComisionQueryHandler : SearchQueryHandlerBase<SearchComisionQuery, SearchComisionFilterDto, SearchComisionDto>
     {
-        private readonly IRepository<Entity.Models.Comision> _ComisionRepository;
+        private readonly IRepository<Entity.Comision> _ComisionRepository;
 
         public SearchComisionQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Comision> ComisionRepository
+            IRepository<Entity.Comision> ComisionRepository
         ) : base(mapper)
         {
             _ComisionRepository = ComisionRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Comision
         {
             var response = new ResponseDto<SearchResultDto<SearchComisionDto>>();
 
-            Expression<Func<Entity.Models.Comision, bool>> filter = x => true;
+            Expression<Func<Entity.Comision, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,13 +47,13 @@ namespace Reserva.Domain.Queries.Cancha.Comision
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.Models.Comision>>();
+            var sorts = new List<SortExpression<Entity.Comision>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Comision>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Comision>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

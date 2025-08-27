@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Disponibilidad
 {
     public class CreateDisponibilidadCommandHandler : CommandHandlerBase<CreateDisponibilidadCommand, GetDisponibilidadDto>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
 
         public CreateDisponibilidadCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateDisponibilidadCommandValidator validator,
-            IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository
+            IRepository<Entity.Disponibilidad> DisponibilidadRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _DisponibilidadRepository = DisponibilidadRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Disponibilidad
         {
             var response = new ResponseDto<GetDisponibilidadDto>();
 
-            var Disponibilidad = _mapper?.Map<Entity.Models.Disponibilidad>(request.CreateDto);
+            var Disponibilidad = _mapper?.Map<Entity.Disponibilidad>(request.CreateDto);
 
             if (Disponibilidad != null)
             {

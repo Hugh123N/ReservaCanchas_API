@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.GananciaProveedor
 {
     public class SelectGananciaProveedorQueryHandler : SearchQueryHandlerBase<SelectGananciaProveedorQuery, SelectGananciaProveedorFilterDto, SelectGananciaProveedorDto>
     {
-        private readonly IRepository<Entity.Models.GananciaProveedor> _GananciaProveedorRepository;
+        private readonly IRepository<Entity.GananciaProveedor> _GananciaProveedorRepository;
 
         public SelectGananciaProveedorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.GananciaProveedor> GananciaProveedorRepository
+            IRepository<Entity.GananciaProveedor> GananciaProveedorRepository
         ) : base(mapper)
         {
             _GananciaProveedorRepository = GananciaProveedorRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.GananciaProveedor
         {
             var response = new ResponseDto<SearchResultDto<SelectGananciaProveedorDto>>();
 
-            Expression<Func<Entity.Models.GananciaProveedor, bool>> filter = x => true;
+            Expression<Func<Entity.GananciaProveedor, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.GananciaProveedor
             if (filters?.IdGananciaProveedor.HasValue == true)
                 filter = filter.And(x => x.IdGananciaProveedor == filters.IdGananciaProveedor);
 
-            var sorts = new List<SortExpression<Entity.Models.GananciaProveedor>>();
+            var sorts = new List<SortExpression<Entity.GananciaProveedor>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.GananciaProveedor>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.GananciaProveedor>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

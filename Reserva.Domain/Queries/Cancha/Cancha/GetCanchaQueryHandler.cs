@@ -11,13 +11,13 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
 {
     public class GetCanchaQueryHandler : QueryHandlerBase<GetCanchaQuery, GetCanchaDto>
     {
-        private readonly IRepository<Entity.Models.Cancha> _CanchaRepository;
+        private readonly IRepository<Entity.Cancha> _CanchaRepository;
 
         public GetCanchaQueryHandler(
             IMapper mapper,
             IMediator mediator,
             GetCanchaQueryValidator validator,
-            IRepository<Entity.Models.Cancha> CanchaRepository
+            IRepository<Entity.Cancha> CanchaRepository
         ) : base(mapper, mediator, validator)
         {
             _CanchaRepository = CanchaRepository;
@@ -28,7 +28,7 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
             var response = new ResponseDto<GetCanchaDto>();
             var Cancha = await _CanchaRepository.GetByAsync(x => x.IdCancha == request.Id,
                 x => x.IdTipoCanchaNavigation,
-                x => x.ImagenCanchas.Where(i => i.Activo),
+                x => x.ImagenCancha.Where(i => i.Activo),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
                 x => x.CodigoUbigeoNavigation!);

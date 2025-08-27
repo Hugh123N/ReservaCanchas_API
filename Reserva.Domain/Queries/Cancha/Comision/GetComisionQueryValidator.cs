@@ -7,9 +7,9 @@ namespace Reserva.Domain.Queries.Cancha.Comision
 {
     public class GetComisionQueryValidator : QueryValidatorBase<GetComisionQuery>
     {
-        private readonly IRepository<Entity.Models.Comision> _ComisionRepository;
+        private readonly IRepository<Entity.Comision> _ComisionRepository;
 
-        public GetComisionQueryValidator(IRepository<Entity.Models.Comision> ComisionRepository)
+        public GetComisionQueryValidator(IRepository<Entity.Comision> ComisionRepository)
         {
             _ComisionRepository = ComisionRepository;
 

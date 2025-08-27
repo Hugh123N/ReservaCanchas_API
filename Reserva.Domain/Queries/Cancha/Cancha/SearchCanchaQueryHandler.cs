@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
 {
     public class SearchCanchaQueryHandler : SearchQueryHandlerBase<SearchCanchaQuery, SearchCanchaFilterDto, SearchCanchaDto>
     {
-        private readonly IRepository<Entity.Models.Cancha> _CanchaRepository;
+        private readonly IRepository<Entity.Cancha> _CanchaRepository;
 
         public SearchCanchaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Cancha> CanchaRepository
+            IRepository<Entity.Cancha> CanchaRepository
         ) : base(mapper)
         {
             _CanchaRepository = CanchaRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
         {
             var response = new ResponseDto<SearchResultDto<SearchCanchaDto>>();
 
-            Expression<Func<Entity.Models.Cancha, bool>> filter = x => true;
+            Expression<Func<Entity.Cancha, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -50,13 +50,13 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
             if (filters?.IdEstadoCancha.HasValue == true)
                 filter = filter.And(x => x.IdEstadoCancha == filters.IdEstadoCancha);
 
-            var sorts = new List<SortExpression<Entity.Models.Cancha>>();
+            var sorts = new List<SortExpression<Entity.Cancha>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Cancha>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Cancha>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }
@@ -67,7 +67,7 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
                 sorts,
                 filter,
                 x => x.IdTipoCanchaNavigation,
-                x => x.ImagenCanchas.Where(i => i.EsPrincipal == true),
+                x => x.ImagenCancha.Where(i => i.EsPrincipal == true),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
                 x => x.CodigoUbigeoNavigation!

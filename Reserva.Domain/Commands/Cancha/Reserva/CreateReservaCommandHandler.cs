@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.Reserva
 {
     public class CreateReservaCommandHandler : CommandHandlerBase<CreateReservaCommand, GetReservaDto>
     {
-        private readonly IRepository<Entity.Models.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.Reserva> _ReservaRepository;
 
         public CreateReservaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateReservaCommandValidator validator,
-            IRepository<Entity.Models.Reserva> ReservaRepository
+            IRepository<Entity.Reserva> ReservaRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ReservaRepository = ReservaRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.Reserva
         {
             var response = new ResponseDto<GetReservaDto>();
 
-            var Reserva = _mapper?.Map<Entity.Models.Reserva>(request.CreateDto);
+            var Reserva = _mapper?.Map<Entity.Reserva>(request.CreateDto);
 
             if (Reserva != null)
             {

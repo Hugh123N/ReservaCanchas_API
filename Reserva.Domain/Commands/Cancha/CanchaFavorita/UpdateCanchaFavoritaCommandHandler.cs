@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.CanchaFavorita
 {
     public class UpdateCanchaFavoritaCommandHandler : CommandHandlerBase<UpdateCanchaFavoritaCommand, GetCanchaFavoritaDto>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _CanchaFavoritaRepository;
+        private readonly IRepository<Entity.CanchaFavorita> _CanchaFavoritaRepository;
 
         public UpdateCanchaFavoritaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateCanchaFavoritaCommandValidator validator,
-            IRepository<Entity.Models.CanchaFavorita> CanchaFavoritaRepository
+            IRepository<Entity.CanchaFavorita> CanchaFavoritaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _CanchaFavoritaRepository = CanchaFavoritaRepository;

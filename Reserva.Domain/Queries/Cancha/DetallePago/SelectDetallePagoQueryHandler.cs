@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.DetallePago
 {
     public class SelectDetallePagoQueryHandler : SearchQueryHandlerBase<SelectDetallePagoQuery, SelectDetallePagoFilterDto, SelectDetallePagoDto>
     {
-        private readonly IRepository<Entity.Models.DetallePago> _DetallePagoRepository;
+        private readonly IRepository<Entity.DetallePago> _DetallePagoRepository;
 
         public SelectDetallePagoQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.DetallePago> DetallePagoRepository
+            IRepository<Entity.DetallePago> DetallePagoRepository
         ) : base(mapper)
         {
             _DetallePagoRepository = DetallePagoRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.DetallePago
         {
             var response = new ResponseDto<SearchResultDto<SelectDetallePagoDto>>();
 
-            Expression<Func<Entity.Models.DetallePago, bool>> filter = x => true;
+            Expression<Func<Entity.DetallePago, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.DetallePago
             if (filters?.IdDetallePago.HasValue == true)
                 filter = filter.And(x => x.IdDetallePago == filters.IdDetallePago);
 
-            var sorts = new List<SortExpression<Entity.Models.DetallePago>>();
+            var sorts = new List<SortExpression<Entity.DetallePago>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.DetallePago>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.DetallePago>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

@@ -12,14 +12,14 @@ namespace Reserva.Domain.Commands.Cancha.TipoProveedor
 {
     public class CreateTipoProveedorCommandHandler : CommandHandlerBase<CreateTipoProveedorCommand, GetTipoProveedorDto>
     {
-        private readonly IRepository<Entity.Models.TipoProveedor> _TipoProveedorRepository;
+        private readonly IRepository<Entity.TipoProveedor> _TipoProveedorRepository;
 
         public CreateTipoProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CreateTipoProveedorCommandValidator validator,
-            IRepository<Entity.Models.TipoProveedor> TipoProveedorRepository
+            IRepository<Entity.TipoProveedor> TipoProveedorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _TipoProveedorRepository = TipoProveedorRepository;
@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Cancha.TipoProveedor
         {
             var response = new ResponseDto<GetTipoProveedorDto>();
 
-            var TipoProveedor = _mapper?.Map<Entity.Models.TipoProveedor>(request.CreateDto);
+            var TipoProveedor = _mapper?.Map<Entity.TipoProveedor>(request.CreateDto);
 
             if (TipoProveedor != null)
             {

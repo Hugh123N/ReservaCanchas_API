@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Notificacion
 {
     public class UpdateNotificacionCommandHandler : CommandHandlerBase<UpdateNotificacionCommand, GetNotificacionDto>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _NotificacionRepository;
+        private readonly IRepository<Entity.Notificacion> _NotificacionRepository;
 
         public UpdateNotificacionCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateNotificacionCommandValidator validator,
-            IRepository<Entity.Models.Notificacion> NotificacionRepository
+            IRepository<Entity.Notificacion> NotificacionRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _NotificacionRepository = NotificacionRepository;

@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.Notificacion
 {
     public class UpdateNotificacionCommandValidator : CommandValidatorBase<UpdateNotificacionCommand>
     {
-        private readonly IRepository<Entity.Models.Notificacion> _repositoryBase;
-        public UpdateNotificacionCommandValidator(IRepository<Entity.Models.Notificacion> repositoryBase)
+        private readonly IRepository<Entity.Notificacion> _repositoryBase;
+        public UpdateNotificacionCommandValidator(IRepository<Entity.Notificacion> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

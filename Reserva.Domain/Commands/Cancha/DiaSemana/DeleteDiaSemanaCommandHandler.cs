@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.DiaSemana
 {
     public class DeleteDiaSemanaCommandHandler : CommandHandlerBase<DeleteDiaSemanaCommand>
     {
-        private readonly IRepository<Entity.Models.DiaSemana> _DiaSemanaRepository;
+        private readonly IRepository<Entity.DiaSemana> _DiaSemanaRepository;
 
         public DeleteDiaSemanaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteDiaSemanaCommandValidator validator,
-            IRepository<Entity.Models.DiaSemana> DiaSemanaRepository
+            IRepository<Entity.DiaSemana> DiaSemanaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _DiaSemanaRepository = DiaSemanaRepository;

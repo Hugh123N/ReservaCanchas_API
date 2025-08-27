@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.EstadoReserva
     {
         public EstadoReservaProfile()
         {
-            CreateMap<Entity.Models.EstadoReserva, EstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, EstadoReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoReserva, CreateEstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, CreateEstadoReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoReserva, UpdateEstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, UpdateEstadoReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoReserva, GetEstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, GetEstadoReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoReserva, ListEstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, ListEstadoReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoReserva, SelectComboEstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, SelectComboEstadoReservaDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.EstadoReserva, SearchEstadoReservaDto>()
+            CreateMap<Entity.EstadoReserva, SearchEstadoReservaDto>()
                 .ReverseMap();
         }
     }

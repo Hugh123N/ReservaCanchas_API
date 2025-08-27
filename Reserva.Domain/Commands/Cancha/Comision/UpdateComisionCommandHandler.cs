@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Comision
 {
     public class UpdateComisionCommandHandler : CommandHandlerBase<UpdateComisionCommand, GetComisionDto>
     {
-        private readonly IRepository<Entity.Models.Comision> _ComisionRepository;
+        private readonly IRepository<Entity.Comision> _ComisionRepository;
 
         public UpdateComisionCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateComisionCommandValidator validator,
-            IRepository<Entity.Models.Comision> ComisionRepository
+            IRepository<Entity.Comision> ComisionRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _ComisionRepository = ComisionRepository;

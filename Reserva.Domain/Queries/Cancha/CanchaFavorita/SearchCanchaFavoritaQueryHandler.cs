@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.CanchaFavorita
 {
     public class SearchCanchaFavoritaQueryHandler : SearchQueryHandlerBase<SearchCanchaFavoritaQuery, SearchCanchaFavoritaFilterDto, SearchCanchaFavoritaDto>
     {
-        private readonly IRepository<Entity.Models.CanchaFavorita> _CanchaFavoritaRepository;
+        private readonly IRepository<Entity.CanchaFavorita> _CanchaFavoritaRepository;
 
         public SearchCanchaFavoritaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.CanchaFavorita> CanchaFavoritaRepository
+            IRepository<Entity.CanchaFavorita> CanchaFavoritaRepository
         ) : base(mapper)
         {
             _CanchaFavoritaRepository = CanchaFavoritaRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.CanchaFavorita
         {
             var response = new ResponseDto<SearchResultDto<SearchCanchaFavoritaDto>>();
 
-            Expression<Func<Entity.Models.CanchaFavorita, bool>> filter = x => true;
+            Expression<Func<Entity.CanchaFavorita, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,13 +47,13 @@ namespace Reserva.Domain.Queries.Cancha.CanchaFavorita
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.Models.CanchaFavorita>>();
+            var sorts = new List<SortExpression<Entity.CanchaFavorita>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.CanchaFavorita>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.CanchaFavorita>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

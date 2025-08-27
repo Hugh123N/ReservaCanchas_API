@@ -9,13 +9,13 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     public class UpdateUsuarioCommandHandler : CommandHandlerBase<UpdateUsuarioCommand, GetUsuarioDto>
     {
-        private readonly IRepository<Entity.Models.AspNetUser> _UsuarioRepository;
+        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
 
         public UpdateUsuarioCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateUsuarioCommandValidator validator,
-            IRepository<Entity.Models.AspNetUser> UsuarioRepository
+            IRepository<Entity.AspNetUsers> UsuarioRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _UsuarioRepository = UsuarioRepository;

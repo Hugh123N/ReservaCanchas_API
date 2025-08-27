@@ -18,25 +18,25 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 {
     internal class CreateUsuarioProveedorCommandHandler : CommandHandlerBase<CreateUsuarioProveedorCommand, GetUsuarioDto>
     {
-        private readonly UserManager<Entity.Models.ApplicationUser> _UsuarioManager;
-        private readonly IRepository<Entity.Models.AspNetRole> _RolRepository;
+        private readonly UserManager<Entity.ApplicationUser> _UsuarioManager;
+        private readonly IRepository<Entity.AspNetRoles> _RolRepository;
         private readonly IConfiguration _configuration;
-        private readonly IRepository<Entity.Models.ApplicationUser> _applicationUserRepository;
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
-        private readonly IRepository<Entity.Models.EstadoProveedor> _EstadoProveedorRepository;
-        private readonly IRepository<Entity.Models.EstadoUsuario> _EstadoUsuarioRepository;
+        private readonly IRepository<Entity.ApplicationUser> _applicationUserRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.EstadoProveedor> _EstadoProveedorRepository;
+        private readonly IRepository<Entity.EstadoUsuario> _EstadoUsuarioRepository;
 
         public CreateUsuarioProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
-            UserManager<Entity.Models.ApplicationUser> userManager,
-            IRepository<Entity.Models.AspNetRole> RolRepository,
+            UserManager<Entity.ApplicationUser> userManager,
+            IRepository<Entity.AspNetRoles> RolRepository,
             IConfiguration configuration,
-            IRepository<Entity.Models.ApplicationUser> applicationUserRepository,
-            IRepository<Entity.Models.Proveedor> ProveedorRepository,
-            IRepository<Entity.Models.EstadoProveedor> EstadoProveedorRepository,
-            IRepository<Entity.Models.EstadoUsuario> EstadoUsuarioRepository
+            IRepository<Entity.ApplicationUser> applicationUserRepository,
+            IRepository<Entity.Proveedor> ProveedorRepository,
+            IRepository<Entity.EstadoProveedor> EstadoProveedorRepository,
+            IRepository<Entity.EstadoUsuario> EstadoUsuarioRepository
         ) : base(unitOfWork, mapper, mediator)
         {
             _UsuarioManager = userManager;
@@ -54,7 +54,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
             var estadoProveedor = await _EstadoProveedorRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_PROVEEDOR.Pendiente));
             var estadoUsuario = await _EstadoUsuarioRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
 
-            var applicationUser = _mapper?.Map<Entity.Models.ApplicationUser>(request.CreateDto);
+            var applicationUser = _mapper?.Map<Entity.ApplicationUser>(request.CreateDto);
 
             if (applicationUser != null)
             {
@@ -102,7 +102,7 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
                     return response;
                 }
 
-                var proveedor = _mapper?.Map<Entity.Models.Proveedor>(request.CreateDto);
+                var proveedor = _mapper?.Map<Entity.Proveedor>(request.CreateDto);
                 if (proveedor != null)
                 {
                     proveedor.IdProveedor = applicationUser.Id;

@@ -8,11 +8,11 @@ namespace Reserva.Domain.Queries.Cancha.TipoProveedor
 {
     public class ListTipoProveedorQueryHandler : QueryHandlerBase<ListTipoProveedorQuery, IEnumerable<ListTipoProveedorDto>>
     {
-        private readonly IRepository<Entity.Models.TipoProveedor> _repository;
+        private readonly IRepository<Entity.TipoProveedor> _repository;
 
         public ListTipoProveedorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.TipoProveedor> repository
+            IRepository<Entity.TipoProveedor> repository
         ) : base(mapper)
         {
             _repository = repository;

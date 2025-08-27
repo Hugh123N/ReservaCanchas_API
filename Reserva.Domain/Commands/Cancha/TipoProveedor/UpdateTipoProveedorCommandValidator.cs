@@ -7,8 +7,8 @@ namespace Reserva.Domain.Commands.Cancha.TipoProveedor
 {
     public class UpdateTipoProveedorCommandValidator : CommandValidatorBase<UpdateTipoProveedorCommand>
     {
-        private readonly IRepository<Entity.Models.TipoProveedor> _repositoryBase;
-        public UpdateTipoProveedorCommandValidator(IRepository<Entity.Models.TipoProveedor> repositoryBase)
+        private readonly IRepository<Entity.TipoProveedor> _repositoryBase;
+        public UpdateTipoProveedorCommandValidator(IRepository<Entity.TipoProveedor> repositoryBase)
         {
             _repositoryBase = repositoryBase;
 

@@ -7,25 +7,25 @@ namespace Reserva.Domain.Mapping.Disponibilidad
     {
         public DisponibilidadProfile()
         {
-            CreateMap<Entity.Models.Disponibilidad, DisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, DisponibilidadDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Disponibilidad, CreateDisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, CreateDisponibilidadDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Disponibilidad, UpdateDisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, UpdateDisponibilidadDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Disponibilidad, GetDisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, GetDisponibilidadDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Disponibilidad, ListDisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, ListDisponibilidadDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Disponibilidad, SelectComboDisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, SelectComboDisponibilidadDto>()
                 .ReverseMap();
 
-            CreateMap<Entity.Models.Disponibilidad, SearchDisponibilidadDto>()
+            CreateMap<Entity.Disponibilidad, SearchDisponibilidadDto>()
                 .ReverseMap();
         }
     }

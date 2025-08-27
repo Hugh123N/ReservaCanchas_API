@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
 {
     public class SearchProveedorQueryHandler : SearchQueryHandlerBase<SearchProveedorQuery, SearchProveedorFilterDto, SearchProveedorDto>
     {
-        private readonly IRepository<Entity.Models.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
 
         public SearchProveedorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository
         ) : base(mapper)
         {
             _ProveedorRepository = ProveedorRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
         {
             var response = new ResponseDto<SearchResultDto<SearchProveedorDto>>();
 
-            Expression<Func<Entity.Models.Proveedor, bool>> filter = x => true;
+            Expression<Func<Entity.Proveedor, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,13 +47,13 @@ namespace Reserva.Domain.Queries.Cancha.Proveedor
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.Models.Proveedor>>();
+            var sorts = new List<SortExpression<Entity.Proveedor>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Proveedor>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Proveedor>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

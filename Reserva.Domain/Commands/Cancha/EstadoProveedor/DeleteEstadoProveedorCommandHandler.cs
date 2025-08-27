@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.EstadoProveedor
 {
     public class DeleteEstadoProveedorCommandHandler : CommandHandlerBase<DeleteEstadoProveedorCommand>
     {
-        private readonly IRepository<Entity.Models.EstadoProveedor> _EstadoProveedorRepository;
+        private readonly IRepository<Entity.EstadoProveedor> _EstadoProveedorRepository;
 
         public DeleteEstadoProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteEstadoProveedorCommandValidator validator,
-            IRepository<Entity.Models.EstadoProveedor> EstadoProveedorRepository
+            IRepository<Entity.EstadoProveedor> EstadoProveedorRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _EstadoProveedorRepository = EstadoProveedorRepository;

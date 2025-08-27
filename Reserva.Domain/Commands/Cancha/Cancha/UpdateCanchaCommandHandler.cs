@@ -10,15 +10,15 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
 {
     public class UpdateCanchaCommandHandler : CommandHandlerBase<UpdateCanchaCommand, GetCanchaDto>
     {
-        private readonly IRepository<Entity.Models.Cancha> _CanchaRepository;
-        private readonly IRepository<Entity.Models.ImagenCancha> _ImagenCanchaRepository;
+        private readonly IRepository<Entity.Cancha> _CanchaRepository;
+        private readonly IRepository<Entity.ImagenCancha> _ImagenCanchaRepository;
 
         public UpdateCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateCanchaCommandValidator validator,
-            IRepository<Entity.Models.Cancha> CanchaRepository,
-            IRepository<Entity.Models.ImagenCancha> ImagenCanchaRepository
+            IRepository<Entity.Cancha> CanchaRepository,
+            IRepository<Entity.ImagenCancha> ImagenCanchaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _CanchaRepository = CanchaRepository;
@@ -28,7 +28,7 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(UpdateCanchaCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetCanchaDto>();
-            var imgsResultantes = new List<Entity.Models.ImagenCancha>();
+            var imgsResultantes = new List<Entity.ImagenCancha>();
             var Cancha = await _CanchaRepository.GetByAsNoTrackingAsync(x => x.IdCancha == request.UpdateDto.IdCancha);
 
             if (Cancha == null)
@@ -37,7 +37,7 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
                 return response;
             }
 
-            var imgsBD = await _ImagenCanchaRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.UpdateDto.IdCancha) ?? new List<Entity.Models.ImagenCancha>();
+            var imgsBD = await _ImagenCanchaRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.UpdateDto.IdCancha) ?? new List<Entity.ImagenCancha>();
            
             var idsRequest = request.UpdateDto.Imagenes?.Where(i => i.IdImagenCancha != 0).Select(i => i.IdImagenCancha)
                                                .ToList() ?? new List<int>();
@@ -62,7 +62,7 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
 
             var imgsNuevosDto = request.UpdateDto.Imagenes?.Where(x => x.IdImagenCancha == 0);
 
-            var imgsNuevos = _mapper?.Map<List<Entity.Models.ImagenCancha>>(imgsNuevosDto) ?? new List<Entity.Models.ImagenCancha>();
+            var imgsNuevos = _mapper?.Map<List<Entity.ImagenCancha>>(imgsNuevosDto) ?? new List<Entity.ImagenCancha>();
 
             foreach (var img in imgsNuevos)
             {
@@ -73,7 +73,7 @@ namespace Reserva.Domain.Commands.Cancha.Cancha
                 imgsResultantes.Add(img);
             }
             _mapper?.Map(request.UpdateDto, Cancha);
-            Cancha.ImagenCanchas = imgsResultantes;
+            Cancha.ImagenCancha = imgsResultantes;
 
             await _CanchaRepository.UpdateAsync(Cancha);
             await _CanchaRepository.SaveAsync();

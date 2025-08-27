@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Pago
 {
     public class DeletePagoCommandHandler : CommandHandlerBase<DeletePagoCommand>
     {
-        private readonly IRepository<Entity.Models.Pago> _PagoRepository;
+        private readonly IRepository<Entity.Pago> _PagoRepository;
 
         public DeletePagoCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeletePagoCommandValidator validator,
-            IRepository<Entity.Models.Pago> PagoRepository
+            IRepository<Entity.Pago> PagoRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _PagoRepository = PagoRepository;

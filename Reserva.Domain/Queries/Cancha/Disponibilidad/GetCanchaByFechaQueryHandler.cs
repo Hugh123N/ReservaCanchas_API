@@ -13,13 +13,13 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
 {
     internal class GetCanchaByFechaQueryHandler : QueryHandlerBase<GetCanchaByFechaQuery, List<string>>
     {
-        private readonly IRepository<Entity.Models.Disponibilidad> _DisponibilidadRepository;
-        private readonly IRepository<Entity.Models.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.Disponibilidad> _DisponibilidadRepository;
+        private readonly IRepository<Entity.Reserva> _ReservaRepository;
 
         public GetCanchaByFechaQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Disponibilidad> DisponibilidadRepository,
-            IRepository<Entity.Models.Reserva> ReservaRepository
+            IRepository<Entity.Disponibilidad> DisponibilidadRepository,
+            IRepository<Entity.Reserva> ReservaRepository
         ) : base(mapper)
         {
             _DisponibilidadRepository = DisponibilidadRepository;

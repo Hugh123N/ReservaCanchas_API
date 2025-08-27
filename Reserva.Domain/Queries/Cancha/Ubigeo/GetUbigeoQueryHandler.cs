@@ -8,12 +8,12 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
 {
     public class GetUbigeoQueryHandler : QueryHandlerBase<GetUbigeoQuery, GetUbigeoDto>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _UbigeoRepository;
+        private readonly IRepository<Entity.Ubigeo> _UbigeoRepository;
 
         public GetUbigeoQueryHandler(
             IMapper mapper,
             GetUbigeoQueryValidator validator,
-            IRepository<Entity.Models.Ubigeo> UbigeoRepository
+            IRepository<Entity.Ubigeo> UbigeoRepository
         ) : base(mapper, validator)
         {
             _UbigeoRepository = UbigeoRepository;

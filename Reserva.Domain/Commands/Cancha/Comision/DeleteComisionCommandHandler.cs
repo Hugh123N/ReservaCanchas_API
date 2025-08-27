@@ -8,13 +8,13 @@ namespace Reserva.Domain.Commands.Cancha.Comision
 {
     public class DeleteComisionCommandHandler : CommandHandlerBase<DeleteComisionCommand>
     {
-        private readonly IRepository<Entity.Models.Comision> _ComisionRepository;
+        private readonly IRepository<Entity.Comision> _ComisionRepository;
 
         public DeleteComisionCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             DeleteComisionCommandValidator validator,
-            IRepository<Entity.Models.Comision> ComisionRepository
+            IRepository<Entity.Comision> ComisionRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _ComisionRepository = ComisionRepository;

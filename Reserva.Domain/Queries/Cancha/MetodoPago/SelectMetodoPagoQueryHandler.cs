@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.MetodoPago
 {
     public class SelectMetodoPagoQueryHandler : SearchQueryHandlerBase<SelectMetodoPagoQuery, SelectMetodoPagoFilterDto, SelectMetodoPagoDto>
     {
-        private readonly IRepository<Entity.Models.MetodoPago> _MetodoPagoRepository;
+        private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
 
         public SelectMetodoPagoQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.MetodoPago> MetodoPagoRepository
+            IRepository<Entity.MetodoPago> MetodoPagoRepository
         ) : base(mapper)
         {
             _MetodoPagoRepository = MetodoPagoRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.MetodoPago
         {
             var response = new ResponseDto<SearchResultDto<SelectMetodoPagoDto>>();
 
-            Expression<Func<Entity.Models.MetodoPago, bool>> filter = x => true;
+            Expression<Func<Entity.MetodoPago, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.MetodoPago
             if (filters?.IdMetodoPago.HasValue == true)
                 filter = filter.And(x => x.IdMetodoPago == filters.IdMetodoPago);
 
-            var sorts = new List<SortExpression<Entity.Models.MetodoPago>>();
+            var sorts = new List<SortExpression<Entity.MetodoPago>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.MetodoPago>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.MetodoPago>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }

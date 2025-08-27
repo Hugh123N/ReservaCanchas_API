@@ -2,7 +2,7 @@
 //using Reserva.Audit.Common;
 //using Reserva.Audit.RestClient;
 using Reserva.Entity.Base;
-using Reserva.Entity.Models;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
 using Reserva.Repository.Security;

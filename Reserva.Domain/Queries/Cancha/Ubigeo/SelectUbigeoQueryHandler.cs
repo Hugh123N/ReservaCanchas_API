@@ -11,11 +11,11 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
 {
     public class SelectUbigeoQueryHandler : SearchQueryHandlerBase<SelectUbigeoQuery, SelectUbigeoFilterDto, SelectUbigeoDto>
     {
-        private readonly IRepository<Entity.Models.Ubigeo> _UbigeoRepository;
+        private readonly IRepository<Entity.Ubigeo> _UbigeoRepository;
 
         public SelectUbigeoQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Models.Ubigeo> UbigeoRepository
+            IRepository<Entity.Ubigeo> UbigeoRepository
         ) : base(mapper)
         {
             _UbigeoRepository = UbigeoRepository;
@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
         {
             var response = new ResponseDto<SearchResultDto<SelectUbigeoDto>>();
 
-            Expression<Func<Entity.Models.Ubigeo, bool>> filter = x => true;
+            Expression<Func<Entity.Ubigeo, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -49,13 +49,13 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
             if (!string.IsNullOrEmpty(filters?.IdUbigeo))
                 filter = filter.And(x => x.CodigoUbigeo == filters.IdUbigeo);
 
-            var sorts = new List<SortExpression<Entity.Models.Ubigeo>>();
+            var sorts = new List<SortExpression<Entity.Ubigeo>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.Models.Ubigeo>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Ubigeo>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }
