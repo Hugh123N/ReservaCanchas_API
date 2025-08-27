@@ -63,9 +63,7 @@ namespace Reserva.Domain.Commands.User
                 return response;
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var accessToken = await _mediator.Send(new GenerateTokenCommand(user, roles), cancellationToken)!;
+            var accessToken = await _mediator.Send(new GenerateTokenCommand(request.LoginDto.ApplicationCode, user), cancellationToken)!;
 
             if (accessToken?.Data == null)
             {

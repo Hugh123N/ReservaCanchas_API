@@ -40,8 +40,8 @@ namespace Reserva.Application.Cancha
         public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
             => await _mediator.Send(new LoginCommand(loginDto));
 
-        public async Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto)
-            => await _mediator.Send(new CreateGoogleCommand(createDto));
+        public async Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto)
+            => await _mediator.Send(new CreateAndLoginCommand(createDto));
         public async Task<ResponseDto> ForgotPassword(string email, string host)
             => await _mediator.Send(new ForgotPasswordCommand(email, host));
         public async Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto)

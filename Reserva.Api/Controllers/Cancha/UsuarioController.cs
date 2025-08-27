@@ -51,9 +51,9 @@ namespace Reserva.Api.Controllers.Cancha
         [HttpPost("login")]
         public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
             => await _UsuarioApplication.Login(loginDto);
-        [HttpPost("createGoogle")]
-        public async Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto)
-            => await _UsuarioApplication.CreateGoogle(createDto);
+        [HttpPost("client/loginAndCreate")]
+        public async Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto)
+            => await _UsuarioApplication.CreateAndLogin(createDto);
         [AllowAnonymous]
         [HttpGet("forgot-password/{email}/{host}")]
         public async Task<ResponseDto> ForgotPassword(string email, string host)

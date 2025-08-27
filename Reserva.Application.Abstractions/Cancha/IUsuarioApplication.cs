@@ -15,7 +15,7 @@ namespace Reserva.Application.Abstractions.Cancha
         Task<ResponseDto<IEnumerable<SelectComboUsuarioDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectUsuarioDto>>> Select(SearchParamsDto<SelectUsuarioFilterDto> searchParams);
         Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto);
-        Task<ResponseDto<LoginResultDto>> CreateGoogle(CreateGoogleDto createDto);
+        Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto);
         Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto);
         Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, UpgradeToProveedorDto upgradeDto);
         Task<ResponseDto> ForgotPassword(string email, string host);

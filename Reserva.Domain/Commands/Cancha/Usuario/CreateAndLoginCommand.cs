@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Reserva.Domain.Commands.Cancha.Usuario
 {
-    public class CreateGoogleCommand : CommandBase<LoginResultDto>
+    public class CreateAndLoginCommand : CommandBase<LoginResultDto>
     {
-        public CreateGoogleCommand(CreateGoogleDto createDto) => CreateDto = createDto;
-        public CreateGoogleDto CreateDto { get; set; }
+        public CreateAndLoginCommand(CreateAndLoginDto createDto) => CreateDto = createDto;
+        public CreateAndLoginDto CreateDto { get; set; }
     }
 }

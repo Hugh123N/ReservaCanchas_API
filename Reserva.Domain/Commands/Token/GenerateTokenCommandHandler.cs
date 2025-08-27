@@ -22,15 +22,18 @@ namespace Reserva.Domain.Commands.Token
     public class GenerateTokenCommandHandler : CommandHandlerBase<GenerateTokenCommand, AccessTokenDto>
     {
         private readonly IConfiguration _configuration;
+        private readonly UserManager<Entity.Models.ApplicationUser> _userManager;
 
         public GenerateTokenCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
-            IConfiguration configuration
+            IConfiguration configuration,
+            UserManager<Entity.Models.ApplicationUser> userManager
         ) : base(unitOfWork, mapper, mediator)
         {
             _configuration = configuration;
+            _userManager = userManager;
         }
 
         public override async Task<ResponseDto<AccessTokenDto>> HandleCommand(GenerateTokenCommand request, CancellationToken cancellationToken)
@@ -45,6 +48,7 @@ namespace Reserva.Domain.Commands.Token
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey));
             var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var roles = await _userManager.GetRolesAsync(request.Usuario);
 
             var claims = new List<Claim>
             {
@@ -55,11 +59,11 @@ namespace Reserva.Domain.Commands.Token
                 new Claim("UserId", usuario.Id.ToString()),
                 new Claim("DisplayName", $"{usuario.UserName} {usuario.LastName}" ?? ""),
                 new Claim("UserName", usuario.UserName ?? "")
-                //new Claim(ClaimTypes.Role, usuario.?.Nombre ?? "SinRol)"
             };
-            foreach (var role in request.Roles)
+            if(roles != null && roles.Any())
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                foreach (var role in roles)
+                    claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
             var jwt = new JwtSecurityToken(

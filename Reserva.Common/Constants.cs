@@ -38,5 +38,13 @@ namespace Reserva.Common
             public const string Suspendido = "04";
             public const string Mantenimiento = "05";
         }
+
+        public struct TIPO_VALIDACION
+        {
+            public const string GOOGLE = "Google";
+            public const string FACEBOOK = "Facebook";
+            public const string CORREO = "Correo";
+            public const string APPLE = "Apple";
+        }
     }
 }
