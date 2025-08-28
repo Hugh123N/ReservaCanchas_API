@@ -20,7 +20,7 @@ builder.Services.AddDbContext<ReservaCanchasContext>(options =>
 // Cors
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
 {
-    builder.WithOrigins(configuration.GetValue<string>("AllowedHosts"))
+    builder.WithOrigins(configuration.GetValue<string>("AllowedHosts")!)
            .AllowAnyMethod()
            .AllowAnyHeader();
 }));
