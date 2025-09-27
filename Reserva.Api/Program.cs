@@ -32,7 +32,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 // Repositories
 builder.Services.UseRepositories(
-    configuration["ConexionString"]!,
+    connectionString,
     configuration["AuditOptions:ApiUrl"]!,
     typeof(Program).Assembly.GetName().Name!
  );
