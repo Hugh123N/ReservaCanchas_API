@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Reserva.Api.Security;
 using Reserva.Application.Extensions;
 using Reserva.Domain.Extensions;
@@ -18,11 +19,12 @@ builder.Services.AddDbContext<ReservaCanchasContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Cors
-builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", policy =>
 {
-    builder.WithOrigins(configuration.GetValue<string>("AllowedHosts")!)
-           .AllowAnyMethod()
-           .AllowAnyHeader();
+    policy.WithOrigins(allowedOrigins!)
+          .AllowAnyMethod()
+          .AllowAnyHeader();
 }));
 
 // Controllers
