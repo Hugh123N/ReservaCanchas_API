@@ -1,8 +1,10 @@
 using AutoMapper;
-using Reserva.Dto.Base;
-using Reserva.Entity.Base;
+using MediatR;
 using Reserva.Domain.Queries.Base;
+using Reserva.Domain.Queries.Cancha.Disponibilidad;
+using Reserva.Dto.Base;
 using Reserva.Dto.Cancha.Cancha;
+using Reserva.Entity.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
 using System.Linq.Expressions;
@@ -15,8 +17,9 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
 
         public SearchCanchaQueryHandler(
             IMapper mapper,
+            IMediator mediator,
             IRepository<Entity.Cancha> CanchaRepository
-        ) : base(mapper)
+        ) : base(mapper, mediator)
         {
             _CanchaRepository = CanchaRepository;
         }
@@ -35,20 +38,27 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
             if (!string.IsNullOrEmpty(filters?.Nombre))
                 filter = filter.And(x => x.Nombre.Contains(filters.Nombre));
 
-            if (!string.IsNullOrEmpty(filters?.CodigoDepartamento)) 
-                filter = filter.And(x => x.CodigoUbigeo!.StartsWith(filters.CodigoDepartamento));
-
-            if (!string.IsNullOrEmpty(filters?.CodigoProvincia))
-                filter = filter.And(x => x.CodigoUbigeo!.StartsWith(filters.CodigoProvincia));
-
-            if (!string.IsNullOrEmpty(filters?.CodigoDistrito))
-                filter = filter.And(x => x.CodigoUbigeo!.StartsWith(filters.CodigoDistrito));
+            if (!string.IsNullOrEmpty(filters?.CodigoUbigeo)) 
+                filter = filter.And(x => x.CodigoUbigeo!.StartsWith(filters.CodigoUbigeo));
 
             if (filters?.IdTipoCancha.HasValue == true)
                 filter = filter.And(x => x.IdTipoCancha == filters.IdTipoCancha);
 
             if (filters?.IdEstadoCancha.HasValue == true)
                 filter = filter.And(x => x.IdEstadoCancha == filters.IdEstadoCancha);
+
+            if (filters?.Fecha.HasValue == true)
+            {
+                var fecha = filters.Fecha.Value;
+                var diaSemana = fecha.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)fecha.DayOfWeek;
+
+                filter = filter.And(x =>
+                    x.Disponibilidad.Any(d => d.Activo
+                        && d.IdDiaSemana == diaSemana
+                        && (fecha.Date > DateTime.Now.Date || d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
+                    )
+                );
+            }
 
             var sorts = new List<SortExpression<Entity.Cancha>>();
 
@@ -70,11 +80,17 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
                 x => x.ImagenCancha.Where(i => i.EsPrincipal == true),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
-                x => x.CodigoUbigeoNavigation!
-                //x => x.Disponibilidads.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
+                x => x.CodigoUbigeoNavigation!,
+
+                x => x.Disponibilidad.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
             );
 
             var CanchaDtos = _mapper?.Map<IEnumerable<SearchCanchaDto>>(Canchas.Items);
+
+            foreach (var it in CanchaDtos) { 
+                var gr = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, it.IdCancha ?? 0), cancellationToken)!;
+                it.HorariosDisponibles = gr.Data; 
+            }
 
             var searchResult = new SearchResultDto<SearchCanchaDto>(
                 CanchaDtos ?? new List<SearchCanchaDto>(),

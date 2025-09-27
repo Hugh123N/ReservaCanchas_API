@@ -40,10 +40,6 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
             if (disponibilidad == null)
                 return response;
 
-            var requestFechaDateOnly = DateOnly.FromDateTime(request.Fecha);
-            var reservas = await _ReservaRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.CanchaId && x.Fecha == requestFechaDateOnly && x.Activo);
-            var reservasHoras = reservas.Select(x => x.HoraInicio.ToString("HH:mm")).ToList();
-
             foreach (var item in disponibilidad)
             {
                 if (item.HoraInicio != null && item.HoraFin != null)
@@ -57,8 +53,27 @@ namespace Reserva.Domain.Queries.Cancha.Disponibilidad
                 }
             }
 
+            var requestFechaDateOnly = DateOnly.FromDateTime(request.Fecha);
+            var reservas = await _ReservaRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.CanchaId && x.Fecha == requestFechaDateOnly && x.Activo);
+            var reservasHoras = reservas.Select(x => x.HoraInicio.ToString("HH:mm")).ToList();
+
             // Eliminar las horas que ya están reservadas
             response.Data = response.Data.Except(reservasHoras).ToList();
+
+            // Si la fecha es HOY, eliminar horas pasadas
+            var hoy = DateOnly.FromDateTime(DateTime.Now);
+            if (requestFechaDateOnly == hoy)
+            {
+                var horaActual = DateTime.Now;
+
+                response.Data = response.Data
+                    .Where(horaStr =>
+                    {
+                        var hora = DateTime.ParseExact(horaStr, "HH:mm", CultureInfo.InvariantCulture);
+                        return hora > horaActual;
+                    })
+                    .ToList();
+            }
 
             return response;
         }
