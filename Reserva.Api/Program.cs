@@ -19,12 +19,11 @@ builder.Services.AddDbContext<ReservaCanchasContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Cors
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", policy =>
+builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
 {
-    policy.WithOrigins(allowedOrigins!)
-          .AllowAnyMethod()
-          .AllowAnyHeader();
+    builder.WithOrigins(configuration.GetValue<string>("AllowedHosts")!)
+           .AllowAnyMethod()
+           .AllowAnyHeader();
 }));
 
 // Controllers
@@ -68,6 +67,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Cors
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 

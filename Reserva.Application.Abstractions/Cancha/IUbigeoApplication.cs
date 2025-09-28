@@ -11,7 +11,7 @@ namespace Reserva.Application.Abstractions.Cancha
         Task<ResponseDto<GetUbigeoDto>> Get(string id);
         Task<ResponseDto<IEnumerable<DepartamentoDto>>> List();
         Task<ResponseDto<SearchResultDto<SelectUbigeoDto>>> Select(SearchParamsDto<SelectUbigeoFilterDto> searchParams);
-
+        Task<ResponseDto<IEnumerable<GetUbigeoDto>>> ListAll();
     }
 }
 

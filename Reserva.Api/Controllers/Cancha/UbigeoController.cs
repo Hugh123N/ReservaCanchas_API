@@ -30,6 +30,9 @@ namespace Reserva.Api.Controllers.Cancha
         [HttpGet("list")]
         public async Task<ResponseDto<IEnumerable<DepartamentoDto>>> List()
             => await _UbigeoApplication.List();
+        [HttpGet("listAll")]
+        public async Task<ResponseDto<IEnumerable<GetUbigeoDto>>> ListAll()
+            => await _UbigeoApplication.ListAll();
         [HttpPost("select")]
         public async Task<ResponseDto<SearchResultDto<SelectUbigeoDto>>> Select(SearchParamsDto<SelectUbigeoFilterDto> searchParams)
             => await _UbigeoApplication.Select(searchParams);

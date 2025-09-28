@@ -27,6 +27,8 @@ namespace Reserva.Application.Cancha
             => await _mediator.Send(new ListUbigeoQuery());
         public async Task<ResponseDto<SearchResultDto<SelectUbigeoDto>>> Select(SearchParamsDto<SelectUbigeoFilterDto> searchParams)
              => await _mediator.Send(new SelectUbigeoQuery(searchParams));
+        public async Task<ResponseDto<IEnumerable<GetUbigeoDto>>> ListAll()
+            => await _mediator.Send(new ListAllQuery());
 
     }
 }
