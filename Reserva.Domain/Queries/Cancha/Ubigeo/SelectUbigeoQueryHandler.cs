@@ -46,8 +46,6 @@ namespace Reserva.Domain.Queries.Cancha.Ubigeo
             }
             */
 
-            if (!string.IsNullOrEmpty(filters?.IdUbigeo))
-                filter = filter.And(x => x.CodigoUbigeo == filters.IdUbigeo);
 
             var sorts = new List<SortExpression<Entity.Ubigeo>>();
 

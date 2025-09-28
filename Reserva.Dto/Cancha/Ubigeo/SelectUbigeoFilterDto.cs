@@ -4,7 +4,5 @@ namespace Reserva.Dto.Cancha.Ubigeo
     {
         public DateTimeOffset? FechaDesde { get; set; }
         public DateTimeOffset? FechaHasta { get; set; }
-        public string? IdUbigeo { get; set; }
-        public bool? Activo { get; set; }
     }
 }
