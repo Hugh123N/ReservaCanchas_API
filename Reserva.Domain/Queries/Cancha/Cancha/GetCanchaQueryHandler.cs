@@ -36,7 +36,7 @@ namespace Reserva.Domain.Queries.Cancha.Cancha
             var CanchaDto = _mapper?.Map<GetCanchaDto>(Cancha);
             var disponibilidad = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, request.Id), cancellationToken)!;
 
-            CanchaDto.Disponibilidad = disponibilidad.Data;
+            CanchaDto.HorariosDisponibles = disponibilidad.Data;
                 
             if (Cancha != null && CanchaDto != null)
             {

@@ -17,6 +17,6 @@ namespace Reserva.Dto.Cancha.Cancha
         public GetEstadoCanchaDto? EstadoCancha { get; set; }
         public List<GetCanchaFavoritaDto>? Faboritos { get; set; }
         public GetUbigeoDto? Ubigeo { get; set; }
-        public List<string>? Disponibilidad { get; set; }
+        public List<string>? HorariosDisponibles { get; set; }
     }
 }
