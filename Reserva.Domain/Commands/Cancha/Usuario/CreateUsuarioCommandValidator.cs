@@ -18,27 +18,27 @@ namespace Reserva.Domain.Commands.Cancha.Usuario
 
             When(x => x.CreateDto != null, () =>
             {
-                RuleFor(x => x.CreateDto.UserName)
+                RuleFor(x => x.CreateDto.FirstName)
                     .NotEmpty().WithMessage("El nombre es obligatorio.")
                     .MaximumLength(100).WithMessage("El nombre no debe exceder los 100 caracteres.")
-                    .Matches(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$").WithMessage("El nombre solo debe contener letras y espacios.");
+                    .Matches(@"^[\p{L}\s]+$").WithMessage("El nombre solo debe contener letras y espacios.");
 
                 RuleFor(x => x.CreateDto.LastName)
                     .NotEmpty().WithMessage("El apellido es obligatorio.")
                     .MaximumLength(100).WithMessage("El apellido no debe exceder los 100 caracteres.")
-                    .Matches(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$").WithMessage("El apellido solo debe contener letras y espacios.");
+                    .Matches(@"^[\p{L}\s]+$").WithMessage("El apellido solo debe contener letras y espacios.");
 
                 RuleFor(x => x.CreateDto.Email)
-                    .NotEmpty().WithMessage("El correo electrónico es obligatorio.")
-                    .EmailAddress().WithMessage("El correo electrónico no tiene un formato válido.")
+                    .NotEmpty().WithMessage("El correo electronico es obligatorio.")
+                    .EmailAddress().WithMessage("El correo electronico no tiene un formato válido.")
                     .MaximumLength(100)
                     .MustAsync(CorreoNoExiste)
-                    .WithMessage("El correo electrónico ya está registrado.");
+                    .WithMessage("El correo electronico ya esta registrado.");
                     
-                RuleFor(x => x.CreateDto.PhoneNumber)
+                /*RuleFor(x => x.CreateDto.PhoneNumber)
                     .Matches(@"^\d{9}$").WithMessage("El número de teléfono debe tener 9 dígitos.")
                     .MustAsync(TelefonoNoExiste)
-                    .WithMessage("El número de teléfono ya está registrado.");
+                    .WithMessage("El número de teléfono ya está registrado.");*/
 
                 RuleFor(x => x.CreateDto.Password)
                     .NotEmpty().WithMessage("La contraseña es obligatoria.")
