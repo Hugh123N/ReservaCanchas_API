@@ -1,0 +1,10 @@
+namespace Reserva.Dto.Dbo.Reserva
+{
+    public class SelectReservaFilterDto
+    {
+        public DateTimeOffset? FechaDesde { get; set; }
+        public DateTimeOffset? FechaHasta { get; set; }
+        public int? IdReserva { get; set; }
+        public bool? Activo { get; set; }
+    }
+}

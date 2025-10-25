@@ -1,0 +1,12 @@
+using System;
+using System.Collections.Generic;
+
+namespace Reserva.Dto.Dbo.CanchaFavorita
+{
+    public class CanchaFavoritaDto
+    {
+        public Guid IdUsuario { get; set; }
+        public int IdCancha { get; set; }
+        public DateTimeOffset FechaAgregado { get; set; }
+    }
+}

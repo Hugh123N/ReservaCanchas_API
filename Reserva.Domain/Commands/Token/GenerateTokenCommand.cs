@@ -1,5 +1,5 @@
 ﻿using Reserva.Domain.Commands.Base;
-using Reserva.Dto.Token;
+using Reserva.Dto.Dbo.Token;
 using Reserva.Entity;
 using Reserva.Entity;
 

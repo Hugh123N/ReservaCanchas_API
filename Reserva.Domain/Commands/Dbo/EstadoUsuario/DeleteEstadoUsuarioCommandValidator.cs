@@ -1,0 +1,31 @@
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Reserva.Domain.Commands.Base;
+using Reserva.Repository.Abstractions.Base;
+
+namespace Reserva.Domain.Commands.Dbo.EstadoUsuario
+{
+    public class DeleteEstadoUsuarioCommandValidator : CommandValidatorBase<DeleteEstadoUsuarioCommand>
+    {
+        private readonly IRepository<Entity.EstadoUsuario> _repositoryBase;
+        public DeleteEstadoUsuarioCommandValidator(IRepository<Entity.EstadoUsuario> repositoryBase)
+        {
+            _repositoryBase = repositoryBase;
+
+            RequiredField(x => x.Id, Resources.Dbo.EstadoUsuario.IdEstadoUsuario)
+                .DependentRules(() =>
+                {
+                    RuleFor(x => x.Id)
+                        .MustAsync(ValidateExistenceAsync)
+                        .WithCustomValidationMessage();
+                });
+        }
+
+        protected async Task<bool> ValidateExistenceAsync(DeleteEstadoUsuarioCommand command, int id, ValidationContext<DeleteEstadoUsuarioCommand> context, CancellationToken cancellationToken)
+        {
+            var exists = await _repositoryBase.FindAll().Where(x => x.IdEstadoUsuario == id).AnyAsync(cancellationToken);
+            if (!exists) return CustomValidationMessage(context, Resources.Common.DeleteRecordNotFound);
+            return true;
+        }
+    }
+}

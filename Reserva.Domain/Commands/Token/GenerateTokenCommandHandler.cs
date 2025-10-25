@@ -2,7 +2,7 @@
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
-using Reserva.Dto.Token;
+using Reserva.Dto.Dbo.Token;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using MediatR;

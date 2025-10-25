@@ -1,0 +1,36 @@
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Reserva.Domain.Commands.Base;
+using Reserva.Repository.Abstractions.Base;
+
+namespace Reserva.Domain.Commands.Dbo.EstadoUsuario
+{
+    public class UpdateEstadoUsuarioCommandValidator : CommandValidatorBase<UpdateEstadoUsuarioCommand>
+    {
+        private readonly IRepository<Entity.EstadoUsuario> _repositoryBase;
+        public UpdateEstadoUsuarioCommandValidator(IRepository<Entity.EstadoUsuario> repositoryBase)
+        {
+            _repositoryBase = repositoryBase;
+
+            RequiredInformation(x => x.UpdateDto).DependentRules(() =>
+            {
+                RequiredField(x => x.UpdateDto.IdEstadoUsuario, Resources.Dbo.EstadoUsuario.IdEstadoUsuario)
+                    .DependentRules(() =>
+                    {
+                        RuleFor(x => x.UpdateDto.IdEstadoUsuario)
+                            .MustAsync(ValidateExistenceAsync)
+                            .WithCustomValidationMessage();
+                    });
+                //RequiredString(x => x.UpdateDto.Codigo, Resources.Dbo.EstadoUsuario.Codigo, 5, 10);
+                //RequiredField(x => x.UpdateDto.FechaIngreso, Resources.Dbo.EstadoUsuario.FechaIngreso);
+            });
+        }
+
+        protected async Task<bool> ValidateExistenceAsync(UpdateEstadoUsuarioCommand command, int id, ValidationContext<UpdateEstadoUsuarioCommand> context, CancellationToken cancellationToken)
+        {
+            var exists = await _repositoryBase.FindAll().Where(x => x.IdEstadoUsuario == id).AnyAsync(cancellationToken);
+            if (!exists) return CustomValidationMessage(context, Resources.Common.UpdateRecordNotFound);
+            return true;
+        }
+    }
+}

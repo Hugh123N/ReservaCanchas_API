@@ -1,4 +1,4 @@
-﻿using Reserva.Dto.Cancha.Usuario;
+﻿using Reserva.Dto.Dbo.Usuario;
 using Reserva.Domain.Commands.Base;
 using System;
 using System.Collections.Generic;
