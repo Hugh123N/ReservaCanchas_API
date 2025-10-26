@@ -53,8 +53,6 @@ public partial class AspNetUsers
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<AspNetUserClaims> AspNetUserClaims { get; set; } = new List<AspNetUserClaims>();
-
     public virtual ICollection<AspNetUserLogins> AspNetUserLogins { get; set; } = new List<AspNetUserLogins>();
 
     public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; } = new List<CanchaFavorita>();
@@ -64,8 +62,6 @@ public partial class AspNetUsers
     public virtual ICollection<IntentoLogin> IntentoLogin { get; set; } = new List<IntentoLogin>();
 
     public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
-
-    public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
 
     public virtual Proveedor? Proveedor { get; set; }
 

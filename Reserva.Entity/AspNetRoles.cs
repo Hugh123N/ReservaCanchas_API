@@ -23,7 +23,5 @@ public partial class AspNetRoles
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<AspNetRoleClaims> AspNetRoleClaims { get; set; } = new List<AspNetRoleClaims>();
-
     public virtual ICollection<AspNetUsers> User { get; set; } = new List<AspNetUsers>();
 }

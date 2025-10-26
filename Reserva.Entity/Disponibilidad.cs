@@ -15,6 +15,8 @@ public partial class Disponibilidad
 
     public TimeOnly HoraFin { get; set; }
 
+    public bool? Disponible { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }
@@ -24,8 +26,6 @@ public partial class Disponibilidad
     public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
-
-    public bool? Disponible { get; set; }
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 

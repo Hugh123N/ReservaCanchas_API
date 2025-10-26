@@ -7,9 +7,17 @@ public partial class Pago
 {
     public int IdPago { get; set; }
 
-    public Guid IdUsuario { get; set; }
+    public int? IdReserva { get; set; }
+
+    public int? IdPlan { get; set; }
+
+    public string Moneda { get; set; } = null!;
+
+    public string? CodigoOperacion { get; set; }
 
     public decimal Monto { get; set; }
+
+    public string? NumeroReferencia { get; set; }
 
     public int? IdMetodoPago { get; set; }
 
@@ -29,5 +37,5 @@ public partial class Pago
 
     public virtual MetodoPago? IdMetodoPagoNavigation { get; set; }
 
-    public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
+    public virtual Reserva? IdReservaNavigation { get; set; }
 }

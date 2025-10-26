@@ -13,6 +13,8 @@ public partial class Reserva
 
     public DateOnly Fecha { get; set; }
 
+    public decimal? Monto { get; set; }
+
     public TimeOnly HoraInicio { get; set; }
 
     public TimeOnly HoraFin { get; set; }
@@ -36,4 +38,6 @@ public partial class Reserva
     public virtual EstadoReserva IdEstadoReservaNavigation { get; set; } = null!;
 
     public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
+
+    public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
 }
