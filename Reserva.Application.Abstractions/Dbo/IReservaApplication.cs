@@ -5,7 +5,10 @@ namespace Reserva.Application.Abstractions.Dbo
 {
     public interface IReservaApplication
     {
-        Task<ResponseDto<GetReservaDto>> Create(CreateReservaDto createDto);
+        /// <summary>
+        /// Crea una nueva reserva con pago pendiente y genera QR para Yape/Plin
+        /// </summary>
+        Task<ResponseDto<ReservaConPagoDto>> Create(CreateReservaDto createDto);
         Task<ResponseDto<GetReservaDto>> Update(UpdateReservaDto updateDto);
         Task<ResponseDto> Delete(int id);
         Task<ResponseDto<GetReservaDto>> Get(int id);

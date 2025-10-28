@@ -14,6 +14,10 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<IEnumerable<SelectComboPagoDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectPagoDto>>> Select(SearchParamsDto<SelectPagoFilterDto> searchParams);
 
+        /// <summary>
+        /// Confirma un pago ingresando el código de operación de Yape/Plin
+        /// </summary>
+        Task<ResponseDto<GetPagoDto>> ConfirmarPago(ConfirmarPagoDto confirmarDto);
     }
 }
 

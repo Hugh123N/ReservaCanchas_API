@@ -3,7 +3,7 @@ using Reserva.Dto.Dbo.Reserva;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
-    public class CreateReservaCommand : CommandBase<GetReservaDto>
+    public class CreateReservaCommand : CommandBase<ReservaConPagoDto>
     {
         public CreateReservaCommand(CreateReservaDto createDto) => CreateDto = createDto;
         public CreateReservaDto CreateDto { get; set; }

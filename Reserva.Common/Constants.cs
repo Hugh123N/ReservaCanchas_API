@@ -46,5 +46,29 @@ namespace Reserva.Common
             public const string CORREO = "Correo";
             public const string APPLE = "Apple";
         }
+
+        public struct ESTADO_RESERVA
+        {
+            public const string Pendiente = "01";
+            public const string Confirmado = "02";
+            public const string Cancelado = "03";
+        }
+
+        public struct ESTADO_PAGO
+        {
+            public const string Pagado = "01";
+            public const string Pendiente = "02";
+            public const string Rechazado = "03";
+        }
+
+        public struct METODO_PAGO
+        {
+            public const string Tarjeta = "01";
+            public const string Efectivo = "02";
+            public const string Transferencia = "03";
+            public const string Yape = "04";
+            public const string Plin = "05";
+        }
+
     }
 }

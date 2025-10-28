@@ -15,7 +15,7 @@ namespace Reserva.Api.Controllers.Dbo
             => _ReservaApplication = ReservaApplication;
 
         [HttpPost]
-        public async Task<ResponseDto<GetReservaDto>> Create(CreateReservaDto createDto)
+        public async Task<ResponseDto<ReservaConPagoDto>> Create(CreateReservaDto createDto)
             => await _ReservaApplication.Create(createDto);
         [HttpPut]
         public async Task<ResponseDto<GetReservaDto>> Update(UpdateReservaDto updateDto)

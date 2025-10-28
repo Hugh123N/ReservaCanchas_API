@@ -12,5 +12,6 @@ namespace Reserva.Dto.Dbo.Reserva
         public TimeSpan HoraInicio { get; set; }
         public TimeSpan HoraFin { get; set; }
         public int IdEstadoReserva { get; set; }
+        
     }
 }

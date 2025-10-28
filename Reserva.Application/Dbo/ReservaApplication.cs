@@ -15,7 +15,7 @@ namespace Reserva.Application.Dbo
 
         }
 
-        public async Task<ResponseDto<GetReservaDto>> Create(CreateReservaDto createDto)
+        public async Task<ResponseDto<ReservaConPagoDto>> Create(CreateReservaDto createDto)
             => await _mediator.Send(new CreateReservaCommand(createDto));
         public async Task<ResponseDto<GetReservaDto>> Update(UpdateReservaDto updateDto)
             => await _mediator.Send(new UpdateReservaCommand(updateDto));

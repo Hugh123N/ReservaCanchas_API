@@ -39,5 +39,8 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<SearchResultDto<SelectPagoDto>>> Select(SearchParamsDto<SelectPagoFilterDto> searchParams)
             => await _PagoApplication.Select(searchParams);
 
+        [HttpPost("confirmar")]
+        public async Task<ResponseDto<GetPagoDto>> ConfirmarPago([FromBody] ConfirmarPagoDto confirmarDto)
+            => await _PagoApplication.ConfirmarPago(confirmarDto);
     }
 }

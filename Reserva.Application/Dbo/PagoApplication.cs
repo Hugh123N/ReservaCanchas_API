@@ -32,5 +32,7 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<SearchResultDto<SelectPagoDto>>> Select(SearchParamsDto<SelectPagoFilterDto> searchParams)
              => await _mediator.Send(new SelectPagoQuery(searchParams));
 
+        public async Task<ResponseDto<GetPagoDto>> ConfirmarPago(ConfirmarPagoDto confirmarDto)
+            => await _mediator.Send(new ConfirmarPagoCommand(confirmarDto));
     }
 }
