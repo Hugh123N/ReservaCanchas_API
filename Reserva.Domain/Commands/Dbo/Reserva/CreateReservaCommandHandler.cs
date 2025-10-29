@@ -58,12 +58,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 
-            if (metodoPago == null)
-            {
-                response.AddErrorResult("El método de pago seleccionado no existe.");
-                return response;
-            }
-
             if (!_pagoStrategyFactory.EsMetodoPagoSoportado(metodoPago.Codigo!))
             {
                 response.AddErrorResult($"El método de pago '{metodoPago.Nombre}' no está soportado actualmente.");
@@ -106,13 +100,44 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             await _ReservaRepository.AddAsync(nuevaReserva);
             await _ReservaRepository.SaveAsync();
 
-            //Crear el pago con estado Pendiente
-            var estadoPendientePago = await _EstadoPagoRepository.GetByAsNoTrackingAsync(
-                x => x.Codigo!.Equals(Constants.ESTADO_PAGO.Pendiente));
+            // 6. Crear el pago - manejar adelantos para EFECTIVO
+            decimal montoAdelanto = request.CreateDto.MontoAdelanto ?? 0;
+            decimal montoTotal = request.CreateDto.Monto ?? 0;
+            decimal montoPendiente = montoTotal - montoAdelanto;
 
-            if (estadoPendientePago == null)
+            // Validar adelanto solo para EFECTIVO
+            if (montoAdelanto > 0 && metodoPago.Codigo != Constants.METODO_PAGO.Efectivo)
             {
-                response.AddErrorResult("Error del sistema: Estado de pago 'Pendiente' no encontrado.");
+                response.AddErrorResult($"Solo se permiten adelantos para pagos en efectivo. Método seleccionado: {metodoPago.Nombre}");
+                return response;
+            }
+
+            // Determinar estado del pago
+            var  estadoPago = new Entity.EstadoPago();
+
+            if (montoAdelanto >= montoTotal)
+            {
+                // Pago completo desde el inicio
+                estadoPago = await _EstadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo!.Equals(Constants.ESTADO_PAGO.Pagado));
+                montoAdelanto = montoTotal;
+                montoPendiente = 0;
+            }
+            else if (montoAdelanto > 0)
+            {
+                // Pago parcial
+                estadoPago = await _EstadoPagoRepository.GetByAsNoTrackingAsync(
+                    x => x.Codigo!.Equals(Constants.ESTADO_PAGO.Parcial));
+            }
+            else
+            {
+                // Sin adelanto
+                estadoPago = await _EstadoPagoRepository.GetByAsNoTrackingAsync(
+                    x => x.Codigo!.Equals(Constants.ESTADO_PAGO.Pendiente));
+            }
+
+            if (estadoPago == null)
+            {
+                response.AddErrorResult("Error del sistema: Estado de pago no encontrado.");
                 return response;
             }
 
@@ -120,23 +145,42 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             {
                 IdReserva = nuevaReserva.IdReserva,
                 Moneda = "PEN",
-                Monto = request.CreateDto.Monto ?? 0,
+                Monto = montoTotal,
+                MontoAdelanto = montoAdelanto,
+                MontoPendiente = montoPendiente,
                 IdMetodoPago = metodoPago.IdMetodoPago,
-                IdEstadoPago = estadoPendientePago.IdEstadoPago,
-                CodigoOperacion = null 
+                IdEstadoPago = estadoPago.IdEstadoPago,
+                CodigoOperacion = null
             };
 
             await _PagoRepository.AddAsync(nuevoPago);
             await _PagoRepository.SaveAsync();
 
-            // 7. Procesar el pago usando la estrategia correspondiente (Strategy Pattern)
+            // Si hay adelanto y cumple el porcentaje mínimo, confirmar reserva
+            if (montoAdelanto > 0 && metodoPago.Codigo == Constants.METODO_PAGO.Efectivo)
+            {
+                decimal porcentajeAdelanto = (montoAdelanto / montoTotal) * 100;
+                decimal porcentajeMinimoParaConfirmar = _configuration.GetValue<decimal>("Pago:PorcentajeMinimoAdelanto", 50);
+
+                if (porcentajeAdelanto >= porcentajeMinimoParaConfirmar)
+                {
+                    var estadoConfirmado = await _EstadoReservaRepository.GetByAsNoTrackingAsync(
+                        x => x.Codigo!.Equals(Constants.ESTADO_RESERVA.Confirmado));
+
+                    if (estadoConfirmado != null)
+                    {
+                        nuevaReserva.IdEstadoReserva = estadoConfirmado.IdEstadoReserva;
+                        await _ReservaRepository.UpdateAsync(nuevaReserva);
+                        await _ReservaRepository.SaveAsync();
+                    }
+                }
+            }
+
             var estrategiaPago = _pagoStrategyFactory.ObtenerEstrategia(metodoPago.Codigo!);
             var resultadoPago = await estrategiaPago.ProcesarPagoAsync(nuevoPago, cancha, nuevaReserva);
 
-            // 8. Configuración de expiración
             int minutosExpiracion = _configuration.GetValue<int>("Pago:MinutosExpiracion", 15);
 
-            // 9. Mapear y construir respuesta
             var reservaDto = _mapper?.Map<GetReservaDto>(nuevaReserva);
             var pagoDto = _mapper?.Map<GetPagoDto>(nuevoPago);
 

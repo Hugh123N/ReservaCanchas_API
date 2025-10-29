@@ -17,9 +17,6 @@ namespace Reserva.Domain.Services.Pago
         /// <summary>
         /// Obtiene la estrategia de pago correspondiente al código del método de pago
         /// </summary>
-        /// <param name="codigoMetodoPago">Código del método de pago (de Constants.METODO_PAGO)</param>
-        /// <returns>Instancia de la estrategia correspondiente</returns>
-        /// <exception cref="ArgumentException">Si el método de pago no está soportado</exception>
         public IPagoStrategy ObtenerEstrategia(string codigoMetodoPago)
         {
             return codigoMetodoPago switch
@@ -35,8 +32,6 @@ namespace Reserva.Domain.Services.Pago
         /// <summary>
         /// Verifica si un método de pago está soportado
         /// </summary>
-        /// <param name="codigoMetodoPago">Código del método de pago</param>
-        /// <returns>true si está soportado, false en caso contrario</returns>
         public bool EsMetodoPagoSoportado(string codigoMetodoPago)
         {
             return codigoMetodoPago switch

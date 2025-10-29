@@ -10,9 +10,11 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
     {
 
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
-        public CreateReservaCommandValidator(IRepository<Entity.Cancha> CanchaRepository)
+        private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
+        public CreateReservaCommandValidator(IRepository<Entity.Cancha> CanchaRepository, IRepository<Entity.MetodoPago> metodoPagoRepository)
         {
             _CanchaRepository = CanchaRepository;
+            _MetodoPagoRepository = metodoPagoRepository;
             RequiredInformation(x => x.CreateDto).DependentRules(() =>
             {
                 RuleFor(x => x.CreateDto.IdUsuario)
@@ -21,6 +23,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                 RuleFor(x => x.CreateDto.IdCancha)
                             .MustAsync(ValidateExistenceAsync)
+                            .WithCustomValidationMessage();
+
+                RuleFor(x => x.CreateDto.CodigoMetodoPago)
+                            .MustAsync(ValidateExistenceMetodoPagoAsync)
                             .WithCustomValidationMessage();
 
                 RuleFor(x => x.CreateDto.Fecha)
@@ -48,17 +54,38 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     .WithMessage("La hora de fin debe ser mayor que la hora de inicio.");
 
                 RuleFor(x => x.CreateDto)
-                    .Must(dto => {
+                    .Must(dto =>
+                    {
                         var duracion = dto.HoraFin - dto.HoraInicio;
                         return duracion.TotalMinutes >= 60 && duracion.TotalHours <= 24;
                     })
                     .WithMessage("La duración de la reserva debe ser de al menos 30 minutos y no más de 24 horas.");
+
+                // Validar MontoAdelanto (solo si viene informado)
+                When(x => x.CreateDto.MontoAdelanto.HasValue && x.CreateDto.MontoAdelanto.Value > 0, () =>
+                {
+                    RuleFor(x => x.CreateDto.MontoAdelanto)
+                        .GreaterThan(0)
+                        .WithMessage("El monto del adelanto debe ser mayor a 0.");
+
+                    RuleFor(x => x.CreateDto)
+                        .Must(dto => dto.MontoAdelanto <= dto.Monto)
+                        .WithMessage("El monto del adelanto no puede ser mayor que el monto total.");
+                });
             });
+            _MetodoPagoRepository = metodoPagoRepository;
         }
 
         protected async Task<bool> ValidateExistenceAsync(CreateReservaCommand command, int id, ValidationContext<CreateReservaCommand> context, CancellationToken cancellationToken)
         {
             var exists = await _CanchaRepository.FindAll().Where(x => x.IdCancha == id).AnyAsync(cancellationToken);
+            if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
+            return true;
+        }
+
+        protected async Task<bool> ValidateExistenceMetodoPagoAsync(CreateReservaCommand command, string codigoMetodoPago, ValidationContext<CreateReservaCommand> context, CancellationToken cancellationToken)
+        {
+            var exists = await _MetodoPagoRepository.FindAll().Where(x => x.Codigo == codigoMetodoPago).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
             return true;
         }

@@ -8,10 +8,7 @@ namespace Reserva.Domain.Services.Pago
     /// </summary>
     public class EfectivoPagoStrategy : IPagoStrategy
     {
-        public async Task<PagoStrategyResult> ProcesarPagoAsync(
-            Entity.Pago pago,
-            Cancha cancha,
-            Entity.Reserva reserva)
+        public async Task<PagoStrategyResult> ProcesarPagoAsync(Entity.Pago pago, Cancha cancha, Entity.Reserva reserva)
         {
             return await Task.FromResult(new PagoStrategyResult
             {

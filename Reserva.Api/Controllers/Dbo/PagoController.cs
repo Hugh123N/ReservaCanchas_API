@@ -42,5 +42,9 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("confirmar")]
         public async Task<ResponseDto<GetPagoDto>> ConfirmarPago([FromBody] ConfirmarPagoDto confirmarDto)
             => await _PagoApplication.ConfirmarPago(confirmarDto);
+
+        [HttpPost("completar-pago")]
+        public async Task<ResponseDto<GetPagoDto>> CompletarPago([FromBody] CompletarPagoDto completarDto)
+            => await _PagoApplication.CompletarPago(completarDto);
     }
 }

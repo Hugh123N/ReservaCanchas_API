@@ -34,5 +34,8 @@ namespace Reserva.Application.Dbo
 
         public async Task<ResponseDto<GetPagoDto>> ConfirmarPago(ConfirmarPagoDto confirmarDto)
             => await _mediator.Send(new ConfirmarPagoCommand(confirmarDto));
+
+        public async Task<ResponseDto<GetPagoDto>> CompletarPago(CompletarPagoDto completarDto)
+            => await _mediator.Send(new CompletarPagoCommand { CompletarDto = completarDto });
     }
 }

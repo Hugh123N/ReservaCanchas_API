@@ -17,6 +17,10 @@ public partial class Pago
 
     public decimal Monto { get; set; }
 
+    public decimal? MontoAdelanto { get; set; }
+
+    public decimal? MontoPendiente { get; set; }
+
     public string? NumeroReferencia { get; set; }
 
     public int? IdMetodoPago { get; set; }

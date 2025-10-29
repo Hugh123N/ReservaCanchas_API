@@ -59,6 +59,7 @@ namespace Reserva.Common
             public const string Pagado = "01";
             public const string Pendiente = "02";
             public const string Rechazado = "03";
+            public const string Parcial = "04"; // Para adelantos en efectivo
         }
 
         public struct METODO_PAGO

@@ -18,6 +18,11 @@ namespace Reserva.Application.Abstractions.Dbo
         /// Confirma un pago ingresando el código de operación de Yape/Plin
         /// </summary>
         Task<ResponseDto<GetPagoDto>> ConfirmarPago(ConfirmarPagoDto confirmarDto);
+
+        /// <summary>
+        /// Completa un pago que tiene adelanto (solo efectivo)
+        /// </summary>
+        Task<ResponseDto<GetPagoDto>> CompletarPago(CompletarPagoDto completarDto);
     }
 }
 
