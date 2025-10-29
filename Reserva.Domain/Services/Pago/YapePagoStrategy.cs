@@ -18,18 +18,12 @@ namespace Reserva.Domain.Services.Pago
             _qrCodeService = new QrCodeService();
         }
 
-        public async Task<PagoStrategyResult> ProcesarPagoAsync(
-            Entity.Pago pago,
-            Cancha cancha,
-            Entity.Reserva reserva)
+        public async Task<PagoStrategyResult> ProcesarPagoAsync(Entity.Pago pago, Cancha cancha, Entity.Reserva reserva)
         {
-            // Obtener teléfono del proveedor o usar el configurado por defecto
             string telefonoProveedor = ObtenerTelefonoProveedor(cancha);
 
-            // Generar concepto del pago
             string conceptoPago = GenerarConceptoPago(cancha, reserva);
 
-            // Generar QR de Yape
             var (qrBase64, qrText) = await _qrCodeService.GenerarQrYape(
                 telefonoProveedor,
                 pago.Monto,
@@ -47,7 +41,6 @@ namespace Reserva.Domain.Services.Pago
 
         private string ObtenerTelefonoProveedor(Cancha cancha)
         {
-            // Intentar obtener el teléfono del proveedor asociado a la cancha
             if (cancha.IdProveedorNavigation?.IdProveedorNavigation?.PhoneNumber != null)
             {
                 return cancha.IdProveedorNavigation.IdProveedorNavigation.PhoneNumber;

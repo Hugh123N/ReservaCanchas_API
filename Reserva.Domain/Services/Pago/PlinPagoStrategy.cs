@@ -23,13 +23,10 @@ namespace Reserva.Domain.Services.Pago
             Cancha cancha,
             Entity.Reserva reserva)
         {
-            // Obtener teléfono del proveedor o usar el configurado por defecto
             string telefonoProveedor = ObtenerTelefonoProveedor(cancha);
 
-            // Generar concepto del pago
             string conceptoPago = GenerarConceptoPago(cancha, reserva);
 
-            // Generar QR de Plin
             var (qrBase64, qrText) = await _qrCodeService.GenerarQrPlin(
                 telefonoProveedor,
                 pago.Monto,
@@ -47,13 +44,11 @@ namespace Reserva.Domain.Services.Pago
 
         private string ObtenerTelefonoProveedor(Cancha cancha)
         {
-            // Intentar obtener el teléfono del proveedor asociado a la cancha
             if (cancha.IdProveedorNavigation?.IdProveedorNavigation?.PhoneNumber != null)
             {
                 return cancha.IdProveedorNavigation.IdProveedorNavigation.PhoneNumber;
             }
 
-            // Si no hay teléfono, usar el configurado en appsettings (puede ser el mismo que Yape o diferente)
             return _configuration.GetValue<string>("Pago:TelefonoPlin")
                 ?? _configuration.GetValue<string>("Pago:TelefonoYape")
                 ?? "901269594";
