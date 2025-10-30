@@ -20,6 +20,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, UpgradeToProveedorDto upgradeDto);
         Task<ResponseDto> ForgotPassword(string email, string host);
         Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto);
+        Task<ResponseDto> UpdateTelefono(Guid idUsuario, string telefono);
     }
 }
 

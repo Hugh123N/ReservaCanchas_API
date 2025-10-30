@@ -62,6 +62,9 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("reset-password")]
         public async Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto)
             => await _UsuarioApplication.ResetPassword(resetPasswordDto);
+        [HttpPut("telefono")]
+        public async Task<ResponseDto> UpdateTelefono(UpdateTelefonoDto updateTelefonoDto)
+            => await _UsuarioApplication.UpdateTelefono(updateTelefonoDto.IdUsuario, updateTelefonoDto.Telefono);
 
     }
 }
