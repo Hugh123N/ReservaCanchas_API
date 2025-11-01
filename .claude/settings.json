@@ -1,0 +1,99 @@
+{
+  "rules": [
+    "1. ARQUITECTURA: Respetar estrictamente la separación de capas - Entity → Repository → Domain → Application → API. Nunca referenciar capas superiores desde capas inferiores.",
+    "2. CQRS: Separar operaciones de lectura (Queries) y escritura (Commands). Commands modifican datos y usan CommandHandler. Queries solo leen y usan QueryHandler.",
+    "3. NAMING - COMMANDS: Usar convención [Acción][Entity]Command.cs para comandos (CreateReservaCommand, UpdateTelefonoCommand). Handler debe ser [Acción][Entity]CommandHandler.cs.",
+    "4. NAMING - QUERIES: Usar convención [Operación][Entity]Query.cs para queries (GetReservaQuery, SearchCanchaQuery). Handler debe ser [Operación][Entity]QueryHandler.cs.",
+    "5. NAMING - DTOS: Seguir patrón [Operación][Entity]Dto.cs. Ejemplos: CreateReservaDto, GetUsuarioDto, SearchCanchaFilterDto, SelectComboPagoDto.",
+    "6. NAMING - IDs: Propiedades ID deben seguir patrón Id[Entity] para claves primarias (IdReserva, IdCancha) e Id[ReferencedEntity] para claves foráneas. Navegación debe ser Id[Entity]Navigation.",
+    "7. RESPONSE DTO: SIEMPRE retornar ResponseDto o ResponseDto<T> desde Commands, Queries, Application y Controllers. Usar AddOkResult() para éxitos y AddErrorResult() para errores.",
+    "8. VALIDACIÓN: Implementar validación con FluentValidation en clase [Operación][Entity]CommandValidator que hereda de CommandValidatorBase. Usar RequiredInformation() y RuleFor() con mensajes claros.",
+    "9. TRANSACCIONES: Los CommandHandlers automáticamente ejecutan en transacción vía UnitOfWork. No crear transacciones manuales a menos que sea absolutamente necesario.",
+    "10. AUDITORÍA: Toda entidad que tenga propiedades UserNameCreate, CreateDate, UserNameUpdate, UpdateDate y Activo se auditará automáticamente. No setear estos valores manualmente.",
+    "11. ESTRATEGIAS: Para lógica variable por tipo (ej: métodos de pago), implementar Strategy Pattern con interfaz I[Nombre]Strategy y Factory para obtener la estrategia correcta.",
+    "12. REPOSITORY: Usar IRepository<TEntity> para acceso a datos. Métodos comunes: GetByAsync(), FindByAsync(), SearchByAsync(), AddAsync(), UpdateAsync(). Siempre incluir navegaciones necesarias con includeProperties.",
+    "13. CONSTANTES: Usar clase Constants para códigos de negocio (Estados, Métodos de Pago, etc). Formato: Constants.CATEGORIA.Valor (ej: Constants.ESTADO_PAGO.Pagado, Constants.METODO_PAGO.Efectivo).",
+    "14. ASYNC/AWAIT: Todos los métodos que acceden a BD, external APIs o I/O deben ser async y retornar Task o Task<T>. Usar sufijo Async en nombre del método.",
+    "15. SERVICIOS EXTERNOS: Crear servicios en Reserva.Domain/Services/[NombreServicio] con DTOs propios. Registrar con AddHttpClient en Program.cs. Ejemplo: CulqiService con CulqiCreateChargeRequest."
+  ],
+
+  "permissions": {
+    "allow": [
+      "Bash(dotnet:*)",
+      "Bash(git:status)",
+      "Bash(git:diff)",
+      "Bash(git:log:*)",
+      "Bash(git:add:*)",
+      "Bash(git:commit:*)",
+      "Bash(npm:*)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Read(**/*.cs)",
+      "Read(**/*.json)",
+      "Read(**/*.md)",
+      "Read(**/*.sql)",
+      "Edit(**/*.cs)",
+      "Edit(**/*.json)",
+      "Edit(**/*.md)",
+      "Edit(**/*.sql)",
+      "Write(**/*.cs)",
+      "Write(**/*.json)",
+      "Write(**/*.md)",
+      "Write(**/*.sql)"
+    ],
+    "ask": [
+      "Bash(git:push:*)",
+      "Bash(git:pull:*)",
+      "Bash(docker:*)",
+      "Bash(sqlcmd:*)",
+      "WebFetch"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(appsettings.Production.json)",
+      "Read(**/secrets/**)",
+      "Read(**/*.key)",
+      "Read(**/*.pfx)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Edit(appsettings.Production.json)",
+      "Write(.env)",
+      "Write(.env.*)",
+      "Bash(rm:*)",
+      "Bash(del:*)",
+      "Bash(format:*)"
+    ]
+  },
+
+  "env": {
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "ASPNETCORE_ENVIRONMENT": "Development"
+  },
+
+  "hooks": {
+    "PreToolUse": {
+      "Bash": [
+        {
+          "command": "echo 'Ejecutando: {{command}}'",
+          "description": "Log de comandos ejecutados"
+        }
+      ]
+    }
+  },
+
+  "outputStyle": "Concise",
+
+  "includeCoAuthoredBy": true,
+
+  "cleanupPeriodDays": 30,
+
+  "preferences": {
+    "architecture": "Clean Architecture con CQRS",
+    "orm": "Entity Framework Core",
+    "validation": "FluentValidation",
+    "mapping": "AutoMapper",
+    "mediator": "MediatR",
+    "database": "SQL Server"
+  }
+}

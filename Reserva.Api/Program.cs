@@ -40,6 +40,10 @@ builder.Services.UseRepositories(
 
 // Domain Services
 builder.Services.UseDomainServices();
+
+// Culqi Service para integraciÃ³n de pagos
+builder.Services.AddHttpClient<Reserva.Domain.Services.Culqi.CulqiService>();
+
 // Security
 builder.Services.AddHttpContextAccessor();
 builder.Services.UseSecurity(configuration);
@@ -52,10 +56,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//configuracion TkenProvider para resetear contraseña
+//configuracion TkenProvider para resetear contraseï¿½a
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
 {
-    opt.TokenLifespan = TimeSpan.FromHours(1); // válido por 1 horas
+    opt.TokenLifespan = TimeSpan.FromHours(1); // vï¿½lido por 1 horas
 });
 
 
