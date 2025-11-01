@@ -56,10 +56,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//configuracion TkenProvider para resetear contrase�a
+//configuracion TkenProvider para resetear contrasenia
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
 {
-    opt.TokenLifespan = TimeSpan.FromHours(1); // v�lido por 1 horas
+    opt.TokenLifespan = TimeSpan.FromHours(1); // valido por 1 horas
 });
 
 
