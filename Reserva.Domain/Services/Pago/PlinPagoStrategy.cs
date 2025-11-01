@@ -56,7 +56,12 @@ namespace Reserva.Domain.Services.Pago
 
         private string GenerarConceptoPago(Cancha cancha, Entity.Reserva reserva)
         {
-            return $"Reserva {cancha.Nombre} - {reserva.Fecha:dd/MM/yyyy} {reserva.HoraInicio:HH:mm}-{reserva.HoraFin:HH:mm}";
+            var horas = reserva.ReservaDetalle
+            .OrderBy(d => d.HoraInicio).Select(d => d.HoraInicio.ToString(@"hh\:mm"));
+
+            var horasTexto = string.Join(", ", horas);
+
+            return $"Reserva {cancha.Nombre} - {reserva.Fecha:dd/MM/yyyy} {horasTexto}";
         }
     }
 }

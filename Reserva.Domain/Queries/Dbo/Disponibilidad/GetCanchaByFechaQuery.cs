@@ -10,12 +10,12 @@ namespace Reserva.Domain.Queries.Dbo.Disponibilidad
 {
     public class GetCanchaByFechaQuery : QueryBase<List<string>>
     {
-        public GetCanchaByFechaQuery(DateTime fecha, int canchaId)
+        public GetCanchaByFechaQuery(DateTimeOffset fecha, int canchaId)
         {
             Fecha = fecha;
             CanchaId = canchaId;
         }
-        public DateTime Fecha { get; }
+        public DateTimeOffset Fecha { get; }
         public int CanchaId { get; }
     }
 }

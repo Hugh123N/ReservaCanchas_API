@@ -22,7 +22,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
         public override async Task<ResponseDto> HandleCommand(UpdateTelefonoCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto();
-            var usuario = await _UsuarioRepository.GetByAsync(x => x.Id == request.IdUsuario);
+            var usuario = await _UsuarioRepository.GetByAsync(x => x.Id == Guid.Parse(request.IdUsuario));
 
             if (usuario == null)
             {

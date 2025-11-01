@@ -9,6 +9,6 @@ namespace Reserva.Dto.Dbo.Disponibilidad
     public class GetHorarioDisponible
     {
         public int IdCancha { get; set; }
-        public DateTime Fecha { get; set; }
+        public DateTimeOffset Fecha { get; set; }
     }
 }

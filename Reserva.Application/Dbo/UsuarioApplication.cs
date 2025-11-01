@@ -46,7 +46,7 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new ForgotPasswordCommand(email, host));
         public async Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto)
             => await _mediator.Send(new ResetPasswordCommand(resetPasswordDto));
-        public async Task<ResponseDto> UpdateTelefono(Guid idUsuario, string telefono)
+        public async Task<ResponseDto> UpdateTelefono(string idUsuario, string telefono)
             => await _mediator.Send(new UpdateTelefonoCommand(idUsuario, telefono));
     }
 }

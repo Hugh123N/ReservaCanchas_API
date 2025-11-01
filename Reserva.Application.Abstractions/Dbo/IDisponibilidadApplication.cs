@@ -13,7 +13,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<SearchResultDto<SearchDisponibilidadDto>>> Search(SearchParamsDto<SearchDisponibilidadFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboDisponibilidadDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectDisponibilidadDto>>> Select(SearchParamsDto<SelectDisponibilidadFilterDto> searchParams);
-        Task<ResponseDto<List<string>>> HorarioDisponible(DateTime fecha, int idCancha);
+        Task<ResponseDto<List<string>>> HorarioDisponible(DateTimeOffset fecha, int idCancha);
     }
 }
 

@@ -14,7 +14,7 @@ namespace Reserva.Domain.Services.Pago
             {
                 RequiereConfirmacion = true,
                 InformacionAdicional = $"Reserva registrada. El cliente debe pagar S/ {pago.Monto:F2} en efectivo " +
-                                      $"en el establecimiento antes del {reserva.Fecha:dd/MM/yyyy} a las {reserva.HoraInicio:HH:mm}."
+                                      $"en el establecimiento antes del horario establecido de la fecha {reserva.Fecha:dd/MM/yyyy}"
             });
         }
     }

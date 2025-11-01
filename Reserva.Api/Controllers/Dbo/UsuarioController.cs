@@ -9,7 +9,7 @@ namespace Reserva.Api.Controllers.Dbo
 {
     [ApiController]
     [Route("api/Usuario")]
-    public class UsuarioController : IUsuarioApplication
+    public class UsuarioController
     {
         private readonly IUsuarioApplication _UsuarioApplication;
 

@@ -41,26 +41,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     .GreaterThan(0)
                     .WithMessage("El monto debe ser mayor a 0.");
 
-                RuleFor(x => x.CreateDto.HoraInicio)
-                    .NotEmpty()
-                    .WithMessage("La hora de inicio es obligatoria.");
-
-                RuleFor(x => x.CreateDto.HoraFin)
-                    .NotEmpty()
-                    .WithMessage("La hora de fin es obligatoria.");
-
-                RuleFor(x => x.CreateDto)
-                    .Must(dto => dto.HoraFin > dto.HoraInicio)
-                    .WithMessage("La hora de fin debe ser mayor que la hora de inicio.");
-
-                RuleFor(x => x.CreateDto)
-                    .Must(dto =>
-                    {
-                        var duracion = dto.HoraFin - dto.HoraInicio;
-                        return duracion.TotalMinutes >= 60 && duracion.TotalHours <= 24;
-                    })
-                    .WithMessage("La duración de la reserva debe ser de al menos 30 minutos y no más de 24 horas.");
-
                 // Validar MontoAdelanto (solo si viene informado)
                 When(x => x.CreateDto.MontoAdelanto.HasValue && x.CreateDto.MontoAdelanto.Value > 0, () =>
                 {
@@ -90,11 +70,11 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             return true;
         }
 
-        private bool BeValidDate(DateTime fecha)
+        private bool BeValidDate(DateTimeOffset fecha)
         {
             // Obtener la fecha de hoy sin hora
-            var hoy = DateTime.Today;
-            return fecha.Date >= hoy;
+            var hoy = DateTimeOffset.UtcNow;
+            return fecha >= hoy;
         }
     }
 }

@@ -11,13 +11,9 @@ public partial class Reserva
 
     public int IdCancha { get; set; }
 
-    public DateOnly Fecha { get; set; }
+    public DateTimeOffset Fecha { get; set; }
 
     public decimal? Monto { get; set; }
-
-    public TimeOnly HoraInicio { get; set; }
-
-    public TimeOnly HoraFin { get; set; }
 
     public int IdEstadoReserva { get; set; }
 
@@ -40,4 +36,6 @@ public partial class Reserva
     public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
 
     public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
+
+    public virtual ICollection<ReservaDetalle> ReservaDetalle { get; set; } = new List<ReservaDetalle>();
 }

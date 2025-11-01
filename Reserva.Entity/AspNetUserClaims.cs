@@ -12,6 +12,4 @@ public partial class AspNetUserClaims
     public string? ClaimType { get; set; }
 
     public string? ClaimValue { get; set; }
-
-    public virtual AspNetUsers User { get; set; } = null!;
 }

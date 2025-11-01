@@ -5,9 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Pago;
+using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Pago;
 using Reserva.Dto.Dbo.Reserva;
-using Reserva.Dto.Base;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 
@@ -64,22 +65,28 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 return response;
             }
 
-            //Validar disponibilidad: No debe haber otra reserva activa en ese horario
-            var fechaReserva = DateOnly.FromDateTime(request.CreateDto.Fecha);
-            var horaInicio = TimeOnly.FromTimeSpan(request.CreateDto.HoraInicio);
-            var horaFin = TimeOnly.FromTimeSpan(request.CreateDto.HoraFin);
-
-            var reservaConflicto = await _ReservaRepository.GetByAsNoTrackingAsync(r => r.IdCancha == request.CreateDto.IdCancha &&
-                     r.Fecha == fechaReserva && r.Activo &&
-                     r.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Cancelado &&
-                     ((r.HoraInicio < horaFin && r.HoraFin > horaInicio)),
-                r => r.IdEstadoReservaNavigation
+            var reservasDelDia = await _ReservaRepository.FindByAsNoTrackingAsync(
+                r => r.IdCancha == request.CreateDto.IdCancha
+                     && r.Fecha.Date == request.CreateDto.Fecha.Date
+                     && r.Activo
+                     && r.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Cancelado,
+                r => r.ReservaDetalle
             );
 
-            if (reservaConflicto != null)
+            foreach (var detalle in request.CreateDto.Detalles)
             {
-                response.AddErrorResult($"Ya existe una reserva para esta cancha en el horario seleccionado ({reservaConflicto.HoraInicio:hh\\:mm} - {reservaConflicto.HoraFin:hh\\:mm}).");
-                return response;
+                var existeConflicto = reservasDelDia.Any(r =>
+                    r.ReservaDetalle.Any(d => d.HoraInicio < detalle.HoraFin &&
+                        d.HoraFin > detalle.HoraInicio
+                    )
+                );
+
+                if (existeConflicto)
+                {
+                    response.AddErrorResult(
+                        $"La hora {detalle.HoraInicio:hh\\:mm} - {detalle.HoraFin:hh\\:mm} ya está reservada.");
+                    return response;
+                }
             }
 
             var estadoPendienteReserva = await _EstadoReservaRepository.GetByAsNoTrackingAsync(
@@ -91,11 +98,12 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 response.AddErrorResult("Error al mapear los datos de la reserva.");
                 return response;
             }
-
             nuevaReserva.IdEstadoReserva = estadoPendienteReserva.IdEstadoReserva;
-            nuevaReserva.Fecha = fechaReserva;
-            nuevaReserva.HoraInicio = horaInicio;
-            nuevaReserva.HoraFin = horaFin;
+            nuevaReserva.ReservaDetalle = request.CreateDto.Detalles.Select(x => new ReservaDetalle
+            {
+                HoraInicio = x.HoraInicio,
+                HoraFin = x.HoraFin
+            }).ToList();
 
             await _ReservaRepository.AddAsync(nuevaReserva);
             await _ReservaRepository.SaveAsync();
