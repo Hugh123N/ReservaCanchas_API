@@ -27,6 +27,13 @@ public partial class Pago
 
     public int IdEstadoPago { get; set; }
 
+    // Campos para integración con Izipay
+    public string? IzipayTransactionId { get; set; }
+
+    public string? IzipayFormToken { get; set; }
+
+    public string? IzipayPaymentUrl { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }

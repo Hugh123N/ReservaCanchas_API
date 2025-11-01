@@ -13,3 +13,4 @@ public partial class AspNetUserClaims
 
     public string? ClaimValue { get; set; }
 }
+

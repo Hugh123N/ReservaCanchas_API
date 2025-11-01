@@ -77,5 +77,24 @@ namespace Reserva.Dto.Dbo.Reserva
         /// Información adicional del método de pago
         /// </summary>
         public string? InformacionAdicional { get; set; }
+
+        // ========================================
+        // Campos para Izipay (Yape/Plin mediante pasarela)
+        // ========================================
+
+        /// <summary>
+        /// Token del formulario de Izipay (necesario para cargar el widget de pago)
+        /// </summary>
+        public string? IzipayFormToken { get; set; }
+
+        /// <summary>
+        /// URL de la página de pago de Izipay (para redirección o iframe)
+        /// </summary>
+        public string? IzipayPaymentUrl { get; set; }
+
+        /// <summary>
+        /// ID de la transacción en Izipay (para rastreo y consultas)
+        /// </summary>
+        public string? IzipayTransactionId { get; set; }
     }
 }

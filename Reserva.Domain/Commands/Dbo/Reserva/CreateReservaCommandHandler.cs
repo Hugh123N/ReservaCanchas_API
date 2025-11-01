@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Pago;
+using Reserva.Domain.Services.Izipay;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Pago;
 using Reserva.Dto.Dbo.Reserva;
@@ -46,6 +47,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _CanchaRepository = CanchaRepository;
             _MetodoPagoRepository = MetodoPagoRepository;
             _configuration = configuration;
+            _izipayService = izipayService;
             _pagoStrategyFactory = new PagoStrategyFactory(configuration);
         }
 
