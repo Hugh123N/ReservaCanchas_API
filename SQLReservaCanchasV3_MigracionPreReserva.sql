@@ -88,6 +88,20 @@ BEGIN
 END
 GO
 
+-- Flag para controlar notificación de proximidad de expiración
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Reserva]') AND name = 'notificacionAdvertenciaEnviada')
+BEGIN
+    ALTER TABLE [dbo].[Reserva]
+    ADD [notificacionAdvertenciaEnviada] BIT NOT NULL DEFAULT 0;
+
+    PRINT '  ✓ Campo notificacionAdvertenciaEnviada agregado';
+END
+ELSE
+BEGIN
+    PRINT '  - Campo notificacionAdvertenciaEnviada ya existe';
+END
+GO
+
 -- Crear índice único para codigoReserva
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[Reserva]') AND name = 'UQ_Reserva_CodigoReserva')
 BEGIN
@@ -235,6 +249,7 @@ END
 -- Verificar campos en Reserva
 IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Reserva]') AND name = 'codigoReserva')
 AND EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Reserva]') AND name = 'fechaExpiracionPreReserva')
+AND EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Reserva]') AND name = 'notificacionAdvertenciaEnviada')
 BEGIN
     PRINT '✓ Campos de Reserva: OK';
 END

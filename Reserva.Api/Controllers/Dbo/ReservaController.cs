@@ -59,5 +59,12 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpGet("pendientes-operador/{idProveedor}")]
         public async Task<ResponseDto<IEnumerable<ReservaPendienteOperadorDto>>> ObtenerReservasPendientesOperador(int idProveedor)
             => await _ReservaApplication.ObtenerReservasPendientesOperador(idProveedor);
+
+        /// <summary>
+        /// Endpoint para que el cliente obtenga todas sus reservas (historial completo)
+        /// </summary>
+        [HttpGet("mis-reservas/{idUsuario}")]
+        public async Task<ResponseDto<IEnumerable<ReservaClienteDto>>> ObtenerReservasCliente(Guid idUsuario)
+            => await _ReservaApplication.ObtenerReservasCliente(idUsuario);
     }
 }

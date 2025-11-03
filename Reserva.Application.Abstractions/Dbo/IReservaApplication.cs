@@ -32,6 +32,12 @@ namespace Reserva.Application.Abstractions.Dbo
         /// Obtiene lista de reservas pendientes del proveedor
         /// </summary>
         Task<ResponseDto<IEnumerable<ReservaPendienteOperadorDto>>> ObtenerReservasPendientesOperador(int idProveedor);
+
+        // Operaciones para el Cliente
+        /// <summary>
+        /// Obtiene todas las reservas del cliente con información completa
+        /// </summary>
+        Task<ResponseDto<IEnumerable<ReservaClienteDto>>> ObtenerReservasCliente(Guid idUsuario);
     }
 }
 

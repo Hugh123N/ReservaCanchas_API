@@ -1,7 +1,9 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Reserva;
 using Reserva.Entity;
@@ -17,6 +19,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.EstadoReserva> _EstadoReservaRepository;
         private readonly IRepository<Entity.EstadoPago> _EstadoPagoRepository;
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
+        private readonly INotificacionService _notificacionService;
 
         public ConfirmarReservaOperadorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -27,7 +30,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.Pago> PagoRepository,
             IRepository<Entity.EstadoReserva> EstadoReservaRepository,
             IRepository<Entity.EstadoPago> EstadoPagoRepository,
-            IRepository<Entity.Cancha> CanchaRepository
+            IRepository<Entity.Cancha> CanchaRepository,
+            INotificacionService notificacionService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ReservaRepository = ReservaRepository;
@@ -35,6 +39,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _EstadoReservaRepository = EstadoReservaRepository;
             _EstadoPagoRepository = EstadoPagoRepository;
             _CanchaRepository = CanchaRepository;
+            _notificacionService = notificacionService;
         }
 
         public override async Task<ResponseDto<GetReservaDto>> HandleCommand(
@@ -160,7 +165,28 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 $"Pago: {estadoPago.Nombre} " +
                 $"(Adelanto: S/ {montoAdelanto:F2}, Pendiente: S/ {pago.MontoPendiente:F2})");
 
-            // TODO: Enviar notificación al cliente informando confirmación
+            // Enviar notificación al cliente informando confirmación
+            try
+            {
+                var cliente = await _ReservaRepository.FindAll()
+                    .Where(r => r.IdReserva == reserva.IdReserva)
+                    .Select(r => r.IdUsuarioNavigation)
+                    .FirstOrDefaultAsync();
+
+                if (cliente != null && cancha != null)
+                {
+                    await _notificacionService.NotificarReservaConfirmadaAsync(
+                        reserva,
+                        cancha,
+                        cliente,
+                        pago
+                    );
+                }
+            }
+            catch (Exception)
+            {
+                // No fallar la confirmación si falla la notificación
+            }
 
             return response;
         }

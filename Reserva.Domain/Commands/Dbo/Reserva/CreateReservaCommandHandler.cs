@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Pago;
 using Reserva.Dto.Dbo.Reserva;
@@ -23,6 +24,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
         private readonly IRepository<Entity.Operador> _OperadorRepository;
         private readonly IConfiguration _configuration;
+        private readonly INotificacionService _notificacionService;
 
         public CreateReservaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -36,7 +38,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.MetodoPago> MetodoPagoRepository,
             IRepository<Entity.Operador> OperadorRepository,
-            IConfiguration configuration
+            IConfiguration configuration,
+            INotificacionService notificacionService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ReservaRepository = ReservaRepository;
@@ -47,6 +50,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _MetodoPagoRepository = MetodoPagoRepository;
             _OperadorRepository = OperadorRepository;
             _configuration = configuration;
+            _notificacionService = notificacionService;
         }
 
         public override async Task<ResponseDto<ReservaConPagoDto>> HandleCommand(CreateReservaCommand request,CancellationToken cancellationToken)
@@ -197,7 +201,29 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             response.UpdateData(reservaConPagoDto);
             response.AddOkResult($"Pre-reserva creada exitosamente. Código: {nuevaReserva.CodigoReserva}");
 
-            // TODO: Enviar notificación al operador (implementar en siguiente fase)
+            // Enviar notificación a los operadores de la cancha
+            try
+            {
+                var cliente = await _ReservaRepository.FindAll()
+                    .Where(r => r.IdReserva == nuevaReserva.IdReserva)
+                    .Select(r => r.IdUsuarioNavigation)
+                    .FirstOrDefaultAsync();
+
+                if (cliente != null && operadores.Any())
+                {
+                    await _notificacionService.NotificarNuevaReservaPendienteAsync(
+                        nuevaReserva,
+                        cancha,
+                        cliente,
+                        operadores.ToList()
+                    );
+                }
+            }
+            catch (Exception)
+            {
+                // No fallar la creación de la reserva si falla la notificación
+                // El error ya fue logueado en el servicio de notificaciones
+            }
 
             return response;
         }

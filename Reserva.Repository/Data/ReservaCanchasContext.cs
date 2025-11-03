@@ -740,6 +740,9 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.CreateDate).HasColumnName("createDate");
             entity.Property(e => e.Fecha).HasColumnName("fecha");
             entity.Property(e => e.FechaExpiracionPreReserva).HasColumnName("fechaExpiracionPreReserva");
+            entity.Property(e => e.NotificacionAdvertenciaEnviada)
+                .HasDefaultValue(false)
+                .HasColumnName("notificacionAdvertenciaEnviada");
             entity.Property(e => e.IdCancha).HasColumnName("idCancha");
             entity.Property(e => e.IdEstadoReserva).HasColumnName("idEstadoReserva");
             entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");

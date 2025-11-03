@@ -1,5 +1,9 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Reserva.Domain.Services.BackgroundServices;
+using Reserva.Domain.Services.Notificacion;
+using Reserva.Domain.Services.WhatsApp;
+using Microsoft.Extensions.Http;
 using System.Reflection;
 
 namespace Reserva.Domain.Extensions
@@ -26,6 +30,15 @@ namespace Reserva.Domain.Extensions
 
             // AutoMapper Configuration
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            // WhatsApp Service (HttpClient configurado)
+            services.AddHttpClient<IWhatsAppService, WhatsAppService>();
+
+            // Notification Service
+            services.AddScoped<INotificacionService, NotificacionService>();
+
+            // Background Services
+            services.AddHostedService<ReservaExpirationService>();
 
             return services;
         }
