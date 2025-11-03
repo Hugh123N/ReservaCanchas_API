@@ -39,5 +39,25 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<SearchResultDto<SelectReservaDto>>> Select(SearchParamsDto<SelectReservaFilterDto> searchParams)
             => await _ReservaApplication.Select(searchParams);
 
+        /// <summary>
+        /// Endpoint para que el operador confirme una reserva pendiente y registre el pago
+        /// </summary>
+        [HttpPost("confirmar-reserva-operador")]
+        public async Task<ResponseDto<GetReservaDto>> ConfirmarReservaOperador([FromBody] ConfirmarReservaOperadorDto confirmarDto)
+            => await _ReservaApplication.ConfirmarReservaOperador(confirmarDto);
+
+        /// <summary>
+        /// Endpoint para que el operador libere/cancele una reserva pendiente
+        /// </summary>
+        [HttpPost("liberar-reserva-operador")]
+        public async Task<ResponseDto<GetReservaDto>> LiberarReservaOperador([FromBody] LiberarReservaOperadorDto liberarDto)
+            => await _ReservaApplication.LiberarReservaOperador(liberarDto);
+
+        /// <summary>
+        /// Endpoint para obtener todas las reservas pendientes de un proveedor
+        /// </summary>
+        [HttpGet("pendientes-operador/{idProveedor}")]
+        public async Task<ResponseDto<IEnumerable<ReservaPendienteOperadorDto>>> ObtenerReservasPendientesOperador(int idProveedor)
+            => await _ReservaApplication.ObtenerReservasPendientesOperador(idProveedor);
     }
 }

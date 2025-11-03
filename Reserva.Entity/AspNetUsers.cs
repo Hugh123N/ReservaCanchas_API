@@ -63,7 +63,9 @@ public partial class AspNetUsers
 
     public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
 
-    public virtual Proveedor? Proveedor { get; set; }
+    public virtual ICollection<Operador> Operador { get; set; } = new List<Operador>();
+
+    public virtual ICollection<Proveedor> Proveedor { get; set; } = new List<Proveedor>();
 
     public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
 

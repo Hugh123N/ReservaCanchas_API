@@ -5,7 +5,7 @@ namespace Reserva.Domain.Queries.Dbo.Proveedor
 {
     public class GetProveedorQuery : QueryBase<GetProveedorDto>
     {
-        public GetProveedorQuery(Guid id) => Id = id;
-        public Guid Id { get; set; }
+        public GetProveedorQuery(int id) => Id = id;
+        public int Id { get; set; }
     }
 }

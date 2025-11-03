@@ -21,13 +21,13 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<GetProveedorDto>> Update(UpdateProveedorDto updateDto)
             => await _ProveedorApplication.Update(updateDto);
         [HttpDelete("{id}")]
-        public async Task<ResponseDto> Delete(Guid id)
+        public async Task<ResponseDto> Delete(int id)
             => await _ProveedorApplication.Delete(id);
         [HttpGet("{id}")]
-        public async Task<ResponseDto<GetProveedorDto>> Get(Guid id)
+        public async Task<ResponseDto<GetProveedorDto>> Get(int id)
             => await _ProveedorApplication.Get(id);
         [HttpPost("list")]
-        public async Task<ResponseDto<IEnumerable<ListProveedorDto>>> List(Guid id)
+        public async Task<ResponseDto<IEnumerable<ListProveedorDto>>> List(int id)
             => await _ProveedorApplication.List(id);
         [HttpPost("search")]
         public async Task<ResponseDto<SearchResultDto<SearchProveedorDto>>> Search(SearchParamsDto<SearchProveedorFilterDto> searchParams)

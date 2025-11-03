@@ -52,6 +52,7 @@ namespace Reserva.Common
             public const string Pendiente = "01";
             public const string Confirmado = "02";
             public const string Cancelado = "03";
+            public const string Expirado = "04";
         }
 
         public struct ESTADO_PAGO

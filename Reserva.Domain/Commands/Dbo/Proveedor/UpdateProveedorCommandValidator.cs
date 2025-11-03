@@ -26,7 +26,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
             });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(UpdateProveedorCommand command, Guid id, ValidationContext<UpdateProveedorCommand> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(UpdateProveedorCommand command, int id, ValidationContext<UpdateProveedorCommand> context, CancellationToken cancellationToken)
         {
             var exists = await _repositoryBase.FindAll().Where(x => x.IdProveedor == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.UpdateRecordNotFound);

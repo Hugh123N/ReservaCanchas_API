@@ -13,8 +13,19 @@ namespace Reserva.Dto.Dbo.Cancha
         public decimal? Longitud { get; set; }
         public string? Direccion { get; set; }
         public decimal? PrecioHora { get; set; }
-        public Guid? IdProveedor { get; set; }
+        public int? IdProveedor { get; set; }
         public string? CodigoUbigeo { get; set; }
         public int IdEstadoCancha { get; set; }
+
+        /// <summary>
+        /// Duración en horas de la pre-reserva antes de expirar
+        /// </summary>
+        public int? DuracionPreReserva { get; set; }
+
+        /// <summary>
+        /// Porcentaje mínimo de adelanto requerido para confirmar reserva (0-100)
+        /// </summary>
+        public decimal? PorcentajeAdelanto { get; set; }
+        public string? TelefonoCancha { get; set; }
     }
 }

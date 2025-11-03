@@ -105,7 +105,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 var proveedor = _mapper?.Map<Entity.Proveedor>(request.CreateDto);
                 if (proveedor != null)
                 {
-                    proveedor.IdProveedor = applicationUser.Id;
+                    proveedor.IdUsuario = applicationUser.Id;
                     proveedor.IdEstadoProveedor = estadoProveedor.IdEstadoProveedor;
 
                     try

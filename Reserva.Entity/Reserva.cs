@@ -7,6 +7,8 @@ public partial class Reserva
 {
     public int IdReserva { get; set; }
 
+    public string CodigoReserva { get; set; } = null!;
+
     public Guid IdUsuario { get; set; }
 
     public int IdCancha { get; set; }
@@ -14,6 +16,8 @@ public partial class Reserva
     public DateTimeOffset Fecha { get; set; }
 
     public decimal? Monto { get; set; }
+
+    public DateTimeOffset? FechaExpiracionPreReserva { get; set; }
 
     public int IdEstadoReserva { get; set; }
 
@@ -26,8 +30,6 @@ public partial class Reserva
     public DateTimeOffset? UpdateDate { get; set; }
 
     public bool Activo { get; set; }
-
-    public virtual ICollection<GananciaProveedor> GananciaProveedor { get; set; } = new List<GananciaProveedor>();
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 

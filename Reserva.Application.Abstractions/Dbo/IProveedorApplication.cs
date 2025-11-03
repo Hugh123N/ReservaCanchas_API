@@ -7,9 +7,9 @@ namespace Reserva.Application.Abstractions.Dbo
     {
         Task<ResponseDto<GetProveedorDto>> Create(CreateProveedorDto createDto);
         Task<ResponseDto<GetProveedorDto>> Update(UpdateProveedorDto updateDto);
-        Task<ResponseDto> Delete(Guid id);
-        Task<ResponseDto<GetProveedorDto>> Get(Guid id);
-        Task<ResponseDto<IEnumerable<ListProveedorDto>>> List(Guid id);
+        Task<ResponseDto> Delete(int id);
+        Task<ResponseDto<GetProveedorDto>> Get(int id);
+        Task<ResponseDto<IEnumerable<ListProveedorDto>>> List(int id);
         Task<ResponseDto<SearchResultDto<SearchProveedorDto>>> Search(SearchParamsDto<SearchProveedorFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboProveedorDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectProveedorDto>>> Select(SearchParamsDto<SelectProveedorFilterDto> searchParams);

@@ -87,7 +87,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 
         private async Task<bool> NoExisteYaComoProveedor(Guid userId, CancellationToken cancellationToken)
         {
-            var proveedor = await _proveedorRepository.GetByAsync(p => p.IdProveedor == userId);
+            var proveedor = await _proveedorRepository.GetByAsync(p => p.IdUsuario == userId);
             return proveedor == null;
         }
     }

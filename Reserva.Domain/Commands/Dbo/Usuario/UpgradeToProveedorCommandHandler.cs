@@ -76,7 +76,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                     return response;
                 }
 
-                proveedor.IdProveedor = applicationUser.Id;
+                proveedor.IdUsuario = applicationUser.Id;
                 proveedor.IdEstadoProveedor = 1;
 
                 await _ProveedorRepository.AddAsync(proveedor);

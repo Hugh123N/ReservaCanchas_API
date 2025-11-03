@@ -27,7 +27,6 @@ public partial class Pago
 
     public int IdEstadoPago { get; set; }
 
-    // Campos para integración con Culqi
     public string? CulqiChargeId { get; set; }
 
     public string? CulqiTokenId { get; set; }

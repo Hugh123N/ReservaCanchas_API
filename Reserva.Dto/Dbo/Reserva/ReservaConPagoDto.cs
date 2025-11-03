@@ -4,7 +4,7 @@ namespace Reserva.Dto.Dbo.Reserva
 {
     /// <summary>
     /// DTO que contiene la información completa de una reserva con su pago
-    /// Incluye datos específicos según el método de pago (QR para Yape/Plin, datos bancarios para Transferencia, etc.)
+    /// Para sistema de pre-reserva con pago en efectivo coordinado por operador
     /// </summary>
     public class ReservaConPagoDto
     {
@@ -19,33 +19,64 @@ namespace Reserva.Dto.Dbo.Reserva
         public GetPagoDto Pago { get; set; } = null!;
 
         /// <summary>
-        /// QR code en formato Base64 (solo para Yape/Plin)
+        /// Código único de la reserva (ej: RES-2024-0001)
         /// </summary>
+        public string? CodigoReserva { get; set; }
+
+        /// <summary>
+        /// Duración de la pre-reserva en horas
+        /// </summary>
+        public int DuracionPreReservaHoras { get; set; }
+
+        /// <summary>
+        /// Fecha y hora de expiración de la pre-reserva
+        /// </summary>
+        public DateTimeOffset? FechaExpiracionPreReserva { get; set; }
+
+        /// <summary>
+        /// Teléfono de la cancha para coordinar el pago
+        /// </summary>
+        public string? TelefonoCancha { get; set; }
+
+        /// <summary>
+        /// Nombre del operador/proveedor
+        /// </summary>
+        public string? NombreOperador { get; set; }
+
+        /// <summary>
+        /// QR code en formato Base64 (OBSOLETO - Solo se usaba para Yape/Plin)
+        /// </summary>
+        [Obsolete("Ya no se usa. Solo se acepta pago en efectivo.")]
         public string? QrCodeBase64 { get; set; }
 
         /// <summary>
-        /// Texto plano contenido en el QR (solo para Yape/Plin)
+        /// Texto plano contenido en el QR (OBSOLETO - Solo se usaba para Yape/Plin)
         /// </summary>
+        [Obsolete("Ya no se usa. Solo se acepta pago en efectivo.")]
         public string? QrText { get; set; }
 
         /// <summary>
-        /// Número de cuenta bancaria (solo para Transferencia)
+        /// Número de cuenta bancaria (OBSOLETO - Solo se usaba para Transferencia)
         /// </summary>
+        [Obsolete("Ya no se usa. Solo se acepta pago en efectivo.")]
         public string? NumeroCuenta { get; set; }
 
         /// <summary>
-        /// CCI - Código de Cuenta Interbancario (solo para Transferencia)
+        /// CCI - Código de Cuenta Interbancario (OBSOLETO - Solo se usaba para Transferencia)
         /// </summary>
+        [Obsolete("Ya no se usa. Solo se acepta pago en efectivo.")]
         public string? CCI { get; set; }
 
         /// <summary>
-        /// Nombre del banco (solo para Transferencia)
+        /// Nombre del banco (OBSOLETO - Solo se usaba para Transferencia)
         /// </summary>
+        [Obsolete("Ya no se usa. Solo se acepta pago en efectivo.")]
         public string? NombreBanco { get; set; }
 
         /// <summary>
-        /// Titular de la cuenta bancaria (solo para Transferencia)
+        /// Titular de la cuenta bancaria (OBSOLETO - Solo se usaba para Transferencia)
         /// </summary>
+        [Obsolete("Ya no se usa. Solo se acepta pago en efectivo.")]
         public string? TitularCuenta { get; set; }
 
         /// <summary>
@@ -64,13 +95,15 @@ namespace Reserva.Dto.Dbo.Reserva
         public string Moneda { get; set; } = null!;
 
         /// <summary>
-        /// Minutos que tiene el usuario para completar el pago
+        /// Minutos que tiene el usuario para completar el pago (OBSOLETO - Ahora se usa duracionPreReservaHoras)
         /// </summary>
+        [Obsolete("Usar DuracionPreReservaHoras en su lugar.")]
         public int MinutosExpiracion { get; set; }
 
         /// <summary>
-        /// Fecha y hora de expiración del pago
+        /// Fecha y hora de expiración del pago (OBSOLETO - Ahora se usa FechaExpiracionPreReserva)
         /// </summary>
+        [Obsolete("Usar FechaExpiracionPreReserva en su lugar.")]
         public DateTimeOffset FechaExpiracion { get; set; }
 
         /// <summary>

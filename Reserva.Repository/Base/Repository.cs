@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Reserva.Entity;
 //using Reserva.Audit.Common;
 //using Reserva.Audit.RestClient;
 using Reserva.Entity.Base;
-using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
 using Reserva.Repository.Security;
 using System.Collections;
+using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -237,6 +239,34 @@ namespace Reserva.Repository.Base
 
         public void UpdateAuditTrails(TEntity entity, bool creation = true)
             => UpdateAuditTrailsDetails(entity, new List<Type>(), creation);
+        //Para ejecutar stored procedures que retornan un valor escalar
+        public async Task<T?> ExecuteScalarSPAsync<T>(string spName, params SqlParameter[] parameters)
+        {
+            var connection = _dbContext.Database.GetDbConnection();
+            await using var command = connection.CreateCommand();
+            command.CommandText = spName;
+            command.CommandType = CommandType.StoredProcedure;
+
+            if (parameters != null && parameters.Length > 0)
+                command.Parameters.AddRange(parameters);
+
+            try
+            {
+                if (connection.State != ConnectionState.Open)
+                    await connection.OpenAsync();
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result == DBNull.Value || result is null)
+                    return default;
+
+                return (T)Convert.ChangeType(result, typeof(T)); // evita errores de casteo
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
+        }
 
         private void UpdateAuditTrailsDetails<TDetail>(TDetail entity, ICollection<Type> baseTypes, bool creation = true)
         {
@@ -308,5 +338,6 @@ namespace Reserva.Repository.Base
 
             property.SetValue(entity, value);
         }
+
     }
 }

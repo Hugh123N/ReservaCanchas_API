@@ -23,11 +23,17 @@ public partial class Cancha
 
     public decimal? PrecioHora { get; set; }
 
-    public Guid? IdProveedor { get; set; }
+    public int? IdProveedor { get; set; }
 
     public string? CodigoUbigeo { get; set; }
 
     public int IdEstadoCancha { get; set; }
+
+    public int? DuracionPreReserva { get; set; }
+
+    public decimal? PorcentajeAdelanto { get; set; }
+
+    public string? TelefonoCancha { get; set; }
 
     public string UserNameCreate { get; set; } = null!;
 
@@ -52,6 +58,8 @@ public partial class Cancha
     public virtual TipoCancha IdTipoCanchaNavigation { get; set; } = null!;
 
     public virtual ICollection<ImagenCancha> ImagenCancha { get; set; } = new List<ImagenCancha>();
+
+    public virtual ICollection<OperadorCancha> OperadorCancha { get; set; } = new List<OperadorCancha>();
 
     public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
 }

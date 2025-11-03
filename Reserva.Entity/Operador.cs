@@ -3,19 +3,13 @@ using System.Collections.Generic;
 
 namespace Reserva.Entity;
 
-public partial class GananciaProveedor
+public partial class Operador
 {
-    public int IdGananciaProveedor { get; set; }
+    public int IdOperador { get; set; }
 
-    public int IdReserva { get; set; }
+    public Guid IdUsuario { get; set; }
 
-    public Guid IdProveedor { get; set; }
-
-    public decimal MontoTotal { get; set; }
-
-    public decimal Comision { get; set; }
-
-    public decimal GananciaNeta { get; set; }
+    public int IdProveedor { get; set; }
 
     public string UserNameCreate { get; set; } = null!;
 
@@ -29,5 +23,7 @@ public partial class GananciaProveedor
 
     public virtual Proveedor IdProveedorNavigation { get; set; } = null!;
 
-    public virtual Reserva IdReservaNavigation { get; set; } = null!;
+    public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
+
+    public virtual ICollection<OperadorCancha> OperadorCancha { get; set; } = new List<OperadorCancha>();
 }

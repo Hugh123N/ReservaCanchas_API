@@ -32,5 +32,14 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<SearchResultDto<SelectReservaDto>>> Select(SearchParamsDto<SelectReservaFilterDto> searchParams)
              => await _mediator.Send(new SelectReservaQuery(searchParams));
 
+        // Operaciones para el Operador
+        public async Task<ResponseDto<GetReservaDto>> ConfirmarReservaOperador(ConfirmarReservaOperadorDto confirmarDto)
+            => await _mediator.Send(new ConfirmarReservaOperadorCommand(confirmarDto));
+
+        public async Task<ResponseDto<GetReservaDto>> LiberarReservaOperador(LiberarReservaOperadorDto liberarDto)
+            => await _mediator.Send(new LiberarReservaOperadorCommand(liberarDto));
+
+        public async Task<ResponseDto<IEnumerable<ReservaPendienteOperadorDto>>> ObtenerReservasPendientesOperador(int idProveedor)
+            => await _mediator.Send(new ReservasPendientesOperadorQuery(idProveedor));
     }
 }

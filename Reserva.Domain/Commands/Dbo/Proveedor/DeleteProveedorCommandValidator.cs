@@ -21,7 +21,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                 });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(DeleteProveedorCommand command, Guid id, ValidationContext<DeleteProveedorCommand> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(DeleteProveedorCommand command, int id, ValidationContext<DeleteProveedorCommand> context, CancellationToken cancellationToken)
         {
             var exists = await _repositoryBase.FindAll().Where(x => x.IdProveedor == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.DeleteRecordNotFound);

@@ -6,7 +6,7 @@ namespace Reserva.Application.Abstractions.Dbo
     public interface IReservaApplication
     {
         /// <summary>
-        /// Crea una nueva reserva con pago pendiente y genera QR para Yape/Plin
+        /// Crea una nueva pre-reserva en estado PENDIENTE (solo efectivo)
         /// </summary>
         Task<ResponseDto<ReservaConPagoDto>> Create(CreateReservaDto createDto);
         Task<ResponseDto<GetReservaDto>> Update(UpdateReservaDto updateDto);
@@ -17,6 +17,21 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<IEnumerable<SelectComboReservaDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectReservaDto>>> Select(SearchParamsDto<SelectReservaFilterDto> searchParams);
 
+        // Operaciones para el Operador
+        /// <summary>
+        /// Confirma una reserva pendiente y registra el pago/adelanto
+        /// </summary>
+        Task<ResponseDto<GetReservaDto>> ConfirmarReservaOperador(ConfirmarReservaOperadorDto confirmarDto);
+
+        /// <summary>
+        /// Libera/cancela una reserva pendiente para que el horario quede disponible
+        /// </summary>
+        Task<ResponseDto<GetReservaDto>> LiberarReservaOperador(LiberarReservaOperadorDto liberarDto);
+
+        /// <summary>
+        /// Obtiene lista de reservas pendientes del proveedor
+        /// </summary>
+        Task<ResponseDto<IEnumerable<ReservaPendienteOperadorDto>>> ObtenerReservasPendientesOperador(int idProveedor);
     }
 }
 
