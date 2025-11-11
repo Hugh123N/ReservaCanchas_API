@@ -588,10 +588,10 @@ Por favor, contacta al cliente para coordinar el pago.
 
 ---
 
-## 📋 FASE 5: Background Services y Endpoint de Cliente
+## 📋 FASE 5: Background Services, Recordatorios y Endpoint de Cliente
 
 ### Objetivo
-Automatizar expiración de reservas y permitir que clientes vean su historial.
+Automatizar expiración de reservas, enviar recordatorios automáticos y permitir que clientes busquen su historial con filtros.
 
 ### ⏰ 5.1 Background Service: `ReservaExpirationService`
 
@@ -655,6 +655,47 @@ private async Task NotificarReservasProximasExpirar(CancellationToken cancellati
 }
 ```
 
+#### 3. Enviar Recordatorios 1 Hora Antes (NUEVO)
+```csharp
+private async Task EnviarRecordatoriosReservasProximas(CancellationToken cancellationToken)
+{
+    var ahora = DateTimeOffset.Now;
+
+    // Buscar reservas CONFIRMADAS de hoy que empiezan en menos de 1 hora
+    // Y que NO hayan sido notificadas aún (recordatorioEnviado = false)
+    var reservasProximas = await _reservaRepository.FindByAsync(
+        r => r.Activo
+             && r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado
+             && r.Fecha.Date == ahora.Date
+             && !r.RecordatorioEnviado
+    );
+
+    foreach (var reserva in reservasProximas)
+    {
+        // Obtener primer horario
+        var primerHorario = reserva.ReservaDetalle.OrderBy(d => d.HoraInicio).FirstOrDefault();
+        var fechaHoraReserva = reserva.Fecha.Date.Add(primerHorario.HoraInicio.ToTimeSpan());
+        var tiempoHastaReserva = fechaHoraReserva - ahora;
+
+        // Si falta menos de 1 hora → enviar recordatorio
+        if (tiempoHastaReserva.TotalMinutes > 0 && tiempoHastaReserva.TotalMinutes <= 60)
+        {
+            // Enviar Email + WhatsApp al cliente
+            await _notificacionService.NotificarRecordatorioReservaAsync(
+                reserva, cancha, cliente);
+
+            // Marcar como notificada
+            reserva.RecordatorioEnviado = true;
+            await _reservaRepository.UpdateAsync(reserva);
+        }
+    }
+}
+```
+
+**Campos adicionales en Reserva:**
+- `NotificacionAdvertenciaEnviada` (bool): Flag para advertencia 6h antes de expirar (pre-reservas)
+- `RecordatorioEnviado` (bool): Flag para recordatorio 1h antes de jugar (reservas confirmadas)
+
 **Registro del servicio:**
 ```csharp
 services.AddHostedService<ReservaExpirationService>();
@@ -662,11 +703,11 @@ services.AddHostedService<ReservaExpirationService>();
 
 ---
 
-### 👤 5.2 Endpoint para Cliente: Ver Mis Reservas
+### 👤 5.2 Endpoint para Cliente: Buscar Mis Reservas con Filtros
 
-#### Endpoint
+#### Endpoint (MODIFICADO - Ahora con Search)
 ```
-GET /api/Reserva/mis-reservas/{idUsuario}
+POST /api/Reserva/mis-reservas/{idUsuario}
 ```
 
 #### DTO de Respuesta: `ReservaClienteDto`
@@ -717,22 +758,88 @@ public class HorarioReservadoDto
 }
 ```
 
-#### Query Handler: `ReservasClienteQueryHandler`
+#### DTO de Filtros: `SearchReservaClienteFilterDto`
 ```csharp
-var reservas = await _reservaRepository.FindByAsNoTrackingAsync(
-    r => r.IdUsuario == request.IdUsuario && r.Activo,
+public class SearchReservaClienteFilterDto
+{
+    public string? CodigoEstado { get; set; }          // "01", "02", "03", "04"
+    public DateTimeOffset? FechaDesde { get; set; }
+    public DateTimeOffset? FechaHasta { get; set; }
+    public string? EstadoPago { get; set; }            // "Pendiente", "Parcial", "Pagado"
+    public string? CodigoReserva { get; set; }         // Buscar por código
+    public string? NombreCancha { get; set; }          // Buscar por nombre de cancha
+}
+```
+
+#### Request Body
+```json
+{
+  "filter": {
+    "codigoEstado": "02",           // Solo confirmadas
+    "estadoPago": "Parcial"         // Con pago parcial
+  },
+  "page": {
+    "page": 1,
+    "pageSize": 10
+  },
+  "sort": [
+    {
+      "property": "Fecha",
+      "direction": "desc"
+    }
+  ]
+}
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "message": "Se encontraron 15 reservas.",
+  "data": {
+    "items": [ /* Array de ReservaClienteDto */ ],
+    "total": 15,
+    "page": 1,
+    "pageSize": 10,
+    "totalPages": 2
+  }
+}
+```
+
+#### Query Handler: `SearchReservasClienteQueryHandler`
+```csharp
+// Filtro base
+Expression<Func<Entity.Reserva, bool>> filter =
+    x => x.IdUsuario == request.IdUsuario && x.Activo;
+
+// Aplicar filtros opcionales
+if (!string.IsNullOrWhiteSpace(filters.CodigoEstado))
+    filter = filter.And(x => x.IdEstadoReservaNavigation.Codigo == filters.CodigoEstado);
+
+if (filters.FechaDesde.HasValue)
+    filter = filter.And(x => x.Fecha >= filters.FechaDesde.Value);
+
+if (!string.IsNullOrWhiteSpace(filters.CodigoReserva))
+    filter = filter.And(x => x.CodigoReserva.Contains(filters.CodigoReserva));
+
+// Ejecutar búsqueda con paginación
+var reservasPaginadas = await _reservaRepository.SearchByAsNoTrackingAsync(
+    page: request.SearchParams?.Page?.Page ?? 1,
+    pageSize: request.SearchParams?.Page?.PageSize ?? 10,
+    sorts,
+    filter,
     r => r.IdCanchaNavigation,
     r => r.IdEstadoReservaNavigation,
     r => r.ReservaDetalle,
     r => r.Pago
 );
-
-var reservasDtos = reservas
-    .OrderByDescending(r => r.Fecha)           // Más recientes primero
-    .ThenByDescending(r => r.CreateDate)
-    .Select(r => new ReservaClienteDto { ... })
-    .ToList();
 ```
+
+**Ventajas del Search:**
+- ✅ Paginación (frontend puede cargar de a 10)
+- ✅ Filtros múltiples (por estado, fecha, pago, cancha)
+- ✅ Ordenamiento flexible
+- ✅ Performance optimizada con búsqueda indexada
 
 ---
 
@@ -932,7 +1039,50 @@ var reservasDtos = reservas
 
 ---
 
-### 🎯 Flujo 5: Cliente Ve Sus Reservas
+### 🎯 Flujo 5: Recordatorio Automático 1 Hora Antes (NUEVO)
+
+```
+┌─────────────────────────┐
+│ ReservaExpirationService│  ⏰ Cada 30 minutos
+│  (Background Service)   │
+└──────────┬──────────────┘
+           │
+           │ 1. Buscar CONFIRMADAS de hoy sin recordatorio
+           │ 2. Verificar si empiezan en < 1 hora
+           ▼
+┌──────────────────────────────────┐
+│ ¿Hay reservas que empiezan pronto?│
+└───────┬──────────────────────────┘
+        │
+        │ SÍ
+        ▼
+┌──────────────────────────────────┐
+│ Para cada reserva:               │
+│ 1. Enviar Email + WhatsApp       │
+│ 2. Marcar recordatorioEnviado    │
+└──────────┬───────────────────────┘
+           │
+           ├─────────────────────────────┐
+           │                             │
+           ▼                             ▼
+    ┌─────────────┐            ┌──────────────────┐
+    │    EMAIL    │            │     WHATSAPP     │
+    │   Cliente   │            │      Cliente     │
+    └─────────────┘            └──────────────────┘
+
+           Contenido:
+           ⏰ ¡Tu reserva es en 1 HORA!
+           - Código: RES-2025-0001
+           - Cancha: Fútbol 7
+           - Dirección: Av. Principal 123
+           - Horario: 18:00-19:00
+           - Teléfono: +51987654321
+           ¡Prepárate para jugar! ⚽
+```
+
+---
+
+### 🎯 Flujo 6: Cliente Busca Sus Reservas
 
 ```
 ┌─────────────┐
@@ -940,39 +1090,44 @@ var reservasDtos = reservas
 │ (Frontend)  │
 └──────┬──────┘
        │
-       │ GET /api/Reserva/mis-reservas/{idUsuario}
+       │ POST /api/Reserva/mis-reservas/{idUsuario}
+       │ Body: {
+       │   filter: { codigoEstado: "02" },  // Solo confirmadas
+       │   page: { page: 1, pageSize: 10 }
+       │ }
        ▼
-┌──────────────────────────┐
-│ ReservasClienteHandler   │
-├──────────────────────────┤
-│ 1. Buscar todas activas  │
-│ 2. Incluir navegaciones  │
-│ 3. Ordenar desc por fecha│
-│ 4. Mapear a DTOs         │
-└──────────┬───────────────┘
+┌──────────────────────────────────┐
+│ SearchReservasClienteHandler     │
+├──────────────────────────────────┤
+│ 1. Aplicar filtros               │
+│ 2. Ejecutar búsqueda paginada    │
+│ 3. Mapear a DTOs                 │
+└──────────┬───────────────────────┘
            │
            │ Respuesta:
-           │ [
-           │   {
-           │     codigoReserva: "RES-2025-0001",
-           │     estadoReserva: "Confirmado",
-           │     nombreCancha: "Cancha Fútbol 7",
-           │     fecha: "2025-01-15",
-           │     horarios: [{ horaInicio: "18:00", horaFin: "19:00" }],
-           │     monto: 80,
-           │     estadoPago: "Parcial",
-           │     montoAdelanto: 40,
-           │     montoPendiente: 40,
-           │     estaConfirmada: true,
-           │     tienePagoPendiente: true
-           │   },
-           │   { ... más reservas ... }
-           │ ]
+           │ {
+           │   items: [
+           │     {
+           │       codigoReserva: "RES-2025-0001",
+           │       estadoReserva: "Confirmado",
+           │       nombreCancha: "Cancha Fútbol 7",
+           │       fecha: "2025-01-15",
+           │       horarios: [...],
+           │       estadoPago: "Parcial",
+           │       estaConfirmada: true
+           │     }
+           │   ],
+           │   total: 15,
+           │   page: 1,
+           │   pageSize: 10,
+           │   totalPages: 2
+           │ }
            ▼
     ┌──────────────┐
     │  Frontend    │
     │  Renderiza   │
-    │  Historial   │
+    │  con         │
+    │  Paginación  │
     └──────────────┘
 ```
 
@@ -985,7 +1140,7 @@ var reservasDtos = reservas
 | Método | Endpoint | Descripción | Request | Response |
 |--------|----------|-------------|---------|----------|
 | POST | `/api/Reserva` | Crear pre-reserva | `CreateReservaDto` | `ReservaConPagoDto` |
-| GET | `/api/Reserva/mis-reservas/{idUsuario}` | Ver historial completo | - | `List<ReservaClienteDto>` |
+| POST | `/api/Reserva/mis-reservas/{idUsuario}` | Buscar reservas con filtros y paginación | `SearchParamsDto<SearchReservaClienteFilterDto>` | `SearchResultDto<ReservaClienteDto>` |
 | GET | `/api/Reserva/{id}` | Ver detalle de 1 reserva | - | `GetReservaDto` |
 
 ### Para OPERADORES

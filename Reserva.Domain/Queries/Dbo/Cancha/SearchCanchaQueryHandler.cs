@@ -32,7 +32,6 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 
             var filters = request.SearchParams?.Filter;
 
-
             filter = filter.And(x => x.Activo == true);
 
             if (!string.IsNullOrEmpty(filters?.Nombre))
@@ -81,7 +80,6 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
                 x => x.CodigoUbigeoNavigation!,
-
                 x => x.Disponibilidad.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
             );
 

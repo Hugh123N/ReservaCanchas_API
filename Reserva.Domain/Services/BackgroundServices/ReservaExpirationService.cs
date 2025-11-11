@@ -9,7 +9,8 @@ using Reserva.Repository.Abstractions.Base;
 namespace Reserva.Domain.Services.BackgroundServices
 {
     /// <summary>
-    /// Servicio en segundo plano que verifica y expira reservas pendientes
+    /// Servicio en segundo plano que verifica y expira reservas pendientes,
+    /// envía recordatorios 1 hora antes y advertencias 6 horas antes de expirar
     /// </summary>
     public class ReservaExpirationService : BackgroundService
     {
@@ -17,6 +18,7 @@ namespace Reserva.Domain.Services.BackgroundServices
         private readonly ILogger<ReservaExpirationService> _logger;
         private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(30);
         private readonly TimeSpan _warningThreshold = TimeSpan.FromHours(6);
+        private readonly TimeSpan _reminderThreshold = TimeSpan.FromHours(1);
 
         public ReservaExpirationService(
             IServiceProvider serviceProvider,
@@ -36,10 +38,11 @@ namespace Reserva.Domain.Services.BackgroundServices
                 {
                     await ProcesarReservasExpiradas(stoppingToken);
                     await NotificarReservasProximasExpirar(stoppingToken);
+                    await EnviarRecordatoriosReservasProximas(stoppingToken);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error al procesar reservas expiradas");
+                    _logger.LogError(ex, "Error al procesar reservas");
                 }
 
                 await Task.Delay(_checkInterval, stoppingToken);
@@ -150,7 +153,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                      && r.FechaExpiracionPreReserva.HasValue
                      && r.FechaExpiracionPreReserva.Value > ahora
                      && r.FechaExpiracionPreReserva.Value <= limiteAdvertencia
-                     && !r.NotificacionAdvertenciaEnviada, // Campo adicional para evitar notificaciones duplicadas
+                     && !(r.NotificacionAdvertenciaEnviada ?? false), 
                 r => r.IdEstadoReservaNavigation,
                 r => r.IdCanchaNavigation,
                 r => r.IdUsuarioNavigation
@@ -202,6 +205,85 @@ namespace Reserva.Domain.Services.BackgroundServices
                     _logger.LogError(
                         ex,
                         "Error al notificar proximidad de expiración de reserva {CodigoReserva} (ID: {IdReserva})",
+                        reserva.CodigoReserva,
+                        reserva.IdReserva);
+                }
+            }
+        }
+
+        private async Task EnviarRecordatoriosReservasProximas(CancellationToken cancellationToken)
+        {
+            using var scope = _serviceProvider.CreateScope();
+
+            var reservaRepository = scope.ServiceProvider.GetRequiredService<IRepository<Entity.Reserva>>();
+            var notificacionService = scope.ServiceProvider.GetRequiredService<INotificacionService>();
+
+            var ahora = DateTimeOffset.Now;
+
+            // Buscar reservas CONFIRMADAS que empiezan en menos de 1 hora
+            // y que NO hayan sido notificadas aún (recordatorioEnviado = false)
+            var reservasProximas = await reservaRepository.FindByAsync(
+                r => r.Activo
+                     && r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado
+                     && r.Fecha.Date == ahora.Date // Solo reservas de hoy
+                     && !(r.RecordatorioEnviado ?? false),
+                r => r.IdEstadoReservaNavigation,
+                r => r.IdCanchaNavigation,
+                r => r.IdUsuarioNavigation,
+                r => r.ReservaDetalle
+            );
+
+            if (!reservasProximas.Any())
+            {
+                _logger.LogDebug("No hay reservas confirmadas para enviar recordatorios.");
+                return;
+            }
+
+            _logger.LogInformation("Verificando {Count} reservas confirmadas para recordatorios", reservasProximas.Count());
+
+            foreach (var reserva in reservasProximas)
+            {
+                try
+                {
+                    // Verificar si algún horario empieza en menos de 1 hora
+                    var primerHorario = reserva.ReservaDetalle?
+                        .OrderBy(d => d.HoraInicio)
+                        .FirstOrDefault();
+
+                    if (primerHorario == null)
+                        continue;
+
+                    // Construir DateTime completo de la reserva
+                    var fechaHoraReserva = reserva.Fecha.Date
+                        .Add(primerHorario.HoraInicio.ToTimeSpan());
+
+                    var tiempoHastaReserva = fechaHoraReserva - ahora;
+
+                    // Si falta menos de 1 hora (pero más de 0) → enviar recordatorio
+                    if (tiempoHastaReserva.TotalMinutes > 0 && tiempoHastaReserva.TotalMinutes <= 60)
+                    {
+                        await notificacionService.NotificarRecordatorioReservaAsync(
+                            reserva,
+                            reserva.IdCanchaNavigation,
+                            reserva.IdUsuarioNavigation
+                        );
+
+                        // Marcar como notificada
+                        reserva.RecordatorioEnviado = true;
+                        await reservaRepository.UpdateAsync(reserva);
+                        await reservaRepository.SaveAsync();
+
+                        _logger.LogInformation(
+                            "Recordatorio enviado para reserva {CodigoReserva} (empieza en {Minutos} minutos)",
+                            reserva.CodigoReserva,
+                            tiempoHastaReserva.TotalMinutes);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Error al enviar recordatorio de reserva {CodigoReserva} (ID: {IdReserva})",
                         reserva.CodigoReserva,
                         reserva.IdReserva);
                 }

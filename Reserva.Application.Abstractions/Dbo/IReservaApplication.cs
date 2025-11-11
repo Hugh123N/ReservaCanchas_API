@@ -35,9 +35,9 @@ namespace Reserva.Application.Abstractions.Dbo
 
         // Operaciones para el Cliente
         /// <summary>
-        /// Obtiene todas las reservas del cliente con información completa
+        /// Busca reservas del cliente con paginación y filtros
         /// </summary>
-        Task<ResponseDto<IEnumerable<ReservaClienteDto>>> ObtenerReservasCliente(Guid idUsuario);
+        Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(Guid idUsuario, SearchParamsDto<SearchReservaClienteFilterDto> searchParams);
     }
 }
 

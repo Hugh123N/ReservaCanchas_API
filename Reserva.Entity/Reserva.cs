@@ -19,7 +19,9 @@ public partial class Reserva
 
     public DateTimeOffset? FechaExpiracionPreReserva { get; set; }
 
-    public bool NotificacionAdvertenciaEnviada { get; set; }
+    public bool? NotificacionAdvertenciaEnviada { get; set; }
+
+    public bool? RecordatorioEnviado { get; set; }
 
     public int IdEstadoReserva { get; set; }
 

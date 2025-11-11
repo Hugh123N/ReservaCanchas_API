@@ -178,7 +178,7 @@ namespace Reserva.Domain.Services.Notificacion
                         ToEmails = emailsOperadores,
                         SubjectParams = new Dictionary<string, string>
                         {
-                            { "RESERVA_EXPIRADA", $"❌ Reserva Expirada - {reserva.CodigoReserva}" }
+                            { "RESERVA_EXPIRADA", $"Reserva Expirada - {reserva.CodigoReserva}" }
                         },
                         BodyParams = new Dictionary<string, string>
                         {
@@ -545,6 +545,118 @@ namespace Reserva.Domain.Services.Notificacion
             {
                 _logger.LogError(ex, "Error al enviar WhatsApp a cliente para reserva {CodigoReserva}", reserva.CodigoReserva);
             }
+        }
+
+        #endregion
+
+        #region Recordatorios
+
+        public async Task NotificarRecordatorioReservaAsync(
+            Entity.Reserva reserva,
+            Cancha cancha,
+            AspNetUsers cliente)
+        {
+            try
+            {
+                // Email
+                if (!string.IsNullOrEmpty(cliente.Email))
+                {
+                    var htmlBody = ConstruirEmailRecordatorioReserva(reserva, cancha);
+
+                    var emailDto = new SendEmailDto
+                    {
+                        EmailCode = "RECORDATORIO_RESERVA",
+                        ToEmails = new[] { cliente.Email },
+                        SubjectParams = new Dictionary<string, string>
+                        {
+                            { "RECORDATORIO_RESERVA", $"⏰ Recordatorio: Tu reserva es en 1 hora - {reserva.CodigoReserva}" }
+                        },
+                        BodyParams = new Dictionary<string, string>
+                        {
+                            { "{BODY}", htmlBody }
+                        },
+                        SuccesMessage = "Recordatorio enviado al cliente"
+                    };
+
+                    await _mediator.Send(new SendEmailCommand(emailDto));
+                }
+
+                // WhatsApp
+                if (!string.IsNullOrWhiteSpace(cliente.PhoneNumber))
+                {
+                    var horarios = reserva.ReservaDetalle != null && reserva.ReservaDetalle.Any()
+                        ? $"{reserva.ReservaDetalle.Min(d => d.HoraInicio):HH\\:mm} - {reserva.ReservaDetalle.Max(d => d.HoraFin):HH\\:mm}"
+                        : "No especificado";
+
+                    var mensaje = $"⏰ *Recordatorio de Reserva*\n\n" +
+                                 $"¡Hola {cliente.FirstName}! Tu reserva es en *1 HORA*\n\n" +
+                                 $"📋 Código: *{reserva.CodigoReserva}*\n" +
+                                 $"⚽ Cancha: {cancha.Nombre}\n" +
+                                 $"📍 Dirección: {cancha.Direccion}\n" +
+                                 $"📅 Fecha: {reserva.Fecha:dd/MM/yyyy}\n" +
+                                 $"🕐 Horario: {horarios}\n\n" +
+                                 $"📞 Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
+                                 $"¡Nos vemos en la cancha! ⚽";
+
+                    await _whatsAppService.SendTextMessageAsync(cliente.PhoneNumber, mensaje);
+                }
+
+                _logger.LogInformation("Recordatorio enviado para reserva {CodigoReserva}", reserva.CodigoReserva);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al enviar recordatorio para reserva {CodigoReserva}", reserva.CodigoReserva);
+            }
+        }
+
+        private string ConstruirEmailRecordatorioReserva(Entity.Reserva reserva, Cancha cancha)
+        {
+            var horarios = reserva.ReservaDetalle != null && reserva.ReservaDetalle.Any()
+                ? $"{reserva.ReservaDetalle.Min(d => d.HoraInicio):HH:mm} - {reserva.ReservaDetalle.Max(d => d.HoraFin):HH:mm}"
+                : "No especificado";
+
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .content {{ background: #f8f9fa; padding: 30px; border: 1px solid #dee2e6; }}
+        .info-box {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #667eea; }}
+        .footer {{ background: #e9ecef; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; color: #6c757d; }}
+        .btn {{ display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>⏰ ¡Tu reserva es en 1 HORA!</h1>
+        </div>
+        <div class='content'>
+            <p>Hola,</p>
+            <p>Este es un recordatorio amigable de que tu reserva está próxima:</p>
+
+            <div class='info-box'>
+                <p><strong>📋 Código de Reserva:</strong> {reserva.CodigoReserva}</p>
+                <p><strong>⚽ Cancha:</strong> {cancha.Nombre}</p>
+                <p><strong>📍 Dirección:</strong> {cancha.Direccion}</p>
+                <p><strong>📅 Fecha:</strong> {reserva.Fecha:dd/MM/yyyy}</p>
+                <p><strong>🕐 Horario:</strong> {horarios}</p>
+                <p><strong>📞 Teléfono:</strong> {cancha.TelefonoCancha ?? "No disponible"}</p>
+            </div>
+
+            <p>⚽ <strong>¡Prepárate para jugar!</strong></p>
+            <p>Recuerda llegar unos minutos antes para aprovechar al máximo tu tiempo reservado.</p>
+        </div>
+        <div class='footer'>
+            <p>Este es un mensaje automático. Por favor no respondas a este correo.</p>
+            <p>© {DateTimeOffset.Now.Year} Sistema de Reserva de Canchas</p>
+        </div>
+    </div>
+</body>
+</html>";
         }
 
         #endregion

@@ -29,7 +29,7 @@ namespace Reserva.Domain.Extensions
             });
 
             // AutoMapper Configuration
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(assembly);
 
             // WhatsApp Service (HttpClient configurado)
             services.AddHttpClient<IWhatsAppService, WhatsAppService>();

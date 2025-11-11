@@ -61,10 +61,10 @@ namespace Reserva.Api.Controllers.Dbo
             => await _ReservaApplication.ObtenerReservasPendientesOperador(idProveedor);
 
         /// <summary>
-        /// Endpoint para que el cliente obtenga todas sus reservas (historial completo)
+        /// Endpoint para que el cliente busque sus reservas con paginación y filtros
         /// </summary>
-        [HttpGet("mis-reservas/{idUsuario}")]
-        public async Task<ResponseDto<IEnumerable<ReservaClienteDto>>> ObtenerReservasCliente(Guid idUsuario)
-            => await _ReservaApplication.ObtenerReservasCliente(idUsuario);
+        [HttpPost("mis-reservas/{idUsuario}")]
+        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(Guid idUsuario,SearchParamsDto<SearchReservaClienteFilterDto> searchParams)
+            => await _ReservaApplication.SearchReservasCliente(idUsuario, searchParams);
     }
 }

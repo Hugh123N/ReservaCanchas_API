@@ -43,7 +43,7 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new ReservasPendientesOperadorQuery(idProveedor));
 
         // Operaciones para el Cliente
-        public async Task<ResponseDto<IEnumerable<ReservaClienteDto>>> ObtenerReservasCliente(Guid idUsuario)
-            => await _mediator.Send(new ReservasClienteQuery(idUsuario));
+        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(Guid idUsuario, SearchParamsDto<SearchReservaClienteFilterDto> searchParams)
+            => await _mediator.Send(new SearchReservasClienteQuery(idUsuario, searchParams));
     }
 }

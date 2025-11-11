@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Reserva.Entity;
 //using Reserva.Audit.Common;
 //using Reserva.Audit.RestClient;
@@ -247,25 +248,22 @@ namespace Reserva.Repository.Base
             command.CommandText = spName;
             command.CommandType = CommandType.StoredProcedure;
 
+            var currentTransaction = _dbContext.Database.CurrentTransaction;
+            if (currentTransaction != null)
+                command.Transaction = currentTransaction.GetDbTransaction();
+
             if (parameters != null && parameters.Length > 0)
                 command.Parameters.AddRange(parameters);
 
-            try
-            {
-                if (connection.State != ConnectionState.Open)
-                    await connection.OpenAsync();
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
 
-                var result = await command.ExecuteScalarAsync();
+            var result = await command.ExecuteScalarAsync();
 
-                if (result == DBNull.Value || result is null)
-                    return default;
+            if (result == DBNull.Value || result is null)
+                return default;
 
-                return (T)Convert.ChangeType(result, typeof(T)); // evita errores de casteo
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
+            return (T)Convert.ChangeType(result, typeof(T));
         }
 
         private void UpdateAuditTrailsDetails<TDetail>(TDetail entity, ICollection<Type> baseTypes, bool creation = true)

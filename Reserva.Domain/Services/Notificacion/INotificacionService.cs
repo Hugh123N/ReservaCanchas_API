@@ -31,5 +31,10 @@ namespace Reserva.Domain.Services.Notificacion
         /// Notifica al cliente que su reserva fue cancelada
         /// </summary>
         Task NotificarReservaCanceladaAsync(Entity.Reserva reserva, AspNetUsers cliente, string motivo);
+
+        /// <summary>
+        /// Envia recordatorio al cliente 1 hora antes de su reserva confirmada
+        /// </summary>
+        Task NotificarRecordatorioReservaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente);
     }
 }

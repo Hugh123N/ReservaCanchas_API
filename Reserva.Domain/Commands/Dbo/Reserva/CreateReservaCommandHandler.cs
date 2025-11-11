@@ -127,7 +127,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 return response;
             }
 
-            nuevaReserva.IdEstadoReserva = estadoPendienteReserva.IdEstadoReserva;
             nuevaReserva.ReservaDetalle = request.CreateDto.Detalles.Select(x => new ReservaDetalle
             {
                 HoraInicio = x.HoraInicio,
@@ -137,6 +136,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             int duracionPreReservaHoras = cancha.DuracionPreReserva ?? 24;
             nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.Now.AddHours(duracionPreReservaHoras);
             nuevaReserva.CodigoReserva = await GenerarCodigoReserva();
+            nuevaReserva.IdEstadoReserva = estadoPendienteReserva.IdEstadoReserva;
+            nuevaReserva.IdCanchaNavigation = null;
+            nuevaReserva.RecordatorioEnviado = false;
+            nuevaReserva.NotificacionAdvertenciaEnviada = false;
 
             await _ReservaRepository.AddAsync(nuevaReserva);
             await _ReservaRepository.SaveAsync();
@@ -201,7 +204,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             response.UpdateData(reservaConPagoDto);
             response.AddOkResult($"Pre-reserva creada exitosamente. Código: {nuevaReserva.CodigoReserva}");
 
-            // Enviar notificación a los operadores de la cancha
             try
             {
                 var cliente = await _ReservaRepository.FindAll()
@@ -209,7 +211,16 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     .Select(r => r.IdUsuarioNavigation)
                     .FirstOrDefaultAsync();
 
-                if (cliente != null && operadores.Any())
+                if(!operadores.Any())
+                    operadores = new List<Operador>
+                    {
+                        new Operador
+                        {
+                            IdUsuarioNavigation = cancha.IdProveedorNavigation.IdUsuarioNavigation,
+                        }
+                    };
+
+                if (cliente != null)
                 {
                     await _notificacionService.NotificarNuevaReservaPendienteAsync(
                         nuevaReserva,

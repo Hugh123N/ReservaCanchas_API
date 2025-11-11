@@ -743,6 +743,9 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.NotificacionAdvertenciaEnviada)
                 .HasDefaultValue(false)
                 .HasColumnName("notificacionAdvertenciaEnviada");
+            entity.Property(e => e.RecordatorioEnviado)
+                .HasDefaultValue(false)
+                .HasColumnName("recordatorioEnviado");
             entity.Property(e => e.IdCancha).HasColumnName("idCancha");
             entity.Property(e => e.IdEstadoReserva).HasColumnName("idEstadoReserva");
             entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
