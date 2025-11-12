@@ -53,6 +53,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         .WithMessage("El monto del adelanto no puede ser mayor que el monto total.");
                 });
             });
+
+
             _MetodoPagoRepository = metodoPagoRepository;
         }
 
@@ -73,7 +75,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private bool BeValidDate(DateTimeOffset fecha)
         {
             // Obtener la fecha de hoy sin hora
-            var hoy = DateTimeOffset.UtcNow;
+            var hoy = DateTimeOffset.Now.Date;
             return fecha >= hoy;
         }
     }

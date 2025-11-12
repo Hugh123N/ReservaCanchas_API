@@ -18,5 +18,6 @@ namespace Reserva.Dto.Dbo.Usuario
         public DateTimeOffset? LockoutEnd { get; set; } = null!;
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
+        public string? Imagen { get; set; }
     }
 }
