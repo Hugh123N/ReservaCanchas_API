@@ -8,5 +8,6 @@ namespace Reserva.Dto.Dbo.Cancha
         public DateTimeOffset? Fecha { get; set; }
         public string? Hora { get; set; }
         public int? IdEstadoCancha { get; set; }
+        public AreaGeograficaDto? Area { get; set; }
     }
 }

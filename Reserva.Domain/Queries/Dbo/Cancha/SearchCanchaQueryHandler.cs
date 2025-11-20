@@ -46,6 +46,18 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
             if (filters?.IdEstadoCancha.HasValue == true)
                 filter = filter.And(x => x.IdEstadoCancha == filters.IdEstadoCancha);
 
+            if (filters?.Area != null)
+            {
+                filter = filter.And(x =>
+                    x.Latitud.HasValue &&
+                    x.Longitud.HasValue &&
+                    x.Latitud.Value >= filters.Area.Sur &&
+                    x.Latitud.Value <= filters.Area.Norte &&
+                    x.Longitud.Value >= filters.Area.Oeste &&
+                    x.Longitud.Value <= filters.Area.Este
+                );
+            }
+
             if (filters?.Fecha.HasValue == true)
             {
                 var fecha = filters.Fecha.Value;
