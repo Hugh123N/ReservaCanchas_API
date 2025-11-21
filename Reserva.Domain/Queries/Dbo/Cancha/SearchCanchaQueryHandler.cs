@@ -71,6 +71,15 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 );
             }
 
+            // Filtro por favoritos del usuario
+            if (filters?.SoloFavoritos == true && filters?.IdUsuario.HasValue == true)
+            {
+                filter = filter.And(x => x.CanchaFavorita.Any(cf =>
+                    cf.IdUsuario == filters.IdUsuario.Value &&
+                    cf.Activo == true
+                ));
+            }
+
             var sorts = new List<SortExpression<Entity.Cancha>>();
 
             if (request.SearchParams?.Sort != null)
