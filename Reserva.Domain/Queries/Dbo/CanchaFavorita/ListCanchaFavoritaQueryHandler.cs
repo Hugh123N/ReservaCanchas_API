@@ -21,7 +21,14 @@ namespace Reserva.Domain.Queries.Dbo.CanchaFavorita
         protected override async Task<ResponseDto<IEnumerable<ListCanchaFavoritaDto>>> HandleQuery(ListCanchaFavoritaQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<IEnumerable<ListCanchaFavoritaDto>>();
-            var list = await _repository.FindByAsNoTrackingAsync(x => x.IdCancha == request.Id);
+
+            if (!Guid.TryParse(request.IdUsuario, out var idUsuarioGuid))
+            {
+                response.AddErrorResult("El IdUsuario proporcionado no es un GUID válido.");
+                return response;
+            }
+
+            var list = await _repository.FindByAsNoTrackingAsync(x => x.IdUsuario == idUsuarioGuid && x.Activo == true);
             var listDtos = _mapper?.Map<IEnumerable<ListCanchaFavoritaDto>>(list);
 
             response.UpdateData(listDtos ?? new List<ListCanchaFavoritaDto>());

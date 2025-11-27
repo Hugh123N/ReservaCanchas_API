@@ -29,12 +29,22 @@ namespace Reserva.Domain.Commands.Dbo.CanchaFavorita
         {
             var response = new ResponseDto<GetCanchaFavoritaDto>();
 
-            var CanchaFavorita = _mapper?.Map<Entity.CanchaFavorita>(request.CreateDto);
+            var CanchaFavorita = await _CanchaFavoritaRepository.GetByAsync(
+                x => x.IdCancha == request.CreateDto.IdCancha && x.IdUsuario == request.CreateDto.IdUsuario);
 
             if (CanchaFavorita != null)
             {
-                await _CanchaFavoritaRepository.AddAsync(CanchaFavorita);
+                CanchaFavorita.Activo = true;
+                await _CanchaFavoritaRepository.UpdateAsync(CanchaFavorita);
                 await _CanchaFavoritaRepository.SaveAsync();
+            }else{
+                CanchaFavorita = _mapper?.Map<Entity.CanchaFavorita>(request.CreateDto);
+
+                if (CanchaFavorita != null)
+                {
+                    await _CanchaFavoritaRepository.AddAsync(CanchaFavorita);
+                    await _CanchaFavoritaRepository.SaveAsync();
+                }
             }
 
             var CanchaFavoritaDto = _mapper?.Map<GetCanchaFavoritaDto>(CanchaFavorita);

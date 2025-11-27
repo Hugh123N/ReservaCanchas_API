@@ -20,15 +20,15 @@ namespace Reserva.Apis.Controllers.Dbo
         [HttpPut]
         public async Task<ResponseDto<GetCanchaFavoritaDto>> Update(UpdateCanchaFavoritaDto updateDto)
             => await _CanchaFavoritaApplication.Update(updateDto);
-        [HttpDelete("{id}")]
-        public async Task<ResponseDto> Delete(int id)
-            => await _CanchaFavoritaApplication.Delete(id);
+        [HttpDelete("{id}/{idUsuario}")]
+        public async Task<ResponseDto> Delete(int id, string idUsuario)
+            => await _CanchaFavoritaApplication.Delete(id, idUsuario);
         [HttpGet("{id}")]
         public async Task<ResponseDto<GetCanchaFavoritaDto>> Get(int id)
             => await _CanchaFavoritaApplication.Get(id);
-        [HttpPost("list")]
-        public async Task<ResponseDto<IEnumerable<ListCanchaFavoritaDto>>> List(int id)
-            => await _CanchaFavoritaApplication.List(id);
+        [HttpGet("list/{idUsuario}")]
+        public async Task<ResponseDto<IEnumerable<ListCanchaFavoritaDto>>> List(string idUsuario)
+            => await _CanchaFavoritaApplication.List(idUsuario);
         [HttpPost("search")]
         public async Task<ResponseDto<SearchResultDto<SearchCanchaFavoritaDto>>> Search(SearchParamsDto<SearchCanchaFavoritaFilterDto> searchParams)
             => await _CanchaFavoritaApplication.Search(searchParams);

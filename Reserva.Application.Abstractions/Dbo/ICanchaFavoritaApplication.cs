@@ -7,9 +7,9 @@ namespace Reserva.Application.Abstractions.Dbo
     {
         Task<ResponseDto<GetCanchaFavoritaDto>> Create(CreateCanchaFavoritaDto createDto);
         Task<ResponseDto<GetCanchaFavoritaDto>> Update(UpdateCanchaFavoritaDto updateDto);
-        Task<ResponseDto> Delete(int id);
+        Task<ResponseDto> Delete(int id, string idUsuario);
         Task<ResponseDto<GetCanchaFavoritaDto>> Get(int id);
-        Task<ResponseDto<IEnumerable<ListCanchaFavoritaDto>>> List(int id);
+        Task<ResponseDto<IEnumerable<ListCanchaFavoritaDto>>> List(string idUsuario);
         Task<ResponseDto<SearchResultDto<SearchCanchaFavoritaDto>>> Search(SearchParamsDto<SearchCanchaFavoritaFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboCanchaFavoritaDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectCanchaFavoritaDto>>> Select(SearchParamsDto<SelectCanchaFavoritaFilterDto> searchParams);
