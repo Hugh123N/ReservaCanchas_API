@@ -80,6 +80,12 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 ));
             }
 
+            // Filtro por proveedor
+            if (filters?.IdProveedor.HasValue == true)
+            {
+                filter = filter.And(x => x.IdProveedor == filters.IdProveedor);
+            }
+
             var sorts = new List<SortExpression<Entity.Cancha>>();
 
             if (request.SearchParams?.Sort != null)

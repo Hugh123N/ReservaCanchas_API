@@ -21,5 +21,11 @@ namespace Reserva.Dto.Dbo.Cancha
         /// Si es true, IdUsuario debe estar presente.
         /// </summary>
         public bool? SoloFavoritos { get; set; }
+
+        /// <summary>
+        /// ID del proveedor para filtrar sus canchas.
+        /// Permite que un proveedor vea solo las canchas que le pertenecen.
+        /// </summary>
+        public int? IdProveedor { get; set; }
     }
 }
