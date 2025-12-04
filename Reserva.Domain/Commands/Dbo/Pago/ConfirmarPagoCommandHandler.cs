@@ -115,7 +115,7 @@ namespace Reserva.Domain.Commands.Dbo.Pago
             await _PagoRepository.SaveAsync();
 
             //Si el pago está asociado a una reserva, actualizar su estado a Confirmado
-            if (pago.IdReserva.HasValue && pago.IdReservaNavigation != null)
+            if (pago.IdReservaNavigation != null)
             {
                 var estadoConfirmado = await _EstadoReservaRepository.GetByAsNoTrackingAsync(x => x.Codigo!.Equals(Constants.ESTADO_RESERVA.Confirmado));
 

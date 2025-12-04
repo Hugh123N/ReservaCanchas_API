@@ -9,13 +9,15 @@ public partial class Reserva
 
     public string CodigoReserva { get; set; } = null!;
 
-    public Guid IdUsuario { get; set; }
+    public Guid IdCliente { get; set; }
 
     public int IdCancha { get; set; }
 
-    public DateTimeOffset Fecha { get; set; }
+    public int IdTipoDeporte { get; set; }
 
-    public decimal? Monto { get; set; }
+    public DateTimeOffset FechaReserva { get; set; }
+
+    public decimal MontoTotal { get; set; }
 
     public DateTimeOffset? FechaExpiracionPreReserva { get; set; }
 
@@ -24,6 +26,10 @@ public partial class Reserva
     public bool? RecordatorioEnviado { get; set; }
 
     public int IdEstadoReserva { get; set; }
+
+    public int? IdOperadorConfirmo { get; set; }
+
+    public DateTimeOffset? FechaConfirmacion { get; set; }
 
     public string UserNameCreate { get; set; } = null!;
 
@@ -35,13 +41,19 @@ public partial class Reserva
 
     public bool Activo { get; set; }
 
+    public virtual ICollection<DetalleReserva> DetalleReserva { get; set; } = new List<DetalleReserva>();
+
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
+
+    public virtual AspNetUsers IdClienteNavigation { get; set; } = null!;
 
     public virtual EstadoReserva IdEstadoReservaNavigation { get; set; } = null!;
 
-    public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
+    public virtual Operador? IdOperadorConfirmoNavigation { get; set; }
+
+    public virtual TipoDeporte IdTipoDeporteNavigation { get; set; } = null!;
+
+    public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
 
     public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
-
-    public virtual ICollection<ReservaDetalle> ReservaDetalle { get; set; } = new List<ReservaDetalle>();
 }

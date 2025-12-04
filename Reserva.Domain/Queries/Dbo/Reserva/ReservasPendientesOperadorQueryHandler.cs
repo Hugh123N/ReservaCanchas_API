@@ -32,8 +32,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                      && r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente
                      && r.Activo,
                 r => r.IdCanchaNavigation,
-                r => r.IdUsuarioNavigation,
-                r => r.ReservaDetalle,
+                r => r.IdClienteNavigation,
+                r => r.DetalleReserva,
                 r => r.IdEstadoReservaNavigation
             );
 
@@ -44,24 +44,24 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 {
                     IdReserva = r.IdReserva,
                     CodigoReserva = r.CodigoReserva,
-                    Fecha = r.Fecha,
-                    HoraInicio = r.ReservaDetalle.Any()
-                        ? r.ReservaDetalle.Min(d => d.HoraInicio).ToString("HH:mm")
+                    Fecha = r.FechaReserva,
+                    HoraInicio = r.DetalleReserva.Any()
+                        ? r.DetalleReserva.Min(d => d.HoraInicio).ToString("HH:mm")
                         : null,
-                    HoraFin = r.ReservaDetalle.Any()
-                        ? r.ReservaDetalle.Max(d => d.HoraFin).ToString("HH:mm")
+                    HoraFin = r.DetalleReserva.Any()
+                        ? r.DetalleReserva.Max(d => d.HoraFin).ToString("HH:mm")
                         : null,
-                    Monto = r.Monto,
+                    Monto = r.MontoTotal,
                     FechaCreacion = r.CreateDate,
                     FechaExpiracion = r.FechaExpiracionPreReserva,
                     HorasRestantes = r.FechaExpiracionPreReserva.HasValue
                         ? (r.FechaExpiracionPreReserva.Value - DateTimeOffset.Now).TotalHours
                         : 0,
                     NombreCancha = r.IdCanchaNavigation.Nombre,
-                    IdCliente = r.IdUsuario,
-                    NombreCliente = r.IdUsuarioNavigation.UserName,
-                    EmailCliente = r.IdUsuarioNavigation.Email,
-                    TelefonoCliente = r.IdUsuarioNavigation.PhoneNumber,
+                    IdCliente = r.IdCliente,
+                    NombreCliente = r.IdClienteNavigation.UserName,
+                    EmailCliente = r.IdClienteNavigation.Email,
+                    TelefonoCliente = r.IdClienteNavigation.PhoneNumber,
                     NivelUrgencia = CalcularNivelUrgencia(r.FechaExpiracionPreReserva)
                 })
                 .ToList();

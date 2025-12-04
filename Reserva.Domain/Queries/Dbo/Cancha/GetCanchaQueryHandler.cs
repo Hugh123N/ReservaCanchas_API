@@ -1,7 +1,7 @@
 using AutoMapper;
 using MediatR;
 using Reserva.Domain.Queries.Base;
-using Reserva.Domain.Queries.Dbo.Disponibilidad;
+using Reserva.Domain.Queries.Dbo.HorarioCancha;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Repository.Abstractions.Base;
@@ -27,7 +27,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
         {
             var response = new ResponseDto<GetCanchaDto>();
             var Cancha = await _CanchaRepository.GetByAsync(x => x.IdCancha == request.Id,
-                x => x.IdTipoCanchaNavigation,
+                x => x.HorarioCancha,
                 x => x.ImagenCancha.Where(i => i.Activo),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),

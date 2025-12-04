@@ -103,7 +103,7 @@ namespace Reserva.Domain.Commands.Dbo.Pago
             await _PagoRepository.SaveAsync();
 
             // 8. Confirmar la reserva asociada si aún no está confirmada
-            if (pago.IdReserva.HasValue && pago.IdReservaNavigation != null)
+            if (pago.IdReservaNavigation != null)
             {
                 if (pago.IdReservaNavigation.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Confirmado)
                 {

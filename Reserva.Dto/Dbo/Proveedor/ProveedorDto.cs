@@ -8,8 +8,10 @@ namespace Reserva.Dto.Dbo.Proveedor
         public Guid? IdUsuario { get; set; }
         public string? RazonSocial { get; set; }
         public string? Ruc { get; set; }
-        public string? Descripcion { get; set; }
         public int IdTipoProveedor { get; set; }
         public int IdEstadoProveedor { get; set; }
+        public string? Telefono { get; set; }
+        public string? Facebook { get; set; }
+        public string? Instagram { get; set; }
     }
 }

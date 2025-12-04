@@ -11,5 +11,5 @@ public partial class DiaSemana
 
     public bool Activo { get; set; }
 
-    public virtual ICollection<Disponibilidad> Disponibilidad { get; set; } = new List<Disponibilidad>();
+    public virtual ICollection<HorarioCancha> HorarioCancha { get; set; } = new List<HorarioCancha>();
 }

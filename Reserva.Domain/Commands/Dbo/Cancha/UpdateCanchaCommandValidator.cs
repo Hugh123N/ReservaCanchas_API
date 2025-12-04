@@ -23,16 +23,16 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     });
 
                 RequiredString(x => x.UpdateDto.Nombre, "El nombre de la cancha", 3, 100);
-                RequiredString(x => x.UpdateDto.Ubicacion, "La ubicación de la cancha", 5, 200);
+                RequiredString(x => x.UpdateDto.Direccion, "La Direccion de la cancha", 5, 200);
 
-                RequiredField(x => x.UpdateDto.PrecioHora, "El precio de la cancha")
+                RequiredField(x => x.UpdateDto.Precio, "El precio de la cancha")
                     .GreaterThan(0).WithMessage("El precio debe ser mayor a 0");
 
-                RuleFor(x => x.UpdateDto.Disponibilidades)
+                RuleFor(x => x.UpdateDto.HorarioCanchas)
                     .NotNull().WithMessage("Debe proporcionar al menos una disponibilidad.")
                     .Must(d => d.Any()).WithMessage("Debe proporcionar al menos una disponibilidad.");
 
-                RuleForEach(x => x.UpdateDto.Disponibilidades).ChildRules(dis =>
+                RuleForEach(x => x.UpdateDto.HorarioCanchas).ChildRules(dis =>
                 {
                     dis.RuleFor(d => d.HoraInicio)
                        .LessThan(d => d.HoraFin)

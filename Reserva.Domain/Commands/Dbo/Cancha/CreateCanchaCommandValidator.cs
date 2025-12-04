@@ -17,21 +17,21 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     .NotEmpty().WithMessage("La descripción de la cancha es obligatoria.")
                     .MaximumLength(500).WithMessage("La descripción no puede superar los 500 caracteres.");
 
-                RuleFor(x => x.CreateDto.PrecioHora)
+                RuleFor(x => x.CreateDto.Precio)
                     .GreaterThan(0).WithMessage("El precio por hora debe ser mayor a 0.");
 
-                RuleFor(x => x.CreateDto.IdTipoCancha)
-                    .GreaterThan(0).WithMessage("Debe seleccionar un tipo de cancha válido.");
+                RuleFor(x => x.CreateDto.IdTipoSuperficie)
+                    .GreaterThan(0).WithMessage("Debe seleccionar un tipo de superficie válido.");
 
                 RuleFor(x => x.CreateDto.CodigoUbigeo)
                     .NotEmpty().WithMessage("Debe seleccionar una ubicación válida.");
 
-                RuleFor(x => x.CreateDto.Disponibilidades)
+                RuleFor(x => x.CreateDto.HorarioCanchas)
                     .NotNull().WithMessage("Debe especificar al menos una disponibilidad.")
                     .Must(d => d.Any()).WithMessage("Debe especificar al menos una disponibilidad.")
                     .DependentRules(() =>
                     {
-                        RuleForEach(x => x.CreateDto.Disponibilidades).ChildRules(d =>
+                        RuleForEach(x => x.CreateDto.HorarioCanchas).ChildRules(d =>
                         {
                             d.RuleFor(y => y.IdDiaSemana)
                                 .GreaterThan(0).WithMessage("El día de la semana es obligatorio.");

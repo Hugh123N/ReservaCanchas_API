@@ -11,7 +11,7 @@ public partial class ImagenCancha
 
     public string UrlImagen { get; set; } = null!;
 
-    public bool? EsPrincipal { get; set; }
+    public bool EsPrincipal { get; set; }
 
     public string UserNameCreate { get; set; } = null!;
 

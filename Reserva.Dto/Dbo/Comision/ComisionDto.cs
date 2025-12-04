@@ -6,6 +6,7 @@ namespace Reserva.Dto.Dbo.Comision
     public class ComisionDto
     {
         public decimal Porcentaje { get; set; }
+        public string? Descripcion { get; set; }
         public DateTime? FechaInicio { get; set; }
         public DateTime? FechaFin { get; set; }
         public DateTime? FechaActualizacion { get; set; }

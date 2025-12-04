@@ -82,7 +82,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             }
 
             var cancha = reserva.IdCanchaNavigation;
-            decimal porcentajeMinimoAdelanto = cancha?.PorcentajeAdelanto ?? 50;
+            decimal porcentajeMinimoAdelanto = cancha?.IdProveedorNavigation.ConfiguracionProveedor.PorcentajeAdelantoMinimo ?? 50;
 
             //Procesar adelanto si fue proporcionado
             decimal montoAdelanto = request.ConfirmarDto.MontoAdelanto ?? 0;
@@ -170,7 +170,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             {
                 var cliente = await _ReservaRepository.FindAll()
                     .Where(r => r.IdReserva == reserva.IdReserva)
-                    .Select(r => r.IdUsuarioNavigation)
+                    .Select(r => r.IdClienteNavigation)
                     .FirstOrDefaultAsync();
 
                 if (cliente != null && cancha != null)

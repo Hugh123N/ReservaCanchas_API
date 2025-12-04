@@ -2,7 +2,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Base;
-using Reserva.Dto.Dbo.Disponibilidad;
 using Reserva.Dto.Dbo.Ubigeo;
 using Reserva.Repository.Abstractions.Base;
 

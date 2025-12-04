@@ -239,8 +239,8 @@ namespace Reserva.Domain.Services.Notificacion
                 ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.Now).TotalHours
                 : 0;
 
-            var horarios = reserva.ReservaDetalle != null && reserva.ReservaDetalle.Any()
-                ? $"{reserva.ReservaDetalle.Min(d => d.HoraInicio):HH:mm} - {reserva.ReservaDetalle.Max(d => d.HoraFin):HH:mm}"
+            var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
+                ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH:mm}"
                 : "No especificado";
 
             return $@"
@@ -270,9 +270,9 @@ namespace Reserva.Domain.Services.Notificacion
                 <h3>📋 Detalles de la Reserva</h3>
                 <p><strong>Código:</strong> {reserva.CodigoReserva}</p>
                 <p><strong>Cancha:</strong> {cancha.Nombre}</p>
-                <p><strong>Fecha:</strong> {reserva.Fecha:dddd, dd/MM/yyyy}</p>
+                <p><strong>Fecha:</strong> {reserva.FechaReserva:dddd, dd/MM/yyyy}</p>
                 <p><strong>Horario:</strong> {horarios}</p>
-                <p><strong>Monto:</strong> S/ {reserva.Monto:F2}</p>
+                <p><strong>Monto:</strong> S/ {reserva.MontoTotal:F2}</p>
             </div>
 
             <div class=""info-box"">
@@ -303,8 +303,8 @@ namespace Reserva.Domain.Services.Notificacion
 
         private string ConstruirEmailReservaConfirmada(Entity.Reserva reserva, Cancha cancha, Entity.Pago pago)
         {
-            var horarios = reserva.ReservaDetalle != null && reserva.ReservaDetalle.Any()
-                ? $"{reserva.ReservaDetalle.Min(d => d.HoraInicio):HH:mm} - {reserva.ReservaDetalle.Max(d => d.HoraFin):HH:mm}"
+            var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
+                ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH:mm}"
                 : "No especificado";
 
             var mensajePago = pago.MontoPendiente > 0
@@ -343,10 +343,10 @@ namespace Reserva.Domain.Services.Notificacion
             <div class=""info-box"">
                 <h3>📋 Detalles de tu Reserva</h3>
                 <p><strong>Cancha:</strong> {cancha.Nombre}</p>
-                <p><strong>Fecha:</strong> {reserva.Fecha:dddd, dd/MM/yyyy}</p>
+                <p><strong>Fecha:</strong> {reserva.FechaReserva:dddd, dd/MM/yyyy}</p>
                 <p><strong>Horario:</strong> {horarios}</p>
                 <p><strong>Dirección:</strong> {cancha.Direccion ?? "Ver en la app"}</p>
-                <p><strong>Monto Total:</strong> S/ {reserva.Monto:F2}</p>
+                <p><strong>Monto Total:</strong> S/ {reserva.MontoTotal:F2}</p>
             </div>
 
             <div class=""info-box"">
@@ -477,8 +477,8 @@ namespace Reserva.Domain.Services.Notificacion
                 var mensaje = $"🔔 *Nueva Reserva Pendiente*\n\n" +
                              $"📋 Código: *{reserva.CodigoReserva}*\n" +
                              $"⚽ Cancha: {cancha.Nombre}\n" +
-                             $"📅 Fecha: {reserva.Fecha:dd/MM/yyyy}\n" +
-                             $"💰 Monto: S/ {reserva.Monto:F2}\n\n" +
+                             $"📅 Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
+                             $"💰 Monto: S/ {reserva.MontoTotal:F2}\n\n" +
                              $"👤 *Cliente:*\n" +
                              $"Nombre: {cliente.FirstName} {cliente.LastName}\n" +
                              $"Teléfono: {cliente.PhoneNumber}\n" +
@@ -519,7 +519,7 @@ namespace Reserva.Domain.Services.Notificacion
                              $"📋 Código: *{reserva.CodigoReserva}*\n" +
                              $"⚽ Cancha: {cancha.Nombre}\n" +
                              $"📍 Dirección: {cancha.Direccion}\n" +
-                             $"📅 Fecha: {reserva.Fecha:dd/MM/yyyy}\n" +
+                             $"📅 Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
                              $"💰 Monto Total: S/ {pago.Monto:F2}\n" +
                              $"💳 Estado Pago: {estadoPago}\n";
 
@@ -584,8 +584,8 @@ namespace Reserva.Domain.Services.Notificacion
                 // WhatsApp
                 if (!string.IsNullOrWhiteSpace(cliente.PhoneNumber))
                 {
-                    var horarios = reserva.ReservaDetalle != null && reserva.ReservaDetalle.Any()
-                        ? $"{reserva.ReservaDetalle.Min(d => d.HoraInicio):HH\\:mm} - {reserva.ReservaDetalle.Max(d => d.HoraFin):HH\\:mm}"
+                    var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
+                        ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH\\:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH\\:mm}"
                         : "No especificado";
 
                     var mensaje = $"⏰ *Recordatorio de Reserva*\n\n" +
@@ -593,7 +593,7 @@ namespace Reserva.Domain.Services.Notificacion
                                  $"📋 Código: *{reserva.CodigoReserva}*\n" +
                                  $"⚽ Cancha: {cancha.Nombre}\n" +
                                  $"📍 Dirección: {cancha.Direccion}\n" +
-                                 $"📅 Fecha: {reserva.Fecha:dd/MM/yyyy}\n" +
+                                 $"📅 Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
                                  $"🕐 Horario: {horarios}\n\n" +
                                  $"📞 Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
                                  $"¡Nos vemos en la cancha! ⚽";
@@ -611,8 +611,8 @@ namespace Reserva.Domain.Services.Notificacion
 
         private string ConstruirEmailRecordatorioReserva(Entity.Reserva reserva, Cancha cancha)
         {
-            var horarios = reserva.ReservaDetalle != null && reserva.ReservaDetalle.Any()
-                ? $"{reserva.ReservaDetalle.Min(d => d.HoraInicio):HH:mm} - {reserva.ReservaDetalle.Max(d => d.HoraFin):HH:mm}"
+            var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
+                ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH:mm}"
                 : "No especificado";
 
             return $@"
@@ -642,7 +642,7 @@ namespace Reserva.Domain.Services.Notificacion
                 <p><strong>📋 Código de Reserva:</strong> {reserva.CodigoReserva}</p>
                 <p><strong>⚽ Cancha:</strong> {cancha.Nombre}</p>
                 <p><strong>📍 Dirección:</strong> {cancha.Direccion}</p>
-                <p><strong>📅 Fecha:</strong> {reserva.Fecha:dd/MM/yyyy}</p>
+                <p><strong>📅 Fecha:</strong> {reserva.FechaReserva:dd/MM/yyyy}</p>
                 <p><strong>🕐 Horario:</strong> {horarios}</p>
                 <p><strong>📞 Teléfono:</strong> {cancha.TelefonoCancha ?? "No disponible"}</p>
             </div>

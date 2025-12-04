@@ -5,6 +5,8 @@ namespace Reserva.Entity;
 
 public partial class OperadorCancha
 {
+    public int IdOperadorCancha { get; set; }
+
     public int IdOperador { get; set; }
 
     public int IdCancha { get; set; }

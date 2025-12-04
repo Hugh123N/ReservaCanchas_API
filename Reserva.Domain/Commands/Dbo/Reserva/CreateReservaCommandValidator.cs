@@ -17,9 +17,9 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _MetodoPagoRepository = metodoPagoRepository;
             RequiredInformation(x => x.CreateDto).DependentRules(() =>
             {
-                RuleFor(x => x.CreateDto.IdUsuario)
+                RuleFor(x => x.CreateDto.IdCliente)
                     .NotEmpty()
-                    .WithMessage("El ID del usuario es obligatorio.");
+                    .WithMessage("El ID del Cliente es obligatorio.");
 
                 RuleFor(x => x.CreateDto.IdCancha)
                             .MustAsync(ValidateExistenceAsync)
@@ -29,13 +29,13 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                             .MustAsync(ValidateExistenceMetodoPagoAsync)
                             .WithCustomValidationMessage();
 
-                RuleFor(x => x.CreateDto.Fecha)
+                RuleFor(x => x.CreateDto.FechaReserva)
                     .NotEmpty()
                     .WithMessage("La fecha de la reserva es obligatoria.")
                     .Must(BeValidDate)
                     .WithMessage("La fecha de la reserva no puede ser una fecha pasada.");
 
-                RuleFor(x => x.CreateDto.Monto)
+                RuleFor(x => x.CreateDto.MontoTotal)
                     .NotNull()
                     .WithMessage("El monto es obligatorio.")
                     .GreaterThan(0)
@@ -49,7 +49,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         .WithMessage("El monto del adelanto debe ser mayor a 0.");
 
                     RuleFor(x => x.CreateDto)
-                        .Must(dto => dto.MontoAdelanto <= dto.Monto)
+                        .Must(dto => dto.MontoAdelanto <= dto.MontoTotal)
                         .WithMessage("El monto del adelanto no puede ser mayor que el monto total.");
                 });
             });

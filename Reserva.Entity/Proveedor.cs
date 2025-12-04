@@ -17,6 +17,12 @@ public partial class Proveedor
 
     public int IdEstadoProveedor { get; set; }
 
+    public string? Telefono { get; set; }
+
+    public string? Facebook { get; set; }
+
+    public string? Instagram { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }
@@ -28,6 +34,8 @@ public partial class Proveedor
     public bool Activo { get; set; }
 
     public virtual ICollection<Cancha> Cancha { get; set; } = new List<Cancha>();
+
+    public virtual ConfiguracionProveedor? ConfiguracionProveedor { get; set; }
 
     public virtual EstadoProveedor IdEstadoProveedorNavigation { get; set; } = null!;
 

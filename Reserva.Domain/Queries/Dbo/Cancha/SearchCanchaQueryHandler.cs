@@ -1,7 +1,7 @@
 using AutoMapper;
 using MediatR;
 using Reserva.Domain.Queries.Base;
-using Reserva.Domain.Queries.Dbo.Disponibilidad;
+using Reserva.Domain.Queries.Dbo.HorarioCancha;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Entity.Base;
@@ -40,8 +40,8 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
             if (!string.IsNullOrEmpty(filters?.CodigoUbigeo)) 
                 filter = filter.And(x => x.CodigoUbigeo!.StartsWith(filters.CodigoUbigeo));
 
-            if (filters?.IdTipoCancha.HasValue == true)
-                filter = filter.And(x => x.IdTipoCancha == filters.IdTipoCancha);
+            /*if (filters?.IdTipoCancha.HasValue == true)
+                filter = filter.And(x => x.IdTipoCancha == filters.IdTipoCancha);*/
 
             if (filters?.IdEstadoCancha.HasValue == true)
                 filter = filter.And(x => x.IdEstadoCancha == filters.IdEstadoCancha);
@@ -64,7 +64,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 var diaSemana = fecha.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)fecha.DayOfWeek;
 
                 filter = filter.And(x =>
-                    x.Disponibilidad.Any(d => d.Activo
+                    x.HorarioCancha.Any(d => d.Activo
                         && d.IdDiaSemana == diaSemana
                         && (fecha.Date > DateTime.Now.Date || d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
                     )
@@ -102,12 +102,12 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 request.SearchParams?.Page?.PageSize ?? 10,
                 sorts,
                 filter,
-                x => x.IdTipoCanchaNavigation,
+                x => x.TipoDeporteCancha,
                 x => x.ImagenCancha.Where(i => i.EsPrincipal == true),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
                 x => x.CodigoUbigeoNavigation!,
-                x => x.Disponibilidad.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
+                x => x.HorarioCancha.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
             );
 
             var CanchaDtos = _mapper?.Map<IEnumerable<SearchCanchaDto>>(Canchas.Items);

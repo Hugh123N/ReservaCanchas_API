@@ -69,7 +69,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                      && r.FechaExpiracionPreReserva.Value <= ahora,
                 r => r.IdEstadoReservaNavigation,
                 r => r.IdCanchaNavigation,
-                r => r.IdUsuarioNavigation
+                r => r.IdClienteNavigation
             );
 
             if (!reservasExpiradas.Any())
@@ -156,7 +156,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                      && !(r.NotificacionAdvertenciaEnviada ?? false), 
                 r => r.IdEstadoReservaNavigation,
                 r => r.IdCanchaNavigation,
-                r => r.IdUsuarioNavigation
+                r => r.IdClienteNavigation
             );
 
             if (!reservasProximasExpirar.Any())
@@ -185,7 +185,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                         await notificacionService.NotificarReservaProximaExpirarAsync(
                             reserva,
                             reserva.IdCanchaNavigation,
-                            reserva.IdUsuarioNavigation,
+                            reserva.IdClienteNavigation,
                             operadores.ToList()
                         );
 
@@ -225,12 +225,12 @@ namespace Reserva.Domain.Services.BackgroundServices
             var reservasProximas = await reservaRepository.FindByAsync(
                 r => r.Activo
                      && r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado
-                     && r.Fecha.Date == ahora.Date // Solo reservas de hoy
+                     && r.FechaReserva.Date == ahora.Date // Solo reservas de hoy
                      && !(r.RecordatorioEnviado ?? false),
                 r => r.IdEstadoReservaNavigation,
                 r => r.IdCanchaNavigation,
-                r => r.IdUsuarioNavigation,
-                r => r.ReservaDetalle
+                r => r.IdClienteNavigation,
+                r => r.DetalleReserva
             );
 
             if (!reservasProximas.Any())
@@ -246,7 +246,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                 try
                 {
                     // Verificar si algún horario empieza en menos de 1 hora
-                    var primerHorario = reserva.ReservaDetalle?
+                    var primerHorario = reserva.DetalleReserva?
                         .OrderBy(d => d.HoraInicio)
                         .FirstOrDefault();
 
@@ -254,7 +254,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                         continue;
 
                     // Construir DateTime completo de la reserva
-                    var fechaHoraReserva = reserva.Fecha.Date
+                    var fechaHoraReserva = reserva.FechaReserva.Date
                         .Add(primerHorario.HoraInicio.ToTimeSpan());
 
                     var tiempoHastaReserva = fechaHoraReserva - ahora;
@@ -265,7 +265,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                         await notificacionService.NotificarRecordatorioReservaAsync(
                             reserva,
                             reserva.IdCanchaNavigation,
-                            reserva.IdUsuarioNavigation
+                            reserva.IdClienteNavigation
                         );
 
                         // Marcar como notificada

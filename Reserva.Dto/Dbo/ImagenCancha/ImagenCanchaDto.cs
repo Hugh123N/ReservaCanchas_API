@@ -7,6 +7,6 @@ namespace Reserva.Dto.Dbo.ImagenCancha
     {
         public int IdCancha { get; set; }
         public string UrlImagen { get; set; } = null!;
-        public bool? EsPrincipal { get; set; }
+        public bool EsPrincipal { get; set; }
     }
 }

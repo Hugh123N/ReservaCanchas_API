@@ -7,5 +7,6 @@ namespace Reserva.Dto.Dbo.EstadoCancha
     {
         public string Codigo { get; set; } = null!;
         public string Nombre { get; set; } = null!;
+        public string? Descripcion { get; set; }
     }
 }

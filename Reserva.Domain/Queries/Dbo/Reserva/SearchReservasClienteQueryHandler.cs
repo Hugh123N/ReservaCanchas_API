@@ -33,7 +33,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
             try
             {
-                Expression<Func<Entity.Reserva, bool>> filter = x => x.IdUsuario == request.IdUsuario && x.Activo;
+                Expression<Func<Entity.Reserva, bool>> filter = x => x.IdCliente == request.IdUsuario && x.Activo;
 
                 var filters = request.SearchParams?.Filter;
 
@@ -46,12 +46,12 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
                     if (filters.FechaDesde.HasValue)
                     {
-                        filter = filter.And(x => x.Fecha >= filters.FechaDesde.Value);
+                        filter = filter.And(x => x.FechaReserva >= filters.FechaDesde.Value);
                     }
 
                     if (filters.FechaHasta.HasValue)
                     {
-                        filter = filter.And(x => x.Fecha <= filters.FechaHasta.Value);
+                        filter = filter.And(x => x.FechaReserva <= filters.FechaHasta.Value);
                     }
 
                     if (!string.IsNullOrWhiteSpace(filters.CodigoReserva))
@@ -88,7 +88,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     filter,
                     r => r.IdCanchaNavigation,
                     r => r.IdEstadoReservaNavigation,
-                    r => r.ReservaDetalle,
+                    r => r.DetalleReserva,
                     r => r.Pago
                 );
 
@@ -97,8 +97,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 {
                     IdReserva = r.IdReserva,
                     CodigoReserva = r.CodigoReserva,
-                    Fecha = r.Fecha,
-                    Monto = r.Monto ?? 0,
+                    Fecha = r.FechaReserva,
+                    Monto = r.MontoTotal,
 
                     // Estado
                     EstadoReserva = r.IdEstadoReservaNavigation.Nombre,
@@ -111,7 +111,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     TelefonoCancha = r.IdCanchaNavigation.TelefonoCancha,
 
                     // Horarios
-                    Horarios = r.ReservaDetalle
+                    Horarios = r.DetalleReserva
                         .OrderBy(d => d.HoraInicio)
                         .Select(d => new HorarioReservadoDto
                         {

@@ -5,27 +5,36 @@ namespace Reserva.Dto.Dbo.Cancha
 {
     public class CanchaDto
     {
-        public string Nombre { get; set; } = null!;
-        public int IdTipoCancha { get; set; }
-        public string? Descripcion { get; set; }
-        public string? Ubicacion { get; set; }
-        public decimal? Latitud { get; set; }
-        public decimal? Longitud { get; set; }
-        public string? Direccion { get; set; }
-        public decimal? PrecioHora { get; set; }
-        public int? IdProveedor { get; set; }
-        public string? CodigoUbigeo { get; set; }
+        public int IdProveedor { get; set; }
+
+        public int IdTipoSuperficie { get; set; }
+
         public int IdEstadoCancha { get; set; }
 
-        /// <summary>
-        /// Duración en horas de la pre-reserva antes de expirar
-        /// </summary>
-        public int? DuracionPreReserva { get; set; }
+        public string Codigo { get; set; } = null!;
 
-        /// <summary>
-        /// Porcentaje mínimo de adelanto requerido para confirmar reserva (0-100)
-        /// </summary>
-        public decimal? PorcentajeAdelanto { get; set; }
+        public string Nombre { get; set; } = null!;
+
+        public string? Descripcion { get; set; }
+
+        public decimal Precio { get; set; }
+
         public string? TelefonoCancha { get; set; }
+
+        public string? Direccion { get; set; }
+
+        public string? CodigoUbigeo { get; set; }
+
+        public decimal? Latitud { get; set; }
+
+        public decimal? Longitud { get; set; }
+
+        public int? CapacidadJugadores { get; set; }
+
+        public bool TieneTecho { get; set; }
+
+        public bool TieneIluminacion { get; set; }
+
+        
     }
 }

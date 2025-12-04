@@ -7,9 +7,11 @@ public partial class EstadoPago
 {
     public int IdEstadoPago { get; set; }
 
-    public string? Codigo { get; set; }
+    public string Codigo { get; set; } = null!;
 
     public string Nombre { get; set; } = null!;
+
+    public string? Descripcion { get; set; }
 
     public bool Activo { get; set; }
 

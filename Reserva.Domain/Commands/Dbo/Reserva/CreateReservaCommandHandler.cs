@@ -60,7 +60,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var cancha = await _CanchaRepository.GetByAsync(
                 c => c.IdCancha == request.CreateDto.IdCancha,
                 c => c.IdProveedorNavigation!,
-                c => c.IdProveedorNavigation!,
+                c => c.IdProveedorNavigation!.ConfiguracionProveedor!,
                 c => c.IdProveedorNavigation!.IdUsuarioNavigation,
                 c => c.OperadorCancha);
 
@@ -88,17 +88,17 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             //Validar disponibilidad de horario
             var reservasDelDia = await _ReservaRepository.FindByAsNoTrackingAsync(
                 r => r.IdCancha == request.CreateDto.IdCancha
-                     && r.Fecha.Date == request.CreateDto.Fecha.Date
+                     && r.FechaReserva.Date == request.CreateDto.FechaReserva.Date
                      && r.Activo
                      && r.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Cancelado
                      && r.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Expirado,
-                r => r.ReservaDetalle
+                r => r.DetalleReserva
             );
 
             foreach (var detalle in request.CreateDto.Detalles)
             {
                 var existeConflicto = reservasDelDia.Any(r =>
-                    r.ReservaDetalle.Any(d => d.HoraInicio < detalle.HoraFin &&
+                    r.DetalleReserva.Any(d => d.HoraInicio < detalle.HoraFin &&
                         d.HoraFin > detalle.HoraInicio
                     )
                 );
@@ -127,13 +127,13 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 return response;
             }
 
-            nuevaReserva.ReservaDetalle = request.CreateDto.Detalles.Select(x => new ReservaDetalle
+            nuevaReserva.DetalleReserva = request.CreateDto.Detalles.Select(x => new Entity.DetalleReserva
             {
                 HoraInicio = x.HoraInicio,
                 HoraFin = x.HoraFin
             }).ToList();
 
-            int duracionPreReservaHoras = cancha.DuracionPreReserva ?? 24;
+            int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor.DuracionPreReserva ?? 24;
             nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.Now.AddHours(duracionPreReservaHoras);
             nuevaReserva.CodigoReserva = await GenerarCodigoReserva();
             nuevaReserva.IdEstadoReserva = estadoPendienteReserva.IdEstadoReserva;
@@ -144,7 +144,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             await _ReservaRepository.AddAsync(nuevaReserva);
             await _ReservaRepository.SaveAsync();
 
-            decimal montoTotal = request.CreateDto.Monto ?? 0;
+            decimal montoTotal = request.CreateDto.MontoTotal;
 
             var estadoPagoPendiente = await _EstadoPagoRepository.GetByAsNoTrackingAsync(
                 x => x.Codigo!.Equals(Constants.ESTADO_PAGO.Pendiente));
@@ -208,7 +208,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             {
                 var cliente = await _ReservaRepository.FindAll()
                     .Where(r => r.IdReserva == nuevaReserva.IdReserva)
-                    .Select(r => r.IdUsuarioNavigation)
+                    .Select(r => r.IdClienteNavigation)
                     .FirstOrDefaultAsync();
 
                 if(!operadores.Any())

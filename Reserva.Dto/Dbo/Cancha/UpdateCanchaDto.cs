@@ -1,4 +1,4 @@
-using Reserva.Dto.Dbo.Disponibilidad;
+using Reserva.Dto.Dbo.HorarioCancha;
 using Reserva.Dto.Dbo.ImagenCancha;
 
 namespace Reserva.Dto.Dbo.Cancha
@@ -7,6 +7,6 @@ namespace Reserva.Dto.Dbo.Cancha
     {
         public int IdCancha { get; set; }
         public List<UpdateImagenCanchaDto>? Imagenes { get; set; }
-        public List<UpdateDisponibilidadDto> Disponibilidades { get; set; } = new List<UpdateDisponibilidadDto>();
+        public List<UpdateHorarioCanchaDto> HorarioCanchas { get; set; } = new List<UpdateHorarioCanchaDto>();
     }
 }
