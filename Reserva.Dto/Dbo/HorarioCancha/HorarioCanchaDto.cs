@@ -10,9 +10,9 @@ public class HorarioCanchaDto
 
     public int IdDiaSemana { get; set; }
 
-    public TimeOnly HoraInicio { get; set; }
+    public int IdHoraInicio { get; set; }
 
-    public TimeOnly? HoraFin { get; set; }
+    public int? IdHoraFin { get; set; }
 
     public decimal PrecioHora { get; set; }
 

@@ -13,10 +13,6 @@ public partial class TipoDeporteCancha
 
     public bool Activo { get; set; }
 
-    public string UserNameCreate { get; set; } = null!;
-
-    public DateTimeOffset CreateDate { get; set; }
-
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 
     public virtual TipoDeporte IdTipoDeporteNavigation { get; set; } = null!;

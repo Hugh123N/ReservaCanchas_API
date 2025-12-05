@@ -10,12 +10,12 @@ namespace Reserva.Domain.Services.Notificacion
         /// <summary>
         /// Notifica al operador sobre una nueva reserva pendiente
         /// </summary>
-        Task NotificarNuevaReservaPendienteAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, List<Operador> operadores);
+        Task NotificarNuevaReservaPendienteAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, List<Operador> operadores, string horariosFormateado);
 
         /// <summary>
         /// Notifica al cliente que su reserva fue confirmada
         /// </summary>
-        Task NotificarReservaConfirmadaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, Entity.Pago pago);
+        Task NotificarReservaConfirmadaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, Entity.Pago pago, string horariosFormateado);
 
         /// <summary>
         /// Notifica al operador sobre reservas próximas a expirar
@@ -35,6 +35,6 @@ namespace Reserva.Domain.Services.Notificacion
         /// <summary>
         /// Envia recordatorio al cliente 1 hora antes de su reserva confirmada
         /// </summary>
-        Task NotificarRecordatorioReservaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente);
+        Task NotificarRecordatorioReservaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, string horariosFormateado);
     }
 }

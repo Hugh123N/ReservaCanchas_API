@@ -1,6 +1,7 @@
 
 using Reserva.Dto.Dbo.CanchaFavorita;
 using Reserva.Dto.Dbo.EstadoCancha;
+using Reserva.Dto.Dbo.HorarioCancha;
 using Reserva.Dto.Dbo.ImagenCancha;
 using Reserva.Dto.Dbo.TipoDeporte;
 using Reserva.Dto.Dbo.Ubigeo;
@@ -15,6 +16,6 @@ namespace Reserva.Dto.Dbo.Cancha
         public GetEstadoCanchaDto? EstadoCancha { get; set; }
         public List<GetCanchaFavoritaDto>? Faboritos { get; set; }
         public GetUbigeoDto? Ubigeo { get; set; }
-        public List<string>? HorariosDisponibles { get; set; }
+        public List<HorarioDisponibleDto>? HorariosDisponibles { get; set; }
     }
 }

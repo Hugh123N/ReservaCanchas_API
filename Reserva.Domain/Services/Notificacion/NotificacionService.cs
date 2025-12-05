@@ -32,11 +32,12 @@ namespace Reserva.Domain.Services.Notificacion
             Entity.Reserva reserva,
             Cancha cancha,
             AspNetUsers cliente,
-            List<Operador> operadores)
+            List<Operador> operadores,
+            string horariosFormateado)
         {
             try
             {
-                var htmlBody = ConstruirEmailNuevaReservaPendiente(reserva, cancha, cliente);
+                var htmlBody = ConstruirEmailNuevaReservaPendiente(reserva, cancha, cliente, horariosFormateado);
 
                 var emailsOperadores = operadores
                     .Where(o => o.IdUsuarioNavigation?.Email != null)
@@ -76,11 +77,12 @@ namespace Reserva.Domain.Services.Notificacion
             Entity.Reserva reserva,
             Cancha cancha,
             AspNetUsers cliente,
-            Entity.Pago pago)
+            Entity.Pago pago,
+            string horariosFormateado)
         {
             try
             {
-                var htmlBody = ConstruirEmailReservaConfirmada(reserva, cancha, pago);
+                var htmlBody = ConstruirEmailReservaConfirmada(reserva, cancha, pago, horariosFormateado);
 
                 if (!string.IsNullOrEmpty(cliente.Email))
                 {
@@ -233,15 +235,11 @@ namespace Reserva.Domain.Services.Notificacion
 
         #region Construcción de Plantillas HTML
 
-        private string ConstruirEmailNuevaReservaPendiente(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente)
+        private string ConstruirEmailNuevaReservaPendiente(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, string horariosFormateado)
         {
             var horasRestantes = reserva.FechaExpiracionPreReserva.HasValue
                 ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.Now).TotalHours
                 : 0;
-
-            var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
-                ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH:mm}"
-                : "No especificado";
 
             return $@"
 <!DOCTYPE html>
@@ -261,29 +259,29 @@ namespace Reserva.Domain.Services.Notificacion
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h2>🔔 Nueva Reserva Pendiente</h2>
+            <h2>Nueva Reserva Pendiente</h2>
         </div>
         <div class=""content"">
             <p>Hola, tienes una nueva reserva pendiente que requiere tu atención.</p>
 
             <div class=""info-box"">
-                <h3>📋 Detalles de la Reserva</h3>
+                <h3>Detalles de la Reserva</h3>
                 <p><strong>Código:</strong> {reserva.CodigoReserva}</p>
                 <p><strong>Cancha:</strong> {cancha.Nombre}</p>
                 <p><strong>Fecha:</strong> {reserva.FechaReserva:dddd, dd/MM/yyyy}</p>
-                <p><strong>Horario:</strong> {horarios}</p>
+                <p><strong>Horario:</strong> {horariosFormateado}</p>
                 <p><strong>Monto:</strong> S/ {reserva.MontoTotal:F2}</p>
             </div>
 
             <div class=""info-box"">
-                <h3>👤 Datos del Cliente</h3>
+                <h3>Datos del Cliente</h3>
                 <p><strong>Nombre:</strong> {cliente.FirstName} {cliente.LastName}</p>
                 <p><strong>Email:</strong> {cliente.Email}</p>
                 <p><strong>Teléfono:</strong> {cliente.PhoneNumber ?? "No proporcionado"}</p>
             </div>
 
             <div class=""alert-box"">
-                <h3>⏰ Tiempo de Expiración</h3>
+                <h3>Tiempo de Expiración</h3>
                 <p><strong>Expira en:</strong> {horasRestantes:F1} horas</p>
                 <p><strong>Fecha límite:</strong> {reserva.FechaExpiracionPreReserva:dd/MM/yyyy HH:mm}</p>
                 <p>⚠️ Si no se confirma el pago antes de esta fecha, la reserva se cancelará automáticamente.</p>
@@ -301,18 +299,15 @@ namespace Reserva.Domain.Services.Notificacion
 </html>";
         }
 
-        private string ConstruirEmailReservaConfirmada(Entity.Reserva reserva, Cancha cancha, Entity.Pago pago)
+        private string ConstruirEmailReservaConfirmada(Entity.Reserva reserva, Cancha cancha, Entity.Pago pago, string horariosFormateado)
         {
-            var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
-                ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH:mm}"
-                : "No especificado";
 
             var mensajePago = pago.MontoPendiente > 0
-                ? $@"<p><strong>💰 Estado del Pago:</strong></p>
+                ? $@"<p><strong>Estado del Pago:</strong></p>
                      <p>Adelanto: S/ {pago.MontoAdelanto:F2}</p>
                      <p>Pendiente: S/ {pago.MontoPendiente:F2}</p>
                      <p class=""alert"">⚠️ Recuerda completar el pago pendiente antes del día de tu reserva.</p>"
-                : "<p><strong>✅ Pago Completo</strong></p>";
+                : "<p><strong>Pago Completo</strong></p>";
 
             return $@"
 <!DOCTYPE html>
@@ -332,19 +327,19 @@ namespace Reserva.Domain.Services.Notificacion
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h2>✅ ¡Reserva Confirmada!</h2>
+            <h2>¡Reserva Confirmada!</h2>
         </div>
         <div class=""content"">
             <div class=""success-box"">
-                <h3>🎉 Tu reserva ha sido confirmada exitosamente</h3>
+                <h3>Tu reserva ha sido confirmada exitosamente</h3>
                 <p>Código de Reserva: <strong>{reserva.CodigoReserva}</strong></p>
             </div>
 
             <div class=""info-box"">
-                <h3>📋 Detalles de tu Reserva</h3>
+                <h3>Detalles de tu Reserva</h3>
                 <p><strong>Cancha:</strong> {cancha.Nombre}</p>
                 <p><strong>Fecha:</strong> {reserva.FechaReserva:dddd, dd/MM/yyyy}</p>
-                <p><strong>Horario:</strong> {horarios}</p>
+                <p><strong>Horario:</strong> {horariosFormateado}</p>
                 <p><strong>Dirección:</strong> {cancha.Direccion ?? "Ver en la app"}</p>
                 <p><strong>Monto Total:</strong> S/ {reserva.MontoTotal:F2}</p>
             </div>
@@ -354,7 +349,7 @@ namespace Reserva.Domain.Services.Notificacion
             </div>
 
             <div style=""text-align: center; margin: 20px 0;"">
-                <p>📱 Presenta este código el día de tu reserva: <strong style=""font-size: 20px; color: #4CAF50;"">{reserva.CodigoReserva}</strong></p>
+                <p>Presenta este código el día de tu reserva: <strong style=""font-size: 20px; color: #4CAF50;"">{reserva.CodigoReserva}</strong></p>
             </div>
         </div>
         <div class=""footer"">
@@ -382,11 +377,11 @@ namespace Reserva.Domain.Services.Notificacion
 <body>
     <div class=""container"">
         <div class=""header"">
-            <h2>⚠️ Reserva Próxima a Expirar</h2>
+            <h2>⚠ Reserva Próxima a Expirar</h2>
         </div>
         <div class=""content"">
             <div class=""alert-box"">
-                <h3>⏰ Acción Urgente Requerida</h3>
+                <h3>Acción Urgente Requerida</h3>
                 <p><strong>Código:</strong> {reserva.CodigoReserva}</p>
                 <p><strong>Cancha:</strong> {cancha.Nombre}</p>
                 <p><strong>Cliente:</strong> {cliente.FirstName} {cliente.LastName}</p>
@@ -397,7 +392,7 @@ namespace Reserva.Domain.Services.Notificacion
                 <p style=""margin-top: 15px; font-weight: bold; color: #d32f2f;"">
                     ⚠️ Esta reserva se cancelará automáticamente si no se confirma el pago antes de la fecha límite.
                 </p>
-                <p>👉 Contacta al cliente de inmediato para confirmar el pago.</p>
+                <p>Contacta al cliente de inmediato para confirmar el pago.</p>
             </div>
         </div>
     </div>
@@ -446,7 +441,7 @@ namespace Reserva.Domain.Services.Notificacion
 </head>
 <body>
     <div class=""container"">
-        <h2>❌ Reserva Cancelada</h2>
+        <h2>Reserva Cancelada</h2>
         <p>Tu reserva <strong>{reserva.CodigoReserva}</strong> ha sido cancelada.</p>
         {(!string.IsNullOrEmpty(motivo) ? $"<p><strong>Motivo:</strong> {motivo}</p>" : "")}
         <p>Si tienes dudas, contacta con el proveedor de la cancha.</p>
@@ -474,16 +469,16 @@ namespace Reserva.Domain.Services.Notificacion
                     return;
                 }
 
-                var mensaje = $"🔔 *Nueva Reserva Pendiente*\n\n" +
-                             $"📋 Código: *{reserva.CodigoReserva}*\n" +
-                             $"⚽ Cancha: {cancha.Nombre}\n" +
-                             $"📅 Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
-                             $"💰 Monto: S/ {reserva.MontoTotal:F2}\n\n" +
-                             $"👤 *Cliente:*\n" +
+                var mensaje = $"*Nueva Reserva Pendiente*\n\n" +
+                             $"Código: *{reserva.CodigoReserva}*\n" +
+                             $"Cancha: {cancha.Nombre}\n" +
+                             $"Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
+                             $"Monto: S/ {reserva.MontoTotal:F2}\n\n" +
+                             $"*Cliente:*\n" +
                              $"Nombre: {cliente.FirstName} {cliente.LastName}\n" +
                              $"Teléfono: {cliente.PhoneNumber}\n" +
                              $"Email: {cliente.Email}\n\n" +
-                             $"⏰ Expira: {reserva.FechaExpiracionPreReserva:dd/MM/yyyy HH:mm}\n\n" +
+                             $"Expira: {reserva.FechaExpiracionPreReserva:dd/MM/yyyy HH:mm}\n\n" +
                              $"Por favor, contacta al cliente para coordinar el pago.";
 
                 var enviados = await _whatsAppService.SendBulkTextMessageAsync(telefonosOperadores, mensaje);
@@ -511,25 +506,25 @@ namespace Reserva.Domain.Services.Notificacion
                 }
 
                 var estadoPago = pago.MontoAdelanto >= pago.Monto ? "✅ PAGADO" :
-                                pago.MontoAdelanto > 0 ? $"⏳ PARCIAL (Adelanto: S/ {pago.MontoAdelanto:F2})" :
-                                "⏳ PENDIENTE";
+                                pago.MontoAdelanto > 0 ? $"PARCIAL (Adelanto: S/ {pago.MontoAdelanto:F2})" :
+                                "PENDIENTE";
 
-                var mensaje = $"✅ *Reserva Confirmada*\n\n" +
+                var mensaje = $"*Reserva Confirmada*\n\n" +
                              $"¡Hola {cliente.FirstName}! Tu reserva ha sido confirmada.\n\n" +
-                             $"📋 Código: *{reserva.CodigoReserva}*\n" +
-                             $"⚽ Cancha: {cancha.Nombre}\n" +
-                             $"📍 Dirección: {cancha.Direccion}\n" +
-                             $"📅 Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
-                             $"💰 Monto Total: S/ {pago.Monto:F2}\n" +
-                             $"💳 Estado Pago: {estadoPago}\n";
+                             $"Código: *{reserva.CodigoReserva}*\n" +
+                             $"Cancha: {cancha.Nombre}\n" +
+                             $"Dirección: {cancha.Direccion}\n" +
+                             $"Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
+                             $"Monto Total: S/ {pago.Monto:F2}\n" +
+                             $"Estado Pago: {estadoPago}\n";
 
                 if (pago.MontoPendiente > 0)
                 {
-                    mensaje += $"\n⚠️ Pendiente: S/ {pago.MontoPendiente:F2}";
+                    mensaje += $"\nPendiente: S/ {pago.MontoPendiente:F2}";
                 }
 
                 mensaje += $"\n\n📞 Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
-                          $"¡Nos vemos en la cancha! ⚽";
+                          $"¡Nos vemos en la cancha!";
 
                 var enviado = await _whatsAppService.SendTextMessageAsync(cliente.PhoneNumber, mensaje);
 
@@ -554,14 +549,15 @@ namespace Reserva.Domain.Services.Notificacion
         public async Task NotificarRecordatorioReservaAsync(
             Entity.Reserva reserva,
             Cancha cancha,
-            AspNetUsers cliente)
+            AspNetUsers cliente,
+            string horariosFormateado)
         {
             try
             {
                 // Email
                 if (!string.IsNullOrEmpty(cliente.Email))
                 {
-                    var htmlBody = ConstruirEmailRecordatorioReserva(reserva, cancha);
+                    var htmlBody = ConstruirEmailRecordatorioReserva(reserva, cancha, horariosFormateado);
 
                     var emailDto = new SendEmailDto
                     {
@@ -569,7 +565,7 @@ namespace Reserva.Domain.Services.Notificacion
                         ToEmails = new[] { cliente.Email },
                         SubjectParams = new Dictionary<string, string>
                         {
-                            { "RECORDATORIO_RESERVA", $"⏰ Recordatorio: Tu reserva es en 1 hora - {reserva.CodigoReserva}" }
+                            { "RECORDATORIO_RESERVA", $"Recordatorio: Tu reserva es en 1 hora - {reserva.CodigoReserva}" }
                         },
                         BodyParams = new Dictionary<string, string>
                         {
@@ -584,19 +580,15 @@ namespace Reserva.Domain.Services.Notificacion
                 // WhatsApp
                 if (!string.IsNullOrWhiteSpace(cliente.PhoneNumber))
                 {
-                    var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
-                        ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH\\:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH\\:mm}"
-                        : "No especificado";
-
-                    var mensaje = $"⏰ *Recordatorio de Reserva*\n\n" +
+                    var mensaje = $"*Recordatorio de Reserva*\n\n" +
                                  $"¡Hola {cliente.FirstName}! Tu reserva es en *1 HORA*\n\n" +
-                                 $"📋 Código: *{reserva.CodigoReserva}*\n" +
-                                 $"⚽ Cancha: {cancha.Nombre}\n" +
-                                 $"📍 Dirección: {cancha.Direccion}\n" +
-                                 $"📅 Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
-                                 $"🕐 Horario: {horarios}\n\n" +
-                                 $"📞 Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
-                                 $"¡Nos vemos en la cancha! ⚽";
+                                 $"Código: *{reserva.CodigoReserva}*\n" +
+                                 $"Cancha: {cancha.Nombre}\n" +
+                                 $"Dirección: {cancha.Direccion}\n" +
+                                 $"Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
+                                 $"Horario: {horariosFormateado}\n\n" +
+                                 $"Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
+                                 $"¡Nos vemos en la cancha!";
 
                     await _whatsAppService.SendTextMessageAsync(cliente.PhoneNumber, mensaje);
                 }
@@ -609,11 +601,8 @@ namespace Reserva.Domain.Services.Notificacion
             }
         }
 
-        private string ConstruirEmailRecordatorioReserva(Entity.Reserva reserva, Cancha cancha)
+        private string ConstruirEmailRecordatorioReserva(Entity.Reserva reserva, Cancha cancha, string horariosFormateado)
         {
-            var horarios = reserva.DetalleReserva != null && reserva.DetalleReserva.Any()
-                ? $"{reserva.DetalleReserva.Min(d => d.HoraInicio):HH:mm} - {reserva.DetalleReserva.Max(d => d.HoraFin):HH:mm}"
-                : "No especificado";
 
             return $@"
 <!DOCTYPE html>
@@ -632,19 +621,19 @@ namespace Reserva.Domain.Services.Notificacion
 <body>
     <div class='container'>
         <div class='header'>
-            <h1>⏰ ¡Tu reserva es en 1 HORA!</h1>
+            <h1>¡Tu reserva es en 1 HORA!</h1>
         </div>
         <div class='content'>
             <p>Hola,</p>
             <p>Este es un recordatorio amigable de que tu reserva está próxima:</p>
 
             <div class='info-box'>
-                <p><strong>📋 Código de Reserva:</strong> {reserva.CodigoReserva}</p>
-                <p><strong>⚽ Cancha:</strong> {cancha.Nombre}</p>
-                <p><strong>📍 Dirección:</strong> {cancha.Direccion}</p>
-                <p><strong>📅 Fecha:</strong> {reserva.FechaReserva:dd/MM/yyyy}</p>
-                <p><strong>🕐 Horario:</strong> {horarios}</p>
-                <p><strong>📞 Teléfono:</strong> {cancha.TelefonoCancha ?? "No disponible"}</p>
+                <p><strong>Código de Reserva:</strong> {reserva.CodigoReserva}</p>
+                <p><strong>Cancha:</strong> {cancha.Nombre}</p>
+                <p><strong>Dirección:</strong> {cancha.Direccion}</p>
+                <p><strong>Fecha:</strong> {reserva.FechaReserva:dd/MM/yyyy}</p>
+                <p><strong>Horario:</strong> {horariosFormateado}</p>
+                <p><strong>Teléfono:</strong> {cancha.TelefonoCancha ?? "No disponible"}</p>
             </div>
 
             <p>⚽ <strong>¡Prepárate para jugar!</strong></p>
@@ -657,6 +646,62 @@ namespace Reserva.Domain.Services.Notificacion
     </div>
 </body>
 </html>";
+        }
+
+        #endregion
+
+        #region Métodos Helper
+
+        /// <summary>
+        /// Formatea una lista de horarios agrupando los consecutivos
+        /// Ejemplo: 08:00-09:00, 09:00-10:00, 10:00-11:00 → "08:00 - 11:00 (3 horas)"
+        /// Ejemplo: 08:00-09:00, 10:00-11:00, 15:00-16:00 → "08:00 - 09:00, 10:00 - 11:00, 15:00 - 16:00 (3 horas)"
+        /// </summary>
+        public static string FormatearHorariosConsecutivos(List<(TimeOnly inicio, TimeOnly fin)> horarios)
+        {
+            if (horarios == null || !horarios.Any())
+                return "No especificado";
+
+            // Ordenar por hora de inicio
+            var horariosOrdenados = horarios.OrderBy(h => h.inicio).ToList();
+
+            var grupos = new List<(TimeOnly inicio, TimeOnly fin)>();
+            TimeOnly? grupoInicio = null;
+            TimeOnly? grupoFin = null;
+
+            foreach (var horario in horariosOrdenados)
+            {
+                if (grupoInicio == null)
+                {
+                    // Primer horario del grupo
+                    grupoInicio = horario.inicio;
+                    grupoFin = horario.fin;
+                }
+                else if (grupoFin == horario.inicio)
+                {
+                    // Es consecutivo, extender el grupo
+                    grupoFin = horario.fin;
+                }
+                else
+                {
+                    // No es consecutivo, cerrar grupo actual y empezar uno nuevo
+                    grupos.Add((grupoInicio.Value, grupoFin.Value));
+                    grupoInicio = horario.inicio;
+                    grupoFin = horario.fin;
+                }
+            }
+
+            // Agregar el último grupo
+            if (grupoInicio.HasValue && grupoFin.HasValue)
+            {
+                grupos.Add((grupoInicio.Value, grupoFin.Value));
+            }
+
+            // Formatear los grupos
+            var horariosFormateados = grupos.Select(g => $"{g.inicio:HH:mm} - {g.fin:HH:mm}");
+            var totalHoras = horarios.Count;
+
+            return $"{string.Join(", ", horariosFormateados)} ({totalHoras} {(totalHoras == 1 ? "hora" : "horas")})";
         }
 
         #endregion

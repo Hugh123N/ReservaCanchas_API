@@ -1,4 +1,5 @@
 ﻿using Reserva.Domain.Queries.Base;
+using Reserva.Dto.Dbo.HorarioCancha;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Reserva.Domain.Queries.Dbo.HorarioCancha
 {
-    public class GetCanchaByFechaQuery : QueryBase<List<string>>
+    public class GetCanchaByFechaQuery : QueryBase<List<HorarioDisponibleDto>>
     {
         public GetCanchaByFechaQuery(DateTimeOffset fecha, int canchaId)
         {

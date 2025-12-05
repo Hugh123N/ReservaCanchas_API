@@ -36,7 +36,7 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<IEnumerable<SelectComboHorarioCanchaDto>>> SelectCombo()
             => await _HorarioCanchaApplication.SelectCombo();
         [HttpPost("horarioDisponible")]
-        public async Task<ResponseDto<List<string>>> HorarioDisponible(GetHorarioDisponible horarioDisponible)
+        public async Task<ResponseDto<List<HorarioDisponibleDto>>> HorarioDisponible(GetHorarioDisponible horarioDisponible)
             => await _HorarioCanchaApplication.HorarioDisponible(horarioDisponible.Fecha, horarioDisponible.IdCancha);
 
     }

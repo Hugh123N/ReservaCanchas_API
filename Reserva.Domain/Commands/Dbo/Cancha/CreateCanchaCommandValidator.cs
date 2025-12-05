@@ -27,28 +27,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     .NotEmpty().WithMessage("Debe seleccionar una ubicación válida.");
 
                 RuleFor(x => x.CreateDto.HorarioCanchas)
-                    .NotNull().WithMessage("Debe especificar al menos una disponibilidad.")
-                    .Must(d => d.Any()).WithMessage("Debe especificar al menos una disponibilidad.")
-                    .DependentRules(() =>
-                    {
-                        RuleForEach(x => x.CreateDto.HorarioCanchas).ChildRules(d =>
-                        {
-                            d.RuleFor(y => y.IdDiaSemana)
-                                .GreaterThan(0).WithMessage("El día de la semana es obligatorio.");
-
-                            d.RuleFor(y => y.HoraInicio)
-                                .LessThan(y => y.HoraFin)
-                                .WithMessage("La hora de inicio debe ser menor que la hora de fin.");
-
-                            d.RuleFor(y => y.HoraInicio)
-                                .NotEqual(default(TimeOnly))
-                                .WithMessage("Debe especificar la hora de inicio.");
-
-                            d.RuleFor(y => y.HoraFin)
-                                .NotEqual(default(TimeOnly))
-                                .WithMessage("Debe especificar la hora de fin.");
-                        });
-                    });
+                    .NotNull().WithMessage("Debe especificar al menos un Horario Cancha.");
             });
         }
     }

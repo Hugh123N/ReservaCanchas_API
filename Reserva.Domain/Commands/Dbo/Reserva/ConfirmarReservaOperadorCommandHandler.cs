@@ -19,6 +19,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.EstadoReserva> _EstadoReservaRepository;
         private readonly IRepository<Entity.EstadoPago> _EstadoPagoRepository;
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
+        private readonly IRepository<Entity.DetalleReserva> _DetalleReservaRepository;
         private readonly INotificacionService _notificacionService;
 
         public ConfirmarReservaOperadorCommandHandler(
@@ -31,6 +32,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.EstadoReserva> EstadoReservaRepository,
             IRepository<Entity.EstadoPago> EstadoPagoRepository,
             IRepository<Entity.Cancha> CanchaRepository,
+            IRepository<Entity.DetalleReserva> DetalleReservaRepository,
             INotificacionService notificacionService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
@@ -39,6 +41,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _EstadoReservaRepository = EstadoReservaRepository;
             _EstadoPagoRepository = EstadoPagoRepository;
             _CanchaRepository = CanchaRepository;
+            _DetalleReservaRepository = DetalleReservaRepository;
             _notificacionService = notificacionService;
         }
 
@@ -175,11 +178,31 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                 if (cliente != null && cancha != null)
                 {
+                    var detallesConHorarios = await _DetalleReservaRepository.FindByAsNoTrackingAsync(
+                        d => d.IdReserva == reserva.IdReserva && d.Activo,
+                        d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!,
+                        d => d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!
+                    );
+
+                    var horariosLista = detallesConHorarios
+                        .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
+                                 && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
+                        .Select(d => {
+                            var horaInicio = d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+                            var horaFin = d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                            return (inicio: horaInicio, fin: horaFin);
+                        })
+                        .OrderBy(h => h.inicio)
+                        .ToList();
+
+                    var horariosFormateado = NotificacionService.FormatearHorariosConsecutivos(horariosLista);
+
                     await _notificacionService.NotificarReservaConfirmadaAsync(
                         reserva,
                         cancha,
                         cliente,
-                        pago
+                        pago,
+                        horariosFormateado
                     );
                 }
             }

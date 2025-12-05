@@ -8,6 +8,8 @@ namespace Reserva.Dto.Dbo.Cancha
     {
         public List<CreateImagenCanchaDto>? Imagenes { get; set; }
         public List<CreateHorarioCanchaDto> HorarioCanchas { get; set; } = new List<CreateHorarioCanchaDto>();
+        public List<int> IdsTipoDeporte { get; set; } = new List<int>();
+        public List<int> IdsServicios { get; set; } = new List<int>();
 
     }
 }

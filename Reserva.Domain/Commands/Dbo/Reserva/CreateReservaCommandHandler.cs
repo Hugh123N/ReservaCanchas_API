@@ -23,6 +23,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
         private readonly IRepository<Entity.Operador> _OperadorRepository;
+        private readonly IRepository<Entity.DetalleReserva> _DetalleReservaRepository;
         private readonly IConfiguration _configuration;
         private readonly INotificacionService _notificacionService;
 
@@ -38,6 +39,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.MetodoPago> MetodoPagoRepository,
             IRepository<Entity.Operador> OperadorRepository,
+            IRepository<Entity.DetalleReserva> DetalleReservaRepository,
             IConfiguration configuration,
             INotificacionService notificacionService
         ) : base(unitOfWork, mapper, mediator, validator)
@@ -49,6 +51,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _CanchaRepository = CanchaRepository;
             _MetodoPagoRepository = MetodoPagoRepository;
             _OperadorRepository = OperadorRepository;
+            _DetalleReservaRepository = DetalleReservaRepository;
             _configuration = configuration;
             _notificacionService = notificacionService;
         }
@@ -73,13 +76,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 
-            if (metodoPago == null)
-            {
-                response.AddErrorResult("El método de pago seleccionado no es válido.");
-                return response;
-            }
-
-            if (metodoPago.Codigo != Constants.METODO_PAGO.Efectivo)
+            if (metodoPago!.Codigo != Constants.METODO_PAGO.Efectivo)
             {
                 response.AddErrorResult($"Solo se acepta pago en efectivo. El método '{metodoPago.Nombre}' no está disponible para reservas.");
                 return response;
@@ -95,49 +92,39 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 r => r.DetalleReserva
             );
 
-            foreach (var detalle in request.CreateDto.Detalles)
-            {
-                var existeConflicto = reservasDelDia.Any(r =>
-                    r.DetalleReserva.Any(d => d.HoraInicio < detalle.HoraFin &&
-                        d.HoraFin > detalle.HoraInicio
-                    )
-                );
+            // Obtener los IDs de horarios ya reservados
+            var horariosReservados = reservasDelDia
+                .SelectMany(r => r.DetalleReserva)
+                .Where(d => d.IdHorarioCancha.HasValue && d.Activo)
+                .Select(d => d.IdHorarioCancha.Value)
+                .ToHashSet();
 
-                if (existeConflicto)
-                {
-                    response.AddErrorResult(
-                        $"La hora {detalle.HoraInicio:hh\\:mm} - {detalle.HoraFin:hh\\:mm} ya está reservada.");
-                    return response;
-                }
+            // Validar si algún horario ya está reservado
+            var horariosConflicto = request.CreateDto.IdsHorarioCancha
+                .Where(id => horariosReservados.Contains(id))
+                .ToList();
+
+            if (horariosConflicto.Any())
+            {
+                response.AddErrorResult($"Los siguientes horarios ya están reservados: {string.Join(", ", horariosConflicto)}");
+                return response;
             }
 
             var estadoPendienteReserva = await _EstadoReservaRepository.GetByAsNoTrackingAsync(
                 x => x.Codigo!.Equals(Constants.ESTADO_RESERVA.Pendiente));
 
-            if (estadoPendienteReserva == null)
-            {
-                response.AddErrorResult("Error del sistema: Estado de reserva no encontrado.");
-                return response;
-            }
-
             var nuevaReserva = _mapper?.Map<Entity.Reserva>(request.CreateDto);
-            if (nuevaReserva == null)
-            {
-                response.AddErrorResult("Error al mapear los datos de la reserva.");
-                return response;
-            }
 
-            nuevaReserva.DetalleReserva = request.CreateDto.Detalles.Select(x => new Entity.DetalleReserva
+            nuevaReserva!.DetalleReserva = request.CreateDto.IdsHorarioCancha.Select(idHorario => new Entity.DetalleReserva
             {
-                HoraInicio = x.HoraInicio,
-                HoraFin = x.HoraFin
+                IdHorarioCancha = idHorario
             }).ToList();
 
-            int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor.DuracionPreReserva ?? 24;
+            int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor!.DuracionPreReserva ?? 12;
             nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.Now.AddHours(duracionPreReservaHoras);
             nuevaReserva.CodigoReserva = await GenerarCodigoReserva();
-            nuevaReserva.IdEstadoReserva = estadoPendienteReserva.IdEstadoReserva;
-            nuevaReserva.IdCanchaNavigation = null;
+            nuevaReserva.IdEstadoReserva = estadoPendienteReserva!.IdEstadoReserva;
+            //nuevaReserva.IdCanchaNavigation = null;
             nuevaReserva.RecordatorioEnviado = false;
             nuevaReserva.NotificacionAdvertenciaEnviada = false;
 
@@ -220,13 +207,35 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         }
                     };
 
+                // Cargar DetalleReserva con sus navegaciones para formatear horarios
+                var detallesConHorarios = await _DetalleReservaRepository.FindByAsNoTrackingAsync(
+                    d => d.IdReserva == nuevaReserva.IdReserva && d.Activo,
+                    d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!,
+                    d => d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!
+                );
+
+                // Extraer horarios y formatear
+                var horariosLista = detallesConHorarios
+                    .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
+                             && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
+                    .Select(d => {
+                        var horaInicio = d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+                        var horaFin = d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                        return (inicio: horaInicio, fin: horaFin);
+                    })
+                    .OrderBy(h => h.inicio)
+                    .ToList();
+
+                var horariosFormateado = NotificacionService.FormatearHorariosConsecutivos(horariosLista);
+
                 if (cliente != null)
                 {
                     await _notificacionService.NotificarNuevaReservaPendienteAsync(
                         nuevaReserva,
                         cancha,
                         cliente,
-                        operadores.ToList()
+                        operadores.ToList(),
+                        horariosFormateado
                     );
                 }
             }

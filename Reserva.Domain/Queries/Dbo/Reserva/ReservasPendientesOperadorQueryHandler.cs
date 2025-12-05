@@ -11,13 +11,16 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
     public class ReservasPendientesOperadorQueryHandler : QueryHandlerBase<ReservasPendientesOperadorQuery, IEnumerable<ReservaPendienteOperadorDto>>
     {
         private readonly IRepository<Entity.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.DetalleReserva> _DetalleReservaRepository;
 
         public ReservasPendientesOperadorQueryHandler(
             IMapper mapper,
-            IRepository<Entity.Reserva> ReservaRepository
+            IRepository<Entity.Reserva> ReservaRepository,
+            IRepository<Entity.DetalleReserva> DetalleReservaRepository
         ) : base(mapper)
         {
             _ReservaRepository = ReservaRepository;
+            _DetalleReservaRepository = DetalleReservaRepository;
         }
 
         protected override async Task<ResponseDto<IEnumerable<ReservaPendienteOperadorDto>>> HandleQuery(
@@ -33,24 +36,57 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                      && r.Activo,
                 r => r.IdCanchaNavigation,
                 r => r.IdClienteNavigation,
-                r => r.DetalleReserva,
                 r => r.IdEstadoReservaNavigation
             );
 
-            // Mapear a DTOs con información completa
-            var reservasDtos = reservasPendientes
-                .OrderBy(r => r.FechaExpiracionPreReserva) // Más urgentes primero
-                .Select(r => new ReservaPendienteOperadorDto
+            if (!reservasPendientes.Any())
+            {
+                response.UpdateData(new List<ReservaPendienteOperadorDto>());
+                response.AddOkResult("No se encontraron reservas pendientes.");
+                return await Task.FromResult(response);
+            }
+
+            var idsReservas = reservasPendientes.Select(r => r.IdReserva).ToList();
+
+            var todosLosDetalles = await _DetalleReservaRepository.FindByAsNoTrackingAsync(
+                d => idsReservas.Contains(d.IdReserva) && d.Activo,
+                d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!,
+                d => d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!
+            );
+
+            // Agrupar detalles por IdReserva para acceso rápido
+            var detallesPorReserva = todosLosDetalles
+                .GroupBy(d => d.IdReserva)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var reservasDtos = new List<ReservaPendienteOperadorDto>();
+
+            foreach (var r in reservasPendientes.OrderBy(r => r.FechaExpiracionPreReserva))
+            {
+                TimeOnly? horaInicio = null;
+                TimeOnly? horaFin = null;
+
+                if (detallesPorReserva.TryGetValue(r.IdReserva, out var detallesReserva))
+                {
+                    var horasValidas = detallesReserva
+                        .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
+                                 && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
+                        .ToList();
+
+                    if (horasValidas.Any())
+                    {
+                        horaInicio = horasValidas.Min(d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1);
+                        horaFin = horasValidas.Max(d => d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1);
+                    }
+                }
+
+                reservasDtos.Add(new ReservaPendienteOperadorDto
                 {
                     IdReserva = r.IdReserva,
                     CodigoReserva = r.CodigoReserva,
                     Fecha = r.FechaReserva,
-                    HoraInicio = r.DetalleReserva.Any()
-                        ? r.DetalleReserva.Min(d => d.HoraInicio).ToString("HH:mm")
-                        : null,
-                    HoraFin = r.DetalleReserva.Any()
-                        ? r.DetalleReserva.Max(d => d.HoraFin).ToString("HH:mm")
-                        : null,
+                    HoraInicio = horaInicio?.ToString("HH:mm"),
+                    HoraFin = horaFin?.ToString("HH:mm"),
                     Monto = r.MontoTotal,
                     FechaCreacion = r.CreateDate,
                     FechaExpiracion = r.FechaExpiracionPreReserva,
@@ -63,8 +99,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     EmailCliente = r.IdClienteNavigation.Email,
                     TelefonoCliente = r.IdClienteNavigation.PhoneNumber,
                     NivelUrgencia = CalcularNivelUrgencia(r.FechaExpiracionPreReserva)
-                })
-                .ToList();
+                });
+            }
 
             response.UpdateData(reservasDtos);
             response.AddOkResult($"Se encontraron {reservasDtos.Count} reservas pendientes.");

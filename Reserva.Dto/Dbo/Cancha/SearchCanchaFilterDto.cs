@@ -4,7 +4,7 @@ namespace Reserva.Dto.Dbo.Cancha
     {
         public string? Nombre { get; set; }
         public string? CodigoUbigeo { get; set; }
-        public int? IdTipoCancha { get; set; }
+        public int? IdTipoDeporte { get; set; }
         public DateTimeOffset? Fecha { get; set; }
         public string? Hora { get; set; }
         public int? IdEstadoCancha { get; set; }

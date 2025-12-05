@@ -174,7 +174,6 @@ namespace Reserva.Domain.Services.BackgroundServices
             {
                 try
                 {
-                    // Obtener operadores de la cancha
                     var operadores = await operadorRepository.FindByAsNoTrackingAsync(
                         o => o.OperadorCancha.Any(oc => oc.IdCancha == reserva.IdCancha),
                         o => o.IdUsuarioNavigation
@@ -216,6 +215,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             using var scope = _serviceProvider.CreateScope();
 
             var reservaRepository = scope.ServiceProvider.GetRequiredService<IRepository<Entity.Reserva>>();
+            var detalleReservaRepository = scope.ServiceProvider.GetRequiredService<IRepository<DetalleReserva>>();
             var notificacionService = scope.ServiceProvider.GetRequiredService<INotificacionService>();
 
             var ahora = DateTimeOffset.Now;
@@ -229,8 +229,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                      && !(r.RecordatorioEnviado ?? false),
                 r => r.IdEstadoReservaNavigation,
                 r => r.IdCanchaNavigation,
-                r => r.IdClienteNavigation,
-                r => r.DetalleReserva
+                r => r.IdClienteNavigation
             );
 
             if (!reservasProximas.Any())
@@ -245,27 +244,52 @@ namespace Reserva.Domain.Services.BackgroundServices
             {
                 try
                 {
-                    // Verificar si algún horario empieza en menos de 1 hora
-                    var primerHorario = reserva.DetalleReserva?
-                        .OrderBy(d => d.HoraInicio)
+                    var detallesConHorarios = await detalleReservaRepository.FindByAsNoTrackingAsync(
+                        d => d.IdReserva == reserva.IdReserva && d.Activo,
+                        d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!,
+                        d => d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!
+                    );
+
+                    if (!detallesConHorarios.Any())
+                        continue;
+
+                    // Obtener primer horario para verificar si enviar recordatorio
+                    var primerDetalle = detallesConHorarios
+                        .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null)
+                        .OrderBy(d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1)
                         .FirstOrDefault();
 
-                    if (primerHorario == null)
+                    if (primerDetalle == null)
                         continue;
 
                     // Construir DateTime completo de la reserva
                     var fechaHoraReserva = reserva.FechaReserva.Date
-                        .Add(primerHorario.HoraInicio.ToTimeSpan());
+                        .Add(primerDetalle.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1.ToTimeSpan());
 
                     var tiempoHastaReserva = fechaHoraReserva - ahora;
 
                     // Si falta menos de 1 hora (pero más de 0) → enviar recordatorio
                     if (tiempoHastaReserva.TotalMinutes > 0 && tiempoHastaReserva.TotalMinutes <= 60)
                     {
+                        // Extraer horarios y formatear
+                        var horariosLista = detallesConHorarios
+                            .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
+                                     && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
+                            .Select(d => {
+                                var horaInicio = d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+                                var horaFin = d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                                return (inicio: horaInicio, fin: horaFin);
+                            })
+                            .OrderBy(h => h.inicio)
+                            .ToList();
+
+                        var horariosFormateado = NotificacionService.FormatearHorariosConsecutivos(horariosLista);
+
                         await notificacionService.NotificarRecordatorioReservaAsync(
                             reserva,
                             reserva.IdCanchaNavigation,
-                            reserva.IdClienteNavigation
+                            reserva.IdClienteNavigation,
+                            horariosFormateado
                         );
 
                         // Marcar como notificada

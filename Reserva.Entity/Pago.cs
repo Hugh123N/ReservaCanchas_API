@@ -53,5 +53,5 @@ public partial class Pago
 
     public virtual Operador? IdOperadorNavigation { get; set; }
 
-    public virtual Reserva IdReservaNavigation { get; set; } = null!;
+    public virtual Reserva? IdReservaNavigation { get; set; }
 }

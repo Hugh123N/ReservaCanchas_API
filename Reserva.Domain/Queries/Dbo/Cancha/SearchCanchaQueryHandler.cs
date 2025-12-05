@@ -40,8 +40,8 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
             if (!string.IsNullOrEmpty(filters?.CodigoUbigeo)) 
                 filter = filter.And(x => x.CodigoUbigeo!.StartsWith(filters.CodigoUbigeo));
 
-            /*if (filters?.IdTipoCancha.HasValue == true)
-                filter = filter.And(x => x.IdTipoCancha == filters.IdTipoCancha);*/
+            if (filters?.IdTipoDeporte.HasValue == true)
+                filter = filter.And(x => x.TipoDeporteCancha.Any(x => x.Activo && x.IdTipoDeporte == filters.IdTipoDeporte));
 
             if (filters?.IdEstadoCancha.HasValue == true)
                 filter = filter.And(x => x.IdEstadoCancha == filters.IdEstadoCancha);
@@ -63,12 +63,21 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 var fecha = filters.Fecha.Value;
                 var diaSemana = fecha.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)fecha.DayOfWeek;
 
-                filter = filter.And(x =>
-                    x.HorarioCancha.Any(d => d.Activo
-                        && d.IdDiaSemana == diaSemana
-                        && (fecha.Date > DateTime.Now.Date || d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
-                    )
-                );
+                if (fecha.Date > DateTime.Now.Date)
+                {
+                    filter = filter.And(x =>
+                        x.HorarioCancha.Any(hc => hc.Activo && hc.IdDiaSemana == diaSemana)
+                    );
+                }
+                else 
+                {
+                    var horaActual = TimeOnly.FromDateTime(DateTime.Now);
+                    filter = filter.And(x => x.HorarioCancha.Any(hc => hc.Activo
+                            && hc.IdDiaSemana == diaSemana
+                            && hc.IdHoraInicioNavigation.Hora1 >= horaActual
+                        )
+                    );
+                }
             }
 
             // Filtro por favoritos del usuario
@@ -82,9 +91,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 
             // Filtro por proveedor
             if (filters?.IdProveedor.HasValue == true)
-            {
                 filter = filter.And(x => x.IdProveedor == filters.IdProveedor);
-            }
 
             var sorts = new List<SortExpression<Entity.Cancha>>();
 
@@ -106,15 +113,14 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 x => x.ImagenCancha.Where(i => i.EsPrincipal == true),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
-                x => x.CodigoUbigeoNavigation!,
-                x => x.HorarioCancha.Where(d => d.Activo && d.HoraInicio >= TimeOnly.FromDateTime(DateTime.Now))
+                x => x.CodigoUbigeoNavigation!
             );
 
             var CanchaDtos = _mapper?.Map<IEnumerable<SearchCanchaDto>>(Canchas.Items);
 
             foreach (var it in CanchaDtos) { 
-                var gr = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, it.IdCancha ?? 0), cancellationToken)!;
-                it.HorariosDisponibles = gr.Data; 
+                var horariosDisponibles = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, it.IdCancha ?? 0), cancellationToken)!;
+                it.HorariosDisponibles = horariosDisponibles.Data; 
             }
 
             var searchResult = new SearchResultDto<SearchCanchaDto>(

@@ -29,15 +29,9 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     .GreaterThan(0).WithMessage("El precio debe ser mayor a 0");
 
                 RuleFor(x => x.UpdateDto.HorarioCanchas)
-                    .NotNull().WithMessage("Debe proporcionar al menos una disponibilidad.")
-                    .Must(d => d.Any()).WithMessage("Debe proporcionar al menos una disponibilidad.");
+                    .NotNull().WithMessage("Debe proporcionar al menos un Horario.")
+                    .Must(d => d.Any()).WithMessage("Debe proporcionar al menos una Hora.");
 
-                RuleForEach(x => x.UpdateDto.HorarioCanchas).ChildRules(dis =>
-                {
-                    dis.RuleFor(d => d.HoraInicio)
-                       .LessThan(d => d.HoraFin)
-                       .WithMessage("La hora de inicio debe ser menor a la hora de fin.");
-                });
             });
         }
 

@@ -15,5 +15,6 @@ namespace Reserva.Dto.Dbo.Reserva
         public DateTimeOffset? FechaExpiracionPreReserva { get; set; }
         public int? IdOperadorConfirmo { get; set; }
         public DateTimeOffset? FechaConfirmacion { get; set; }
+        public string? Observaciones { get; set; }
     }
 }

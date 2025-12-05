@@ -31,6 +31,8 @@ public partial class Reserva
 
     public DateTimeOffset? FechaConfirmacion { get; set; }
 
+    public string? Observaciones { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }

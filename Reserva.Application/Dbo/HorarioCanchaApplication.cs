@@ -29,7 +29,7 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new SearchHorarioCanchaQuery(searchParams));
         public async Task<ResponseDto<IEnumerable<SelectComboHorarioCanchaDto>>> SelectCombo()
             => await _mediator.Send(new SelectComboHorarioCanchaQuery());
-        public async Task<ResponseDto<List<string>>> HorarioDisponible(DateTimeOffset fecha, int idCancha)
+        public async Task<ResponseDto<List<HorarioDisponibleDto>>> HorarioDisponible(DateTimeOffset fecha, int idCancha)
             => await _mediator.Send(new GetCanchaByFechaQuery(fecha, idCancha));
     }
 }

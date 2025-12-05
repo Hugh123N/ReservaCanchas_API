@@ -12,7 +12,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<IEnumerable<ListHorarioCanchaDto>>> List(int id);
         Task<ResponseDto<SearchResultDto<SearchHorarioCanchaDto>>> Search(SearchParamsDto<SearchHorarioCanchaFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboHorarioCanchaDto>>> SelectCombo();
-        Task<ResponseDto<List<string>>> HorarioDisponible(DateTimeOffset fecha, int idCancha);
+        Task<ResponseDto<List<HorarioDisponibleDto>>> HorarioDisponible(DateTimeOffset fecha, int idCancha);
     }
 }
 

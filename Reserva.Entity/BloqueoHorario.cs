@@ -11,9 +11,9 @@ public partial class BloqueoHorario
 
     public DateOnly FechaBloqueo { get; set; }
 
-    public TimeOnly HoraInicio { get; set; }
+    public int IdHoraInicio { get; set; }
 
-    public TimeOnly HoraFin { get; set; }
+    public int? IdHoraFin { get; set; }
 
     public string? Motivo { get; set; }
 
@@ -28,4 +28,8 @@ public partial class BloqueoHorario
     public bool Activo { get; set; }
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
+
+    public virtual Hora? IdHoraFinNavigation { get; set; }
+
+    public virtual Hora IdHoraInicioNavigation { get; set; } = null!;
 }

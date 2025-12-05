@@ -1,4 +1,5 @@
 using AutoMapper;
+using Reclutamiento.Domain.Extensions;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
@@ -12,24 +13,34 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
     {
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.ImagenCancha> _ImagenCanchaRepository;
+        private readonly IRepository<Entity.TipoDeporteCancha> _TipoDeporteCanchaRepository;
+        private readonly IRepository<Entity.ServicioCancha> _ServicioCanchaRepository;
 
         public UpdateCanchaCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             UpdateCanchaCommandValidator validator,
             IRepository<Entity.Cancha> CanchaRepository,
-            IRepository<Entity.ImagenCancha> ImagenCanchaRepository
+            IRepository<Entity.ImagenCancha> ImagenCanchaRepository,
+            IRepository<Entity.TipoDeporteCancha> TipoDeporteCanchaRepository,
+            IRepository<Entity.ServicioCancha> ServicioCanchaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _CanchaRepository = CanchaRepository;
             _ImagenCanchaRepository = ImagenCanchaRepository;
+            _TipoDeporteCanchaRepository = TipoDeporteCanchaRepository;
+            _ServicioCanchaRepository = ServicioCanchaRepository;
         }
 
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(UpdateCanchaCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetCanchaDto>();
-            var imgsResultantes = new List<Entity.ImagenCancha>();
-            var Cancha = await _CanchaRepository.GetByAsNoTrackingAsync(x => x.IdCancha == request.UpdateDto.IdCancha);
+
+            var Cancha = await _CanchaRepository.GetByAsync(x => x.IdCancha == request.UpdateDto.IdCancha,
+                x => x.ImagenCancha.Where(x => x.Activo),
+                x => x.HorarioCancha.Where(x => x.Activo),
+                x => x.TipoDeporteCancha,
+                x => x.ServicioCancha);
 
             if (Cancha == null)
             {
@@ -37,43 +48,95 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 return response;
             }
 
-            var imgsBD = await _ImagenCanchaRepository.FindByAsNoTrackingAsync(x => x.IdCancha == request.UpdateDto.IdCancha) ?? new List<Entity.ImagenCancha>();
-           
-            var idsRequest = request.UpdateDto.Imagenes?.Where(i => i.IdImagenCancha != 0).Select(i => i.IdImagenCancha)
-                                               .ToList() ?? new List<int>();
-
-            var imgsEliminar = imgsBD.Where(i => !idsRequest.Contains(i.IdImagenCancha)).ToList();
-            foreach (var img in imgsEliminar)
+            if (request.UpdateDto.Imagenes != null)
             {
-                img.Activo = false;
-                imgsResultantes.Add(img);
+                Cancha.ImagenCancha.ActualizarColeccion(
+                   request.UpdateDto.Imagenes,
+                   e => e.IdImagenCancha,
+                   d => d.IdImagenCancha,
+                   (dto, entidad) => {
+                       _mapper.Map(dto, entidad);
+                   },
+                   dto => {
+                       var nuevo = _mapper.Map<Entity.ImagenCancha>(dto);
+                       nuevo.IdCancha = Cancha.IdCancha;
+                       nuevo.UserNameCreate = Cancha.UserNameCreate;
+                       nuevo.CreateDate = Cancha.CreateDate;
+                       nuevo.Activo = true;
+                       return nuevo;
+                   }
+               );
             }
 
-            var imgsActualizarDto = request.UpdateDto.Imagenes?.Where(i => i.IdImagenCancha != 0).ToList() ?? new List<UpdateImagenCanchaDto>();
-            foreach (var dto in imgsActualizarDto)
+            if (request.UpdateDto.HorarioCanchas != null)
             {
-                var imgBD = imgsBD.FirstOrDefault(i => i.IdImagenCancha == dto.IdImagenCancha);
-                if (imgBD != null)
+                Cancha.HorarioCancha.ActualizarColeccion(
+                   request.UpdateDto.HorarioCanchas,
+                   e => e.IdHorarioCancha,
+                   d => d.IdHorarioCancha,
+                   (dto, entidad) => {
+                       _mapper.Map(dto, entidad);
+                   },
+                   dto => {
+                       var nuevo = _mapper.Map<Entity.HorarioCancha>(dto);
+                       nuevo.IdCancha = Cancha.IdCancha;
+                       nuevo.UserNameCreate = Cancha.UserNameCreate;
+                       nuevo.CreateDate = Cancha.CreateDate;
+                       nuevo.Activo = true;
+                       return nuevo;
+                   }
+               );
+            }
+
+            if (request.UpdateDto.IdsTipoDeporte != null)
+            {
+                Cancha.TipoDeporteCancha.Where(x => x.Activo && !request.UpdateDto.IdsTipoDeporte.Contains(x.IdTipoDeporte))
+                    .ToList().ForEach(x => x.Activo = false);
+
+                foreach (var idTipoDeporte in request.UpdateDto.IdsTipoDeporte)
                 {
-                    _mapper?.Map(dto, imgBD); 
-                    imgsResultantes.Add(imgBD);
+                    var existente = Cancha.TipoDeporteCancha.FirstOrDefault(x => x.IdTipoDeporte == idTipoDeporte);
+                    if (existente != null)
+                    {
+                        existente.Activo = true; 
+                    }
+                    else
+                    {
+                        Cancha.TipoDeporteCancha.Add(new Entity.TipoDeporteCancha
+                        {
+                            IdTipoDeporte = idTipoDeporte,
+                            Activo = true
+                        });
+                    }
                 }
             }
 
-            var imgsNuevosDto = request.UpdateDto.Imagenes?.Where(x => x.IdImagenCancha == 0);
-
-            var imgsNuevos = _mapper?.Map<List<Entity.ImagenCancha>>(imgsNuevosDto) ?? new List<Entity.ImagenCancha>();
-
-            foreach (var img in imgsNuevos)
+            if (request.UpdateDto.IdsServicios != null)
             {
-                img.IdCancha = Cancha.IdCancha;
-                img.UserNameCreate = Cancha.UserNameCreate;
-                img.CreateDate = DateTimeOffset.Now;
-                img.Activo = true;
-                imgsResultantes.Add(img);
+                Cancha.ServicioCancha.Where(x => x.Activo && !request.UpdateDto.IdsServicios.Contains(x.IdServicio))
+                    .ToList().ForEach(x => x.Activo = false);
+
+                foreach (var idServicio in request.UpdateDto.IdsServicios)
+                {
+                    var existente = Cancha.ServicioCancha.FirstOrDefault(x => x.IdServicio == idServicio);
+                    if (existente != null)
+                    {
+                        existente.Activo = true; 
+                    }
+                    else
+                    {
+                        Cancha.ServicioCancha.Add(new Entity.ServicioCancha
+                        {
+                            IdServicio = idServicio,
+                            EsIncluido = true,
+                            CostoAdicional = null,
+                            Activo = true
+                        });
+                    }
+                }
             }
+
             _mapper?.Map(request.UpdateDto, Cancha);
-            Cancha.ImagenCancha = imgsResultantes;
 
             await _CanchaRepository.UpdateAsync(Cancha);
             await _CanchaRepository.SaveAsync();

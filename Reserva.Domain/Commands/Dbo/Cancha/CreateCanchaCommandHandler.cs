@@ -34,14 +34,34 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             var estadoCancha = await _EstadoCanchaRepository.GetByAsNoTrackingAsync(x => x.Codigo!.Equals(Constants.ESTADO_CANCHA.Pendiente));
 
             var Cancha = _mapper?.Map<Entity.Cancha>(request.CreateDto);
-            
             Cancha!.IdEstadoCancha = estadoCancha!.IdEstadoCancha;
 
-            if (Cancha != null)
+            if (request.CreateDto.IdsTipoDeporte != null && request.CreateDto.IdsTipoDeporte.Any())
             {
-                await _CanchaRepository.AddAsync(Cancha);
-                await _CanchaRepository.SaveAsync();
+                foreach (var idTipoDeporte in request.CreateDto.IdsTipoDeporte)
+                {
+                    Cancha.TipoDeporteCancha.Add(new Entity.TipoDeporteCancha
+                    {
+                        IdTipoDeporte = idTipoDeporte
+                    });
+                }
             }
+
+            if (request.CreateDto.IdsServicios != null && request.CreateDto.IdsServicios.Any())
+            {
+                foreach (var idServicio in request.CreateDto.IdsServicios)
+                {
+                    Cancha.ServicioCancha.Add(new Entity.ServicioCancha
+                    {
+                        IdServicio = idServicio,
+                        EsIncluido = true,
+                        CostoAdicional = null
+                    });
+                }
+            }
+
+            await _CanchaRepository.AddAsync(Cancha);
+            await _CanchaRepository.SaveAsync();
 
             var CanchaDto = _mapper?.Map<GetCanchaDto>(Cancha);
             if (CanchaDto != null) response.UpdateData(CanchaDto);
