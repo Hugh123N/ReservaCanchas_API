@@ -23,6 +23,7 @@ namespace Reserva.Domain.Mapping.Cancha
                 .ForMember(x => x.EstadoCancha, opt => opt.MapFrom(x => x.IdEstadoCanchaNavigation))
                 .ForMember(x => x.Faboritos, opt => opt.MapFrom(x => x.CanchaFavorita))
                 .ForMember(x => x.Ubigeo, opt => opt.MapFrom(x => x.CodigoUbigeoNavigation))
+                .ForMember(x => x.TipoSuperficie, opt => opt.MapFrom(x => x.IdTipoSuperficieNavigation))
                 .ReverseMap();
 
             CreateMap<Entity.Cancha, ListCanchaDto>()

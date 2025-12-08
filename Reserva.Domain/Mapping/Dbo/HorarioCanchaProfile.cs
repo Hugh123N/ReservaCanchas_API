@@ -17,6 +17,8 @@ namespace Reserva.Domain.Mapping.HorarioCancha
                 .ReverseMap();
 
             CreateMap<Entity.HorarioCancha, GetHorarioCanchaDto>()
+                .ForMember(x => x.DiaSemana, opt => opt.MapFrom(x => x.IdDiaSemanaNavigation))
+                .ForMember(x => x.HoraInicio, opt => opt.MapFrom(x => x.IdHoraInicioNavigation))
                 .ReverseMap();
 
             CreateMap<Entity.HorarioCancha, ListHorarioCanchaDto>()

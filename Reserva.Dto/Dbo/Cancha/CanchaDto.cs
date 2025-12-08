@@ -9,10 +9,6 @@ namespace Reserva.Dto.Dbo.Cancha
 
         public int IdTipoSuperficie { get; set; }
 
-        public int IdEstadoCancha { get; set; }
-
-        public string Codigo { get; set; } = null!;
-
         public string Nombre { get; set; } = null!;
 
         public string? Descripcion { get; set; }

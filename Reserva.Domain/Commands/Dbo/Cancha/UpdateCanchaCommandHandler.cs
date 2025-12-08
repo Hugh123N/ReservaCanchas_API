@@ -88,12 +88,12 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                );
             }
 
-            if (request.UpdateDto.IdsTipoDeporte != null)
+            if (request.UpdateDto.IdsTipoDeportes != null)
             {
-                Cancha.TipoDeporteCancha.Where(x => x.Activo && !request.UpdateDto.IdsTipoDeporte.Contains(x.IdTipoDeporte))
+                Cancha.TipoDeporteCancha.Where(x => x.Activo && !request.UpdateDto.IdsTipoDeportes.Contains(x.IdTipoDeporte))
                     .ToList().ForEach(x => x.Activo = false);
 
-                foreach (var idTipoDeporte in request.UpdateDto.IdsTipoDeporte)
+                foreach (var idTipoDeporte in request.UpdateDto.IdsTipoDeportes)
                 {
                     var existente = Cancha.TipoDeporteCancha.FirstOrDefault(x => x.IdTipoDeporte == idTipoDeporte);
                     if (existente != null)

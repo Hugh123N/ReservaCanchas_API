@@ -36,9 +36,9 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             var Cancha = _mapper?.Map<Entity.Cancha>(request.CreateDto);
             Cancha!.IdEstadoCancha = estadoCancha!.IdEstadoCancha;
 
-            if (request.CreateDto.IdsTipoDeporte != null && request.CreateDto.IdsTipoDeporte.Any())
+            if (request.CreateDto.IdsTipoDeportes != null && request.CreateDto.IdsTipoDeportes.Any())
             {
-                foreach (var idTipoDeporte in request.CreateDto.IdsTipoDeporte)
+                foreach (var idTipoDeporte in request.CreateDto.IdsTipoDeportes)
                 {
                     Cancha.TipoDeporteCancha.Add(new Entity.TipoDeporteCancha
                     {

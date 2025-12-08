@@ -2,30 +2,30 @@ using AutoMapper;
 using Reserva.Dto.Base;
 using Reserva.Entity.Base;
 using Reserva.Domain.Queries.Base;
-using Reserva.Dto.Dbo.IntentoLogin;
+using Reserva.Dto.Dbo.Hora;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
 using System.Linq.Expressions;
 
-namespace Reserva.Domain.Queries.Dbo.IntentoLogin
+namespace Reserva.Domain.Queries.Dbo.Hora
 {
-    public class SearchIntentoLoginQueryHandler : SearchQueryHandlerBase<SearchIntentoLoginQuery, SearchIntentoLoginFilterDto, SearchIntentoLoginDto>
+    public class SearchHoraQueryHandler : SearchQueryHandlerBase<SearchHoraQuery, SearchHoraFilterDto, SearchHoraDto>
     {
-        private readonly IRepository<Entity.IntentoLogin> _IntentoLoginRepository;
+        private readonly IRepository<Entity.Hora> _HoraRepository;
 
-        public SearchIntentoLoginQueryHandler(
+        public SearchHoraQueryHandler(
             IMapper mapper,
-            IRepository<Entity.IntentoLogin> IntentoLoginRepository
+            IRepository<Entity.Hora> HoraRepository
         ) : base(mapper)
         {
-            _IntentoLoginRepository = IntentoLoginRepository;
+            _HoraRepository = HoraRepository;
         }
 
-        protected override async Task<ResponseDto<SearchResultDto<SearchIntentoLoginDto>>> HandleQuery(SearchIntentoLoginQuery request, CancellationToken cancellationToken)
+        protected override async Task<ResponseDto<SearchResultDto<SearchHoraDto>>> HandleQuery(SearchHoraQuery request, CancellationToken cancellationToken)
         {
-            var response = new ResponseDto<SearchResultDto<SearchIntentoLoginDto>>();
+            var response = new ResponseDto<SearchResultDto<SearchHoraDto>>();
 
-            Expression<Func<Entity.IntentoLogin, bool>> filter = x => true;
+            Expression<Func<Entity.Hora, bool>> filter = x => true;
 
             var filters = request.SearchParams?.Filter;
 
@@ -47,29 +47,29 @@ namespace Reserva.Domain.Queries.Dbo.IntentoLogin
             */
             filter = filter.And(x => x.Activo == true);
 
-            var sorts = new List<SortExpression<Entity.IntentoLogin>>();
+            var sorts = new List<SortExpression<Entity.Hora>>();
 
             if (request.SearchParams?.Sort != null)
             {
                 foreach (var srt in request.SearchParams.Sort)
                 {
-                    var property = IQueryableExtensions.GetSortExpression<Entity.IntentoLogin>(srt.Direction, srt.Property);
+                    var property = IQueryableExtensions.GetSortExpression<Entity.Hora>(srt.Direction, srt.Property);
                     if (property != null) sorts.Add(property);
                 }
             }
 
-            var IntentoLogins = await _IntentoLoginRepository.SearchByAsNoTrackingAsync(
+            var Horas = await _HoraRepository.SearchByAsNoTrackingAsync(
                 request.SearchParams?.Page?.Page ?? 1,
                 request.SearchParams?.Page?.PageSize ?? 10,
                 sorts,
                 filter
             );
 
-            var IntentoLoginDtos = _mapper?.Map<IEnumerable<SearchIntentoLoginDto>>(IntentoLogins.Items);
+            var HoraDtos = _mapper?.Map<IEnumerable<SearchHoraDto>>(Horas.Items);
 
-            var searchResult = new SearchResultDto<SearchIntentoLoginDto>(
-                IntentoLoginDtos ?? new List<SearchIntentoLoginDto>(),
-                IntentoLogins.Total,
+            var searchResult = new SearchResultDto<SearchHoraDto>(
+                HoraDtos ?? new List<SearchHoraDto>(),
+                Horas.Total,
                 request.SearchParams
             );
 

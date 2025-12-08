@@ -10,6 +10,8 @@ namespace Reserva.Dto.Dbo.Cancha
 {
     public class SearchCanchaDto: CanchaDto
     {
+        public int IdEstadoCancha { get; set; }
+        public string Codigo { get; set; } = null!;
         public int? IdCancha { get; set; }
         public List<GetTipoDeporteDto>? TipoDeportes { get; set; }
         public List<GetImagenCanchaDto>? ImagenesCancha { get; set; }
