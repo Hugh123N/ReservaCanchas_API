@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.14.1" />
     <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
     <PackageReference Include="MailKit" Version="4.13.0" />
     <PackageReference Include="MediatR" Version="12.5.0" />

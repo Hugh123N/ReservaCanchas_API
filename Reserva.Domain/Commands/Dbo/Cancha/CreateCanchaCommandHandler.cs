@@ -1,12 +1,12 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Microsoft.Data.SqlClient;
 
 namespace Reserva.Domain.Commands.Dbo.Cancha
 {
@@ -60,6 +60,8 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 }
             }
 
+            Cancha.Codigo = await GenerarCodigoCancha(Cancha.IdProveedor);
+
             await _CanchaRepository.AddAsync(Cancha);
             await _CanchaRepository.SaveAsync();
 
@@ -69,6 +71,15 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             response.AddOkResult(Resources.Common.CreateSuccessMessage);
 
             return await Task.FromResult(response);
+        }
+
+        private async Task<string> GenerarCodigoCancha(int idProveedor)
+        {
+            var param = new SqlParameter("@idProveedor", idProveedor);
+            var codigo = await _CanchaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoCancha", param);
+            if (!string.IsNullOrWhiteSpace(codigo))
+                return codigo;
+            return string.Empty;
         }
     }
 }

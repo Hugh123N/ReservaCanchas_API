@@ -3,7 +3,6 @@ using Reclutamiento.Domain.Extensions;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
-using Reserva.Dto.Dbo.ImagenCancha;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 
@@ -12,7 +11,6 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
     public class UpdateCanchaCommandHandler : CommandHandlerBase<UpdateCanchaCommand, GetCanchaDto>
     {
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
-        private readonly IRepository<Entity.ImagenCancha> _ImagenCanchaRepository;
         private readonly IRepository<Entity.TipoDeporteCancha> _TipoDeporteCanchaRepository;
         private readonly IRepository<Entity.ServicioCancha> _ServicioCanchaRepository;
 
@@ -21,13 +19,11 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             IMapper mapper,
             UpdateCanchaCommandValidator validator,
             IRepository<Entity.Cancha> CanchaRepository,
-            IRepository<Entity.ImagenCancha> ImagenCanchaRepository,
             IRepository<Entity.TipoDeporteCancha> TipoDeporteCanchaRepository,
             IRepository<Entity.ServicioCancha> ServicioCanchaRepository
         ) : base(unitOfWork, mapper, validator)
         {
             _CanchaRepository = CanchaRepository;
-            _ImagenCanchaRepository = ImagenCanchaRepository;
             _TipoDeporteCanchaRepository = TipoDeporteCanchaRepository;
             _ServicioCanchaRepository = ServicioCanchaRepository;
         }
@@ -37,36 +33,9 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             var response = new ResponseDto<GetCanchaDto>();
 
             var Cancha = await _CanchaRepository.GetByAsync(x => x.IdCancha == request.UpdateDto.IdCancha,
-                x => x.ImagenCancha.Where(x => x.Activo),
                 x => x.HorarioCancha.Where(x => x.Activo),
                 x => x.TipoDeporteCancha,
                 x => x.ServicioCancha);
-
-            if (Cancha == null)
-            {
-                response.AddErrorResult("Cancha no encontrada.");
-                return response;
-            }
-
-            if (request.UpdateDto.Imagenes != null)
-            {
-                Cancha.ImagenCancha.ActualizarColeccion(
-                   request.UpdateDto.Imagenes,
-                   e => e.IdImagenCancha,
-                   d => d.IdImagenCancha,
-                   (dto, entidad) => {
-                       _mapper.Map(dto, entidad);
-                   },
-                   dto => {
-                       var nuevo = _mapper.Map<Entity.ImagenCancha>(dto);
-                       nuevo.IdCancha = Cancha.IdCancha;
-                       nuevo.UserNameCreate = Cancha.UserNameCreate;
-                       nuevo.CreateDate = Cancha.CreateDate;
-                       nuevo.Activo = true;
-                       return nuevo;
-                   }
-               );
-            }
 
             if (request.UpdateDto.HorarioCanchas != null)
             {
@@ -98,7 +67,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     var existente = Cancha.TipoDeporteCancha.FirstOrDefault(x => x.IdTipoDeporte == idTipoDeporte);
                     if (existente != null)
                     {
-                        existente.Activo = true; 
+                        existente.Activo = true;
                     }
                     else
                     {
@@ -121,7 +90,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     var existente = Cancha.ServicioCancha.FirstOrDefault(x => x.IdServicio == idServicio);
                     if (existente != null)
                     {
-                        existente.Activo = true; 
+                        existente.Activo = true;
                     }
                     else
                     {
@@ -140,7 +109,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
 
             await _CanchaRepository.UpdateAsync(Cancha);
             await _CanchaRepository.SaveAsync();
-            
+
             var CanchaDto = _mapper?.Map<GetCanchaDto>(Cancha);
             if (CanchaDto != null) response.UpdateData(CanchaDto);
 

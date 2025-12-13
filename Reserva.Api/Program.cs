@@ -43,6 +43,8 @@ builder.Services.UseDomainServices();
 
 // Culqi Service para integración de pagos
 builder.Services.AddHttpClient<Reserva.Domain.Services.Culqi.CulqiService>();
+// Cloudflare R2 Storage Service para almacenamiento de imágenes
+builder.Services.AddSingleton<Reserva.Domain.Services.Storage.IStorageService, Reserva.Domain.Services.Storage.CloudflareR2StorageService>();
 
 // Security
 builder.Services.AddHttpContextAccessor();

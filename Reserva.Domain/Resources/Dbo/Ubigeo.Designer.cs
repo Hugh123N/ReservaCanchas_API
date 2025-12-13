@@ -39,7 +39,7 @@ namespace Reserva.Domain.Resources.Dbo {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Acopio.Pesaje.Domain.Resources.Dbo.Ubigeo", typeof(Ubigeo).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Reserva.Domain.Resources.Dbo.Ubigeo", typeof(Ubigeo).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -66,6 +66,60 @@ namespace Reserva.Domain.Resources.Dbo {
         internal static string IdUbigeo {
             get {
                 return ResourceManager.GetString("IdUbigeo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a El departamento especificado no existe en el sistema.
+        /// </summary>
+        internal static string DepartamentoNoEncontrado {
+            get {
+                return ResourceManager.GetString("DepartamentoNoEncontrado", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Ubigeo encontrado.
+        /// </summary>
+        internal static string UbigeoEncontrado {
+            get {
+                return ResourceManager.GetString("UbigeoEncontrado", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Ubigeo creado automáticamente con código {0}.
+        /// </summary>
+        internal static string UbigeoCreado {
+            get {
+                return ResourceManager.GetString("UbigeoCreado", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Departamento.
+        /// </summary>
+        internal static string Departamento {
+            get {
+                return ResourceManager.GetString("Departamento", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Provincia.
+        /// </summary>
+        internal static string Provincia {
+            get {
+                return ResourceManager.GetString("Provincia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Distrito.
+        /// </summary>
+        internal static string Distrito {
+            get {
+                return ResourceManager.GetString("Distrito", resourceCulture);
             }
         }
     }

@@ -31,7 +31,6 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 RuleFor(x => x.UpdateDto.HorarioCanchas)
                     .NotNull().WithMessage("Debe proporcionar al menos un Horario.")
                     .Must(d => d.Any()).WithMessage("Debe proporcionar al menos una Hora.");
-
             });
         }
 

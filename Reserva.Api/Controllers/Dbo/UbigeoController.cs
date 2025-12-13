@@ -36,6 +36,12 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("select")]
         public async Task<ResponseDto<SearchResultDto<SelectUbigeoDto>>> Select(SearchParamsDto<SelectUbigeoFilterDto> searchParams)
             => await _UbigeoApplication.Select(searchParams);
+        [HttpGet("buscar")]
+        public async Task<ResponseDto<GetUbigeoDto>> Buscar(
+            [FromQuery] string departamento,
+            [FromQuery] string provincia,
+            [FromQuery] string distrito)
+            => await _UbigeoApplication.Buscar(departamento, provincia, distrito);
 
     }
 }

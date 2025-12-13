@@ -12,7 +12,6 @@ namespace Reserva.Domain.Mapping.Cancha
 
             CreateMap<Entity.Cancha, CreateCanchaDto>()
                 .ForMember(x => x.HorarioCanchas, opt => opt.MapFrom(x => x.HorarioCancha))
-                .ForMember(x => x.Imagenes, opt => opt.MapFrom(x => x.ImagenCancha))
                 .ReverseMap();
 
             CreateMap<Entity.Cancha, UpdateCanchaDto>()

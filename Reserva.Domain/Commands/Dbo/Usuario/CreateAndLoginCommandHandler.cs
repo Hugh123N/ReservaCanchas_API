@@ -37,12 +37,12 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
-            //CreateUsuarioCommandValidator validator,
             IRepository<Entity.AspNetUsers> UsuarioRepository,
             UserManager<Entity.ApplicationUser> userManager,
             IRepository<Entity.ApplicationUser> ApplicationUserRepository,
             IRepository<Entity.AspNetRoles> RolRepository,
             IRepository<Entity.EstadoUsuario> EstadoUsuarioRepository,
+            SignInManager<Entity.ApplicationUser> SignInManager,
         IConfiguration configuration
         ) : base(unitOfWork, mapper, mediator)
         {
@@ -52,6 +52,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             _RolRepository = RolRepository;
             _applicationUserRepository = ApplicationUserRepository;
             _EstadoUsuarioRepository = EstadoUsuarioRepository;
+            _SignInManager = SignInManager;
         }
 
 
@@ -83,6 +84,16 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 else
                 {
                     nuevoUsuario = usuarioExistente;
+                }
+
+                if (request.CreateDto.TipoUser != null && request.CreateDto.TipoUser.Equals("Proveedor")) {
+                    var normalizedRoleNames = new List<string>
+                    {
+                        Constants.Role.Proveedor.ToUpper(),
+                        Constants.Role.Operador.ToUpper()
+                    };
+
+                    var addRoleResult = await _UserManager.AddToRolesAsync(nuevoUsuario, normalizedRoleNames);
                 }
             }
             else

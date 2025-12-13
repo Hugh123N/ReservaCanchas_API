@@ -13,5 +13,6 @@ namespace Reserva.Dto.Dbo.Usuario
         public string? Password { get; set; } 
         public string? IdToken { get; set; } 
         public string TypeValidation { get; set; } = null!;
+        public string? TipoUser { get; set; }
     }
 }

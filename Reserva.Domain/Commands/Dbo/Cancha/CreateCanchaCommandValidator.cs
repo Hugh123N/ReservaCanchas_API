@@ -14,17 +14,14 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     .MaximumLength(100).WithMessage("El nombre de la cancha no puede superar los 100 caracteres.");
 
                 RuleFor(x => x.CreateDto.Descripcion)
-                    .NotEmpty().WithMessage("La descripción de la cancha es obligatoria.")
-                    .MaximumLength(500).WithMessage("La descripción no puede superar los 500 caracteres.");
+                    .NotEmpty().WithMessage("La descripciÃ³n de la cancha es obligatoria.")
+                    .MaximumLength(500).WithMessage("La descripciÃ³n no puede superar los 500 caracteres.");
 
                 RuleFor(x => x.CreateDto.Precio)
                     .GreaterThan(0).WithMessage("El precio por hora debe ser mayor a 0.");
 
                 RuleFor(x => x.CreateDto.IdTipoSuperficie)
-                    .GreaterThan(0).WithMessage("Debe seleccionar un tipo de superficie válido.");
-
-                RuleFor(x => x.CreateDto.CodigoUbigeo)
-                    .NotEmpty().WithMessage("Debe seleccionar una ubicación válida.");
+                    .GreaterThan(0).WithMessage("Debe seleccionar un tipo de superficie vÃ¡lido.");
 
                 RuleFor(x => x.CreateDto.HorarioCanchas)
                     .NotNull().WithMessage("Debe especificar al menos un Horario Cancha.");

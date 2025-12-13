@@ -14,21 +14,19 @@ namespace Reserva.Domain.Commands.Dbo.ImagenCancha
 
             RequiredInformation(x => x.UpdateDto).DependentRules(() =>
             {
-                RequiredField(x => x.UpdateDto.IdImagenCancha, Resources.Dbo.ImagenCancha.IdImagenCancha)
-                    .DependentRules(() =>
-                    {
-                        RuleFor(x => x.UpdateDto.IdImagenCancha)
-                            .MustAsync(ValidateExistenceAsync)
-                            .WithCustomValidationMessage();
-                    });
-                //RequiredString(x => x.UpdateDto.Codigo, Resources.Dbo.ImagenCancha.Codigo, 5, 10);
-                //RequiredField(x => x.UpdateDto.FechaIngreso, Resources.Dbo.ImagenCancha.FechaIngreso);
+                // El IdImagenCancha ahora es nullable, solo validar existencia cuando tiene valor
+                RuleFor(x => x.UpdateDto.IdImagenCancha)
+                    .MustAsync(ValidateExistenceAsync)
+                    .WithCustomValidationMessage()
+                    .When(x => x.UpdateDto.IdImagenCancha.HasValue);
             });
         }
 
-        protected async Task<bool> ValidateExistenceAsync(UpdateImagenCanchaCommand command, int id, ValidationContext<UpdateImagenCanchaCommand> context, CancellationToken cancellationToken)
+        protected async Task<bool> ValidateExistenceAsync(UpdateImagenCanchaCommand command, int? id, ValidationContext<UpdateImagenCanchaCommand> context, CancellationToken cancellationToken)
         {
-            var exists = await _repositoryBase.FindAll().Where(x => x.IdImagenCancha == id).AnyAsync(cancellationToken);
+            if (!id.HasValue) return true;
+
+            var exists = await _repositoryBase.FindAll().Where(x => x.IdImagenCancha == id.Value).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.UpdateRecordNotFound);
             return true;
         }

@@ -120,4 +120,23 @@
   <data name="IdUbigeo" xml:space="preserve">
     <value>IdUbigeo</value>
   </data>
+  <data name="DepartamentoNoEncontrado" xml:space="preserve">
+    <value>El departamento especificado no existe en el sistema</value>
+  </data>
+  <data name="UbigeoEncontrado" xml:space="preserve">
+    <value>Ubigeo encontrado</value>
+  </data>
+  <data name="UbigeoCreado" xml:space="preserve">
+    <value>Ubigeo creado automáticamente con código {0}</value>
+    <comment>0: CodigoUbigeo</comment>
+  </data>
+  <data name="Departamento" xml:space="preserve">
+    <value>Departamento</value>
+  </data>
+  <data name="Provincia" xml:space="preserve">
+    <value>Provincia</value>
+  </data>
+  <data name="Distrito" xml:space="preserve">
+    <value>Distrito</value>
+  </data>
 </root>

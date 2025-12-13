@@ -55,10 +55,6 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 
             try
             {
-                
-
-                //var roles = await _RolRepository.FindByAsNoTrackingAsync(x => normalizedRoleNames.Contains(x.NormalizedName!));
-
                 var addRoleResult = await _UsuarioManager.AddToRolesAsync(applicationUser, normalizedRoleNames);
                 if (!addRoleResult.Succeeded)
                 {

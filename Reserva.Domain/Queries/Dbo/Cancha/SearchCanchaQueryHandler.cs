@@ -4,6 +4,7 @@ using Reserva.Domain.Queries.Base;
 using Reserva.Domain.Queries.Dbo.HorarioCancha;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
+using Reserva.Dto.Dbo.TipoDeporte;
 using Reserva.Entity.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
@@ -14,14 +15,17 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
     public class SearchCanchaQueryHandler : SearchQueryHandlerBase<SearchCanchaQuery, SearchCanchaFilterDto, SearchCanchaDto>
     {
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
+        private readonly IRepository<Entity.TipoDeporte> _TipoDeporteRepository;
 
         public SearchCanchaQueryHandler(
             IMapper mapper,
             IMediator mediator,
-            IRepository<Entity.Cancha> CanchaRepository
+            IRepository<Entity.Cancha> CanchaRepository,
+            IRepository<Entity.TipoDeporte> TipoDeporteRepository
         ) : base(mapper, mediator)
         {
             _CanchaRepository = CanchaRepository;
+            _TipoDeporteRepository = TipoDeporteRepository;
         }
 
         protected override async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> HandleQuery(SearchCanchaQuery request, CancellationToken cancellationToken)
@@ -118,11 +122,19 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 
             var CanchaDtos = _mapper?.Map<IEnumerable<SearchCanchaDto>>(Canchas.Items);
 
-            foreach (var it in CanchaDtos) { 
-                var horariosDisponibles = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, it.IdCancha ?? 0), cancellationToken)!;
-                it.HorariosDisponibles = horariosDisponibles.Data; 
-            }
+            foreach (var it in CanchaDtos) {
+                var canchaEntity = Canchas.Items.FirstOrDefault(x => x.IdCancha == it.IdCancha);
+                var idsTipoDeportes = canchaEntity.TipoDeporteCancha.Where(x => x.Activo).Select(x => x.IdTipoDeporte).ToList();
 
+                var horariosDisponibles = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, it.IdCancha ?? 0), cancellationToken)!;
+                
+                var tiposDeportes = await _TipoDeporteRepository.FindByAsNoTrackingAsync(x => idsTipoDeportes.Contains(x.IdTipoDeporte) && x.Activo);
+                var tipoDeportesDto = _mapper?.Map<List<GetTipoDeporteDto>>(tiposDeportes);
+
+                it.HorariosDisponibles = horariosDisponibles.Data;
+                it.TipoDeportes = tipoDeportesDto;
+            }
+            
             var searchResult = new SearchResultDto<SearchCanchaDto>(
                 CanchaDtos ?? new List<SearchCanchaDto>(),
                 Canchas.Total,

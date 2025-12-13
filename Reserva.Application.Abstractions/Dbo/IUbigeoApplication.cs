@@ -12,6 +12,6 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<IEnumerable<DepartamentoDto>>> List();
         Task<ResponseDto<SearchResultDto<SelectUbigeoDto>>> Select(SearchParamsDto<SelectUbigeoFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<GetUbigeoDto>>> ListAll();
+        Task<ResponseDto<GetUbigeoDto>> Buscar(string departamento, string provincia, string distrito);
     }
 }
-

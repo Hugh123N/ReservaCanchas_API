@@ -29,7 +29,7 @@ namespace Reserva.Dto.Dbo.Cancha
         public List<GetHorarioCanchaDto>? HorariosCancha { get; set; }
         public List<GetTipoDeporteDto>? TipoDeportes { get; set; }
         public List<GetServicioDto>? Servicios { get; set; }
-        public List<GetTipoSuperficieDto>? TipoSuperficie { get; set; }
+        public GetTipoSuperficieDto? TipoSuperficie { get; set; }
         public GetEstadoCanchaDto? EstadoCancha { get; set; }
         public List<GetCanchaFavoritaDto>? Faboritos { get; set; }
         public GetUbigeoDto? Ubigeo { get; set; }

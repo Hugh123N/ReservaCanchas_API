@@ -29,6 +29,8 @@ namespace Reserva.Application.Dbo
              => await _mediator.Send(new SelectUbigeoQuery(searchParams));
         public async Task<ResponseDto<IEnumerable<GetUbigeoDto>>> ListAll()
             => await _mediator.Send(new ListAllQuery());
+        public async Task<ResponseDto<GetUbigeoDto>> Buscar(string departamento, string provincia, string distrito)
+            => await _mediator.Send(new BuscarUbigeoQuery(departamento, provincia, distrito));
 
     }
 }
