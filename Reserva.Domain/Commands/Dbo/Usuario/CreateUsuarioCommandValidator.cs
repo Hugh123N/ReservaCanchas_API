@@ -40,12 +40,6 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                     .MustAsync(TelefonoNoExiste)
                     .WithMessage("El número de teléfono ya está registrado.");*/
 
-                RuleFor(x => x.CreateDto.Password)
-                    .NotEmpty().WithMessage("La contraseña es obligatoria.")
-                    .MinimumLength(6).WithMessage("La contraseña debe tener al menos 6 caracteres.")
-                    .Matches("[A-Z]").WithMessage("La contraseña debe contener al menos una letra mayúscula.")
-                    .Matches("[a-z]").WithMessage("La contraseña debe contener al menos una letra minúscula.")
-                    .Matches("[0-9]").WithMessage("La contraseña debe contener al menos un número.");
             });
         }
 

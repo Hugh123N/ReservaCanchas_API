@@ -47,72 +47,53 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
         public override async Task<ResponseDto<GetUsuarioDto>> HandleCommand(CreateUsuarioCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetUsuarioDto>();
+            var result = new IdentityResult();
             var estadoUsuario = await _EstadoUsuarioRepository.GetByAsync(x => x.Codigo.Equals(Constants.ESTADO_USUARIO.Activo));
              
             var applicationUser = _mapper?.Map<Entity.ApplicationUser>(request.CreateDto);
 
-            if (applicationUser != null)
-            {
-                applicationUser.EmailConfirmed = true;
-                applicationUser.IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario;
+            applicationUser.EmailConfirmed = true;
+            applicationUser.IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario;
 
-                _applicationUserRepository.UpdateAuditTrails(applicationUser);
-                var result = await _UsuarioManager.CreateAsync(applicationUser, request.CreateDto.Password);
-
-                if (!result.Succeeded)
-                {
-                    result.Errors.ToList().ForEach(e =>
-                    {
-                        response.AddErrorResult($"{e.Code}: {e.Description}");
-                    });
-
-                    return response;
-                }
-
-                var role = await _RolRepository.GetByAsync(x => x.NormalizedName.Equals(Constants.Role.Cliente));
-
-                if (role != null)
-                {
-                    var roleResult = await _UsuarioManager.AddToRoleAsync(applicationUser, role.NormalizedName);
-                    if (!roleResult.Succeeded)
-                    {
-                        roleResult.Errors.ToList().ForEach(e =>
-                        {
-                            response.AddErrorResult($"Error al asignar rol: {e.Code}: {e.Description}");
-                        });
-                        await _UsuarioManager.DeleteAsync(applicationUser);
-                        return response;
-                    }
-                }
-                else
-                {
-                    response.AddErrorResult("Rol no encontrado o inválido.");
-                    await _UsuarioManager.DeleteAsync(applicationUser);
-                    return response;
-                }
-
-                /*if (roles.Any(x => x.NormalizedName.Equals(Constants.Role.Proveedor)))
-                {
-                    var proveedor = _mapper?.Map<Entity.Proveedor>(request.CreateDto);
-                    if (proveedor != null)
-                    {
-                        proveedor.IdProveedor = applicationUser.Id;
-
-                        try
-                        {
-                            await _ProveedorRepository.AddAsync(proveedor);
-                            await _ProveedorRepository.SaveAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            response.AddErrorResult($"Error al crear proveedor: {ex.Message}");
-                            await _UsuarioManager.DeleteAsync(applicationUser);
-                            return response;
-                        }
-                    }
-                }*/
+            _applicationUserRepository.UpdateAuditTrails(applicationUser);
+            if (request.CreateDto.Password != null) {
+                result = await _UsuarioManager.CreateAsync(applicationUser, request.CreateDto.Password);
+            }else{
+                result = await _UsuarioManager.CreateAsync(applicationUser);
             }
 
+            if (!result.Succeeded)
+            {
+                result.Errors.ToList().ForEach(e =>
+                {
+                    response.AddErrorResult($"{e.Code}: {e.Description}");
+                });
+
+                return response;
+            }
+
+            var rols = await _RolRepository.FindByAsNoTrackingAsync(x => x.Activo);
+
+            var roleIds = request.CreateDto.RoleIds ?? new List<Guid>();
+            var roles = rols.Where(x => roleIds.Contains(x.Id));
+
+            if (roles.Any())
+            {
+                var addRolesResult = await _UsuarioManager.AddToRolesAsync(applicationUser, roles.Select(x => x.NormalizedName));
+                if (!addRolesResult.Succeeded)
+                    addRolesResult.Errors.ToList().ForEach(e => { response.AddErrorResult($"{e.Code}: {e.Description}"); });
+            }
+            if (request.CreateDto.Host != null && request.CreateDto.Password == null) {
+                try
+                {
+                    await _mediator!.Send(new ForgotPasswordCommand(request.CreateDto.Email!, request.CreateDto.Host), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    response.AddWarningResult("Error al enviar Email de forgot password");
+                }
+            }
+            
             var UsuarioDto = _mapper?.Map<GetUsuarioDto>(applicationUser);
             if (UsuarioDto != null) response.UpdateData(UsuarioDto);
 
@@ -121,29 +102,5 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             return await Task.FromResult(response);
         }
 
-        /*public async Task SendCreationEmail(CreateUsuarioCommand request)
-        {
-            var sendMail = _configuration.GetValue<bool>("SignInOptions:SendMailOnSignUp");
-            if (sendMail)
-            {
-                var application = _configuration.GetValue<string>("ApiOptions:Name");
-                var frontUrlLogo = _configuration.GetValue<string>("SecurityOptions:FrontUrlLogo");
-
-                var emailDto = new SendEmailDto
-                {
-                    EmailCode = Constants.Email.User.Registration,
-                    ToEmails = new List<string> { request.CreateDto?.Email ?? string.Empty },
-                    BodyParams = new Dictionary<string, string>
-                    {
-                        { "{APPLICATION}", application },
-                        { "{LOGO}", frontUrlLogo },
-                        { "{USER}", request.CreateDto?.UserName! },
-                        { "{PASSWORD}", request.CreateDto?.Password! }
-                    }
-                };
-
-                await _mediator!.Send(new SendEmailCommand(emailDto));
-            }
-        }*/
     }
 }

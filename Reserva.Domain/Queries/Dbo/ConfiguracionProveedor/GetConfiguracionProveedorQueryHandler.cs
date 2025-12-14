@@ -22,7 +22,7 @@ namespace Reserva.Domain.Queries.Dbo.ConfiguracionProveedor
         protected override async Task<ResponseDto<GetConfiguracionProveedorDto>> HandleQuery(GetConfiguracionProveedorQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetConfiguracionProveedorDto>();
-            var ConfiguracionProveedor = await _ConfiguracionProveedorRepository.GetByAsync(x => x.IdConfiguracionProveedor == request.Id);
+            var ConfiguracionProveedor = await _ConfiguracionProveedorRepository.GetByAsync(x => x.IdProveedor == request.Id);
             var ConfiguracionProveedorDto = _mapper?.Map<GetConfiguracionProveedorDto>(ConfiguracionProveedor);
 
             if (ConfiguracionProveedor != null && ConfiguracionProveedorDto != null)

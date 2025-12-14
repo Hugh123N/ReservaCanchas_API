@@ -9,7 +9,6 @@ namespace Reserva.Dto.Dbo.Usuario
         public string? FirstName { get; set; } = null!;
         public string? LastName { get; set; } = null!;
         public string? Imagen { get; set; }
-        public bool Activo { get; set; }
         public IEnumerable<Guid> RoleIds { get; set; } = null!;
     }
 }

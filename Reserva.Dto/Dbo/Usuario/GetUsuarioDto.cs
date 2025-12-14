@@ -5,6 +5,5 @@ namespace Reserva.Dto.Dbo.Usuario
         public Guid Id { get; set; }
         public int? IdEstadoUsuario { get; set; }
         public IEnumerable<Guid> RoleIds { get; set; } = Array.Empty<Guid>();
-        public bool Activo { get; set; }
     }
 }

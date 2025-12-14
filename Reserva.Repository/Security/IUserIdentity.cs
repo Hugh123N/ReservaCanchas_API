@@ -10,6 +10,7 @@ namespace Reserva.Repository.Security
         string GetCurrentUser();
         string GetUserName();
         string GetUserRole();
-        int? GetCurrentUserId();
+        Guid? GetCurrentUserId();
+        int? GetCurrentUserIdNegocio();
     }
 }

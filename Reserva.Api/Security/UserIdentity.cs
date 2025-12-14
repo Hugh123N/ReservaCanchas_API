@@ -29,10 +29,16 @@ namespace Reserva.Api.Security
         public string GetCurrentUser()
             => GetUserNameClaim() ?? Constants.Security.User.Admin;
 
-        public int? GetCurrentUserId()
+        public Guid? GetCurrentUserId()
+        {
+            var parsed = Guid.TryParse(GetCurrentUserClaims().FirstOrDefault(x => x.Type == "UserId")?.Value, out Guid userGuid);
+            return parsed ? userGuid : null;
+        }
+
+        public int? GetCurrentUserIdNegocio()
         {
             var userId = default(int?);
-            var userIdClaim = GetCurrentUserClaims().FirstOrDefault(x => x.Type == "UserId")?.Value;
+            var userIdClaim = GetCurrentUserClaims().FirstOrDefault(x => x.Type == "UserIdNegocio")?.Value;
             if (userIdClaim != null) userId = int.Parse(userIdClaim);
             return userId;
         }

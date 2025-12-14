@@ -17,6 +17,13 @@ namespace Reserva.Common
             public const string Cliente = "CLIENTE";
             public const string Operador = "OPERADOR";
         }
+        public struct RoleIds
+        {
+            public const string Admin = "1873C70C-ABD0-F011-A1DD-58FB84C3C26E";
+            public const string Proveedor = "1973C70C-ABD0-F011-A1DD-58FB84C3C26E";
+            public const string Cliente = "1B73C70C-ABD0-F011-A1DD-58FB84C3C26E";
+            public const string Operador = "1A73C70C-ABD0-F011-A1DD-58FB84C3C26E";
+        }
         public struct ESTADO_PROVEEDOR
         {
             public const string Pendiente = "01";

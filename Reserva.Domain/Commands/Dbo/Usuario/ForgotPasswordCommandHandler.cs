@@ -57,14 +57,11 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             var tokenCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             var email = WebUtility.UrlDecode(user.Email);
 
-            // Construcción de enlace al frontend
             var frontUrl = _configuration.GetValue<string>("SecurityOptions:FrontUrl") ?? "";
             frontUrl = frontUrl.Replace("{host}", request.Host);
 
-            //var callbackUrl = $"{frontUrl}/#/user/reset-password?email={request.Email}&token={token}";
-            var callbackUrl = $"{frontUrl}/#/user/reset-password?email={email}&token={tokenCode}";
+            var callbackUrl = $"{frontUrl}/auth/reset-password?email={email}&token={tokenCode}";
 
-            // Enviar correo
             try
             {
                 await SendResetPasswordEmail(user, callbackUrl);
@@ -82,10 +79,11 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
         private async Task SendResetPasswordEmail(ApplicationUser user, string callbackUrl)
         {
             var logo = _configuration.GetValue<string>("SecurityOptions:FrontUrlLogo") ?? "";
+            var nombreCompleto = $"{user.FirstName} {user.LastName}";
 
             var emailDto = new SendEmailDto
             {
-                EmailCode = $"Hola {user.UserName}, restablece tu contraseña",
+                EmailCode = $"Hola {nombreCompleto}, restablece tu contraseña",
                 ToEmails = new List<string> { user.Email! },
                 BodyParams = new Dictionary<string, string>
                 {
@@ -95,7 +93,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                                 <div style='text-align: center; margin-bottom: 20px;'>
                                     <img src='{logo}' alt='Logo' style='max-height: 60px;' />
                                 </div>
-                                <h2 style='color: #333;'>Hola {user.UserName},</h2>
+                                <h2 style='color: #333;'>Hola {nombreCompleto},</h2>
                                 <p style='color: #555; font-size: 16px;'>Recibimos una solicitud para restablecer tu contraseña.</p>
                                 <p style='color: #555; font-size: 16px;'>Haz clic en el siguiente botón para continuar:</p>
                                 <div style='text-align: center; margin: 30px 0;'>

@@ -199,9 +199,9 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     .FirstOrDefaultAsync();
 
                 if(!operadores.Any())
-                    operadores = new List<Operador>
+                    operadores = new List<Entity.Operador>
                     {
-                        new Operador
+                        new Entity.Operador
                         {
                             IdUsuarioNavigation = cancha.IdProveedorNavigation.IdUsuarioNavigation,
                         }
