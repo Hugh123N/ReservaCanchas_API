@@ -20,10 +20,15 @@ namespace Reserva.Dto.Dbo.Reserva
         public string DireccionCancha { get; set; } = null!;
         public string? TelefonoCancha { get; set; }
 
+        // Información del cliente
+        public string? NombreCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+
         // Horarios reservados
         public List<HorarioReservadoDto> Horarios { get; set; } = new();
 
         // Información del pago
+        public string? CodigoEstadoPago { get; set; }
         public string EstadoPago { get; set; } = null!;
         public decimal MontoAdelanto { get; set; }
         public decimal MontoPendiente { get; set; }
