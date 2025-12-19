@@ -5,11 +5,13 @@ using Reserva.Application.Abstractions.Dbo;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Domain.Commands.Dbo.ImagenCancha;
 using Reserva.Dto.Dbo.ImagenCancha;
+using Reserva.Api.Security;
 
 namespace Reserva.Api.Controllers.Dbo
 {
     [ApiController]
     [Route("api/Cancha")]
+    [Security.Authorize]
     public class CanchaController : ICanchaApplication
     {
         private readonly ICanchaApplication _CanchaApplication;

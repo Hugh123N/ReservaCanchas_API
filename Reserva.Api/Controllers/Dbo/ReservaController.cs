@@ -30,7 +30,7 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<IEnumerable<ListReservaDto>>> List(int id)
             => await _ReservaApplication.List(id);
         [HttpPost("search")]
-        public async Task<ResponseDto<SearchResultDto<SearchReservaDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
+        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
             => await _ReservaApplication.Search(searchParams);
         [HttpGet("selectcombo")]
         public async Task<ResponseDto<IEnumerable<SelectComboReservaDto>>> SelectCombo()

@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Token;
 using Reserva.Dto.Base;
@@ -17,7 +18,8 @@ namespace Reserva.Domain.Commands.User
         private readonly IConfiguration _configuration;
         private readonly UserManager<Entity.ApplicationUser> _userManager;
         private readonly SignInManager<Entity.ApplicationUser> _signInManager;
-        
+        private readonly IRepository<Entity.Operador> _OperadorRepository;
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
 
         public LoginCommandHandler(
             IUnitOfWork unitOfWork,
@@ -26,12 +28,16 @@ namespace Reserva.Domain.Commands.User
             LoginCommandValidator validator,
             IConfiguration configuration,
             UserManager<Entity.ApplicationUser> userManager,
-            SignInManager<Entity.ApplicationUser> signInManager
+            SignInManager<Entity.ApplicationUser> signInManager,
+            IRepository<Entity.Operador> OperadorRepository,
+            IRepository<Entity.Proveedor> ProveedorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _configuration = configuration;
             _signInManager = signInManager;
             _userManager = userManager;
+            _OperadorRepository = OperadorRepository;
+            _ProveedorRepository = ProveedorRepository;
         }
 
 
@@ -57,7 +63,33 @@ namespace Reserva.Domain.Commands.User
                 return response;
             }
 
-            var accessToken = await _mediator.Send(new GenerateTokenCommand(request.LoginDto.ApplicationCode, user), cancellationToken)!;
+            int? idUsuarioNegocio = null;
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
+            {
+                var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
+                    p => p.IdUsuario == user.Id && p.Activo
+                );
+
+                if (proveedor != null)
+                {
+                    idUsuarioNegocio = proveedor.IdProveedor;
+                }
+            }
+            else if (roles.Any(r => r.Equals(Constants.Role.Operador, StringComparison.OrdinalIgnoreCase)))
+            {
+                var operador = await _OperadorRepository.GetByAsNoTrackingAsync(
+                    o => o.IdUsuario == user.Id && o.Activo
+                );
+
+                if (operador != null)
+                {
+                    idUsuarioNegocio = operador.IdOperador;
+                }
+            }
+
+            var accessToken = await _mediator.Send(new GenerateTokenCommand(request.LoginDto.ApplicationCode, user, idUsuarioNegocio), cancellationToken)!;
 
             if (accessToken?.Data == null)
             {

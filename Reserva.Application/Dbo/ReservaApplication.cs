@@ -25,7 +25,7 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new GetReservaQuery(id));
         public async Task<ResponseDto<IEnumerable<ListReservaDto>>> List(int id)
             => await _mediator.Send(new ListReservaQuery(id));
-        public async Task<ResponseDto<SearchResultDto<SearchReservaDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
+        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
             => await _mediator.Send(new SearchReservaQuery(searchParams));
         public async Task<ResponseDto<IEnumerable<SelectComboReservaDto>>> SelectCombo()
             => await _mediator.Send(new SelectComboReservaQuery());

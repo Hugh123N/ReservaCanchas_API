@@ -8,6 +8,7 @@ using Reserva.Entity;
 using Reserva.Repository.Data;
 using Reserva.Repository.Extensions;
 using Reserva.Repository.Security;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -17,6 +18,14 @@ var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim(
 
 builder.Services.AddDbContext<ReservaCanchasContext>(options =>
     options.UseSqlServer(connectionString));
+
+//Sentry
+//builder.WebHost.UseSentry(o =>
+//{
+//    o.Dsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? configuration.GetValue<string>("Sentry:Dsn");
+//    o.Debug = true; // Opcional: útil en desarrollo
+//    o.TracesSampleRate = 1.0; // Captura 100% del rendimiento, ajusta en producción
+//});
 
 // Cors
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
@@ -77,7 +86,30 @@ if (app.Environment.IsDevelopment())
 // Cors
 app.UseCors("CorsPolicy");
 
+// Authentication
+app.UseAuthentication();
+
+// Authorization
 app.UseAuthorization();
+
+//Sentry
+//app.Use(async (context, next) =>
+//{
+//    var user = context.User;
+
+//    if (user?.Identity?.IsAuthenticated == true)
+//    {
+//        SentrySdk.ConfigureScope(scope =>
+//        {
+//            scope.SetTag("Modulo", "Reclutamiento");
+//            scope.SetTag("usuario", user.FindFirst("DisplayName")?.Value);
+//            scope.SetTag("Connection", context.Connection.RemoteIpAddress?.ToString());
+//            scope.SetTag("Empresa", "RunaIT");
+//        });
+//    }
+
+//    await next();
+//});
 
 app.MapControllers();
 

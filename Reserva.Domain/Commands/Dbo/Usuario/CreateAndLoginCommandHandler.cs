@@ -92,13 +92,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 }
 
                 if (request.CreateDto.TipoUser != null && request.CreateDto.TipoUser.Equals("Proveedor")) {
-                    var normalizedRoleNames = new List<string>
-                    {
-                        Constants.Role.Proveedor.ToUpper(),
-                        Constants.Role.Operador.ToUpper()
-                    };
-
-                    var addRoleResult = await _UserManager.AddToRolesAsync(nuevoUsuario, normalizedRoleNames);
+                    var addRoleResult = await _UserManager.AddToRoleAsync(nuevoUsuario, Constants.Role.Proveedor);
                 }
             }
             else
@@ -123,7 +117,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             int? idUsuarioNegocio = null;
             var roles = await _UserManager.GetRolesAsync(nuevoUsuario);
 
-            if (roles.Contains(Constants.Role.Proveedor))
+            if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
                 var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
                     p => p.IdUsuario == nuevoUsuario.Id && p.Activo
@@ -134,7 +128,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                     idUsuarioNegocio = proveedor.IdProveedor;
                 }
             }
-            else if (roles.Contains(Constants.Role.Operador))
+            else if (roles.Any(r => r.Equals(Constants.Role.Operador, StringComparison.OrdinalIgnoreCase)))
             {
                 var operador = await _OperadorRepository.GetByAsNoTrackingAsync(
                     o => o.IdUsuario == nuevoUsuario.Id && o.Activo

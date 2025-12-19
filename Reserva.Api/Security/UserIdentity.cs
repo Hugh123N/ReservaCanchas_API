@@ -38,7 +38,8 @@ namespace Reserva.Api.Security
         public int? GetCurrentUserIdNegocio()
         {
             var userId = default(int?);
-            var userIdClaim = GetCurrentUserClaims().FirstOrDefault(x => x.Type == "UserIdNegocio")?.Value;
+            var userIdClai = GetCurrentUserClaims();
+            var userIdClaim = userIdClai.FirstOrDefault(x => x.Type == "UserIdNegocio")?.Value;
             if (userIdClaim != null) userId = int.Parse(userIdClaim);
             return userId;
         }

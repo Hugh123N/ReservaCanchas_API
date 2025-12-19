@@ -29,6 +29,10 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 
             var idProveedor = _userIdentity.GetCurrentUserIdNegocio() ?? 1;
 
+            var token = _userIdentity.GetCurrentToken();
+
+            var user = _userIdentity.GetUserName();
+
             var list = await _repository.FindByAsNoTrackingAsync(x => x.Activo && x.IdProveedor == idProveedor);
             var listDtos = _mapper?.Map<IEnumerable<SelectComboCanchaDto>>(list);
 
