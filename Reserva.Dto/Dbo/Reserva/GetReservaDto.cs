@@ -7,6 +7,7 @@ namespace Reserva.Dto.Dbo.Reserva
     {
         public int IdReserva { get; set; }
         public bool Activo { get; set; }
+        public string? CodigoReserva { get; set; }
 
         // Lista de horarios reservados
         public List<HorarioReservadoDto> Horarios { get; set; } = new();
@@ -29,7 +30,7 @@ namespace Reserva.Dto.Dbo.Reserva
         public string CodigoEstadoPago { get; set; } = null!;
 
         // Operador que confirmó (si existe)
-        public string? NombreOperador { get; set; }
+        public string? NombreOperadorConfirmo { get; set; }
 
         // Tipo de Deporte
         public string? NombreDeporte { get; set; }

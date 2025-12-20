@@ -66,7 +66,6 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 .OrderBy(h => h.HoraInicio)
                 .ToList();
 
-            // Obtener información del pago activo con su estado
             var pagoActivo = await _pagoRepository.GetByAsNoTrackingAsync(
                 p => p.IdReserva == reserva.IdReserva && p.Activo,
                 p => p.IdEstadoPagoNavigation!
@@ -111,7 +110,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 CodigoEstadoPago = pagoActivo?.IdEstadoPagoNavigation?.Codigo ?? string.Empty,
 
                 // Operador que confirmó (si existe)
-                NombreOperador = reserva.IdOperadorConfirmoNavigation?.IdUsuarioNavigation.FirstName + reserva.IdOperadorConfirmoNavigation?.IdUsuarioNavigation.LastName,
+                NombreOperadorConfirmo = reserva.IdOperadorConfirmoNavigation?.IdUsuarioNavigation.FirstName + reserva.IdOperadorConfirmoNavigation?.IdUsuarioNavigation.LastName,
 
                 // Tipo de Deporte
                 NombreDeporte = reserva.IdTipoDeporteNavigation?.Nombre,
