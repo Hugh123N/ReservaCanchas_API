@@ -77,11 +77,13 @@ namespace Reserva.Api.Security
                     options.SaveToken = true;
                     options.TokenValidationParameters = new TokenValidationParameters()
                     {
-                        ValidateIssuer = true, // validar apk, si queremos utilizar la url donde se encunetra almacenado para que pueda ingresar otro app externa 
+                        ValidateIssuer = true, // validar apk, si queremos utilizar la url donde se encunetra almacenado para que pueda ingresar otro app externa
                         ValidateAudience = true, // validar quienes pueden acceder a este app esta vinculado con ValidateIssuer
                         ValidAudience = validAudience,
                         ValidIssuer = validIssuer,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey!))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey!)),
+                        ValidateLifetime = true, // Validar que el token no haya expirado
+                        ClockSkew = TimeSpan.Zero // Eliminar los 5 minutos de tolerancia por defecto
                     };
                 });
             #endregion

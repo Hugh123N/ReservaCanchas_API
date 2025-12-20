@@ -40,7 +40,7 @@ namespace Reserva.Domain.Commands.Token
         {
             var usuario = request.Usuario;
 
-            var now = DateTime.UtcNow;
+            var now = DateTimeOffset.UtcNow;
             var issuer = _configuration["SecurityOptions:Issuer"];
             var audience = _configuration["SecurityOptions:Audience"];
             var expiration = _configuration.GetValue<int>("SecurityOptions:ExpirationInSeconds");
@@ -54,11 +54,11 @@ namespace Reserva.Domain.Commands.Token
             {
                 new Claim(JwtRegisteredClaimNames.Sub, usuario.Email ?? usuario.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, now.ToString(), ClaimValueTypes.String),
+                new Claim(JwtRegisteredClaimNames.Iat, now.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                 new Claim(JwtRegisteredClaimNames.Email, usuario.Email ?? ""),
                 new Claim("UserId", usuario.Id.ToString()),
                 new Claim("UserIdNegocio", request.idUsuarioNegocio?.ToString() ?? ""),
-                new Claim("DisplayName", $"{usuario.UserName} {usuario.LastName}" ?? ""),
+                new Claim("DisplayName", $"{usuario.FirstName} {usuario.LastName}" ?? ""),
                 new Claim("UserName", usuario.UserName ?? ""),
                 new Claim("Telefono", usuario.PhoneNumber ?? "")
             };
@@ -72,8 +72,8 @@ namespace Reserva.Domain.Commands.Token
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                notBefore: now,
-                expires: now.AddSeconds(expiration),
+                notBefore: now.UtcDateTime,
+                expires: now.AddSeconds(expiration).UtcDateTime,
                 signingCredentials: signingCredentials
             );
 

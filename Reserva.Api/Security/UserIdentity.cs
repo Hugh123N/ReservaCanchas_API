@@ -24,7 +24,7 @@ namespace Reserva.Api.Security
             => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "DisplayName")?.Value!;
 
         public string GetUserRole()
-            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value!;
+            => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "Roles")?.Value!;
 
         public string GetCurrentUser()
             => GetUserNameClaim() ?? Constants.Security.User.Admin;
@@ -38,8 +38,7 @@ namespace Reserva.Api.Security
         public int? GetCurrentUserIdNegocio()
         {
             var userId = default(int?);
-            var userIdClai = GetCurrentUserClaims();
-            var userIdClaim = userIdClai.FirstOrDefault(x => x.Type == "UserIdNegocio")?.Value;
+            var userIdClaim = GetCurrentUserClaims().FirstOrDefault(x => x.Type == "UserIdNegocio")?.Value;
             if (userIdClaim != null) userId = int.Parse(userIdClaim);
             return userId;
         }
