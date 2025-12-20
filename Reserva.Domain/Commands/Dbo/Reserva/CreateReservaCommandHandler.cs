@@ -67,22 +67,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 c => c.IdProveedorNavigation!.IdUsuarioNavigation,
                 c => c.OperadorCancha);
 
-
-            if (cancha == null)
-            {
-                response.AddErrorResult("La cancha seleccionada no existe.");
-                return response;
-            }
-
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 
-            if (metodoPago!.Codigo != Constants.METODO_PAGO.Efectivo)
-            {
-                response.AddErrorResult($"Solo se acepta pago en efectivo. El método '{metodoPago.Nombre}' no está disponible para reservas.");
-                return response;
-            }
-
-            //Validar disponibilidad de horario
             var reservasDelDia = await _ReservaRepository.FindByAsNoTrackingAsync(
                 r => r.IdCancha == request.CreateDto.IdCancha
                      && r.FechaReserva.Date == request.CreateDto.FechaReserva.Date
