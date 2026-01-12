@@ -11,7 +11,7 @@ namespace Reserva.Api.Controllers.Dbo
 {
     [ApiController]
     [Route("api/Cancha")]
-    //[Security.Authorize]
+    [Security.Authorize]
     public class CanchaController : ICanchaApplication
     {
         private readonly ICanchaApplication _CanchaApplication;

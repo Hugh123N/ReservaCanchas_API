@@ -48,23 +48,16 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             }
 
             // Obtener detalles de la reserva con horarios
-            var detalles = await _detalleReservaRepository.FindByAsNoTrackingAsync(
+            var detallesResult = await _detalleReservaRepository.FindByAsNoTrackingAsync(
                 d => d.IdReserva == reserva.IdReserva && d.Activo,
                 d => d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!,
                 d => d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!
             );
 
-            // Mapear horarios
-            var horarios = detalles
-                .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
-                            && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
-                .Select(d => new HorarioReservadoDto
-                {
-                    HoraInicio = d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1,
-                    HoraFin = d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1
-                })
-                .OrderBy(h => h.HoraInicio)
-                .ToList();
+            var detalles = detallesResult.ToList();
+
+            // Agrupar horarios en bloques consecutivos
+            var horarios = AgruparHorariosConsecutivos(detalles);
 
             var pagoActivo = await _pagoRepository.GetByAsNoTrackingAsync(
                 p => p.IdReserva == reserva.IdReserva && p.Activo,
@@ -124,6 +117,89 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             response.AddOkResult("Reserva obtenida exitosamente.");
 
             return response;
+        }
+
+        /// <summary>
+        /// Agrupa los horarios de una reserva en bloques consecutivos
+        /// Ejemplo: [09:00-09:30, 09:30-10:00, 10:00-10:30, 14:00-14:30, 14:30-15:00]
+        /// Resultado: [09:00-10:30 (1.5h), 14:00-15:00 (1h)]
+        /// </summary>
+        private List<HorarioReservadoDto> AgruparHorariosConsecutivos(List<Entity.DetalleReserva> detalles)
+        {
+            var horariosAgrupados = new List<HorarioReservadoDto>();
+
+            if (!detalles.Any())
+            {
+                return horariosAgrupados;
+            }
+
+            // Ordenar por hora de inicio
+            var detallesOrdenados = detalles
+                .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
+                            && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
+                .OrderBy(d => d.IdHorarioCanchaNavigation!.IdHoraInicio)
+                .ToList();
+
+            if (!detallesOrdenados.Any())
+            {
+                return horariosAgrupados;
+            }
+
+            // Iniciar el primer bloque
+            var bloqueActual = detallesOrdenados.First();
+            var horaInicioBloque = bloqueActual.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+            var horaFinBloque = bloqueActual.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+
+            for (int i = 1; i < detallesOrdenados.Count; i++)
+            {
+                var detalleActual = detallesOrdenados[i];
+                var detalleAnterior = detallesOrdenados[i - 1];
+
+                // Verificar si son consecutivos
+                var idHoraFinAnterior = detalleAnterior.IdHorarioCanchaNavigation!.IdHoraFin;
+                var idHoraInicioActual = detalleActual.IdHorarioCanchaNavigation!.IdHoraInicio;
+
+                if (idHoraFinAnterior == idHoraInicioActual)
+                {
+                    // Extender el bloque actual
+                    horaFinBloque = detalleActual.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                }
+                else
+                {
+                    // Guardar el bloque actual y comenzar uno nuevo
+                    horariosAgrupados.Add(new HorarioReservadoDto
+                    {
+                        HoraInicio = horaInicioBloque,
+                        HoraFin = horaFinBloque,
+                        HorarioFormateado = FormatearRangoHorario(horaInicioBloque, horaFinBloque)
+                    });
+
+                    // Iniciar nuevo bloque
+                    horaInicioBloque = detalleActual.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+                    horaFinBloque = detalleActual.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                }
+            }
+
+            // Agregar el último bloque
+            horariosAgrupados.Add(new HorarioReservadoDto
+            {
+                HoraInicio = horaInicioBloque,
+                HoraFin = horaFinBloque,
+                HorarioFormateado = FormatearRangoHorario(horaInicioBloque, horaFinBloque)
+            });
+
+            return horariosAgrupados;
+        }
+
+        /// <summary>
+        /// Formatea un rango de horarios con la duración
+        /// Ejemplo: "09:00 - 10:30 (1.5 horas)"
+        /// </summary>
+        private string FormatearRangoHorario(TimeOnly horaInicio, TimeOnly horaFin)
+        {
+            var duracion = (horaFin - horaInicio).TotalHours;
+            var duracionTexto = duracion == 1 ? "1 hora" : $"{duracion:0.#} horas";
+            return $"{horaInicio:HH\\:mm} - {horaFin:HH\\:mm} ({duracionTexto})";
         }
     }
 }

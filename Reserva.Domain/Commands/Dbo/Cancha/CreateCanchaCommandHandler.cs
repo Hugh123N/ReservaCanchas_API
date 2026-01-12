@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Services;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
@@ -32,6 +33,15 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
         {
             var response = new ResponseDto<GetCanchaDto>();
             var estadoCancha = await _EstadoCanchaRepository.GetByAsNoTrackingAsync(x => x.Codigo!.Equals(Constants.ESTADO_CANCHA.Pendiente));
+
+            // Expandir horarios: 1 hora → 2 bloques de 30 minutos
+            if (request.CreateDto.HorarioCanchas != null && request.CreateDto.HorarioCanchas.Any())
+            {
+                var horarioCanchaService = new HorarioCanchaService();
+                request.CreateDto.HorarioCanchas = horarioCanchaService.ExpandirHorariosCreate(
+                    request.CreateDto.HorarioCanchas
+                );
+            }
 
             var Cancha = _mapper?.Map<Entity.Cancha>(request.CreateDto);
             Cancha!.IdEstadoCancha = estadoCancha!.IdEstadoCancha;

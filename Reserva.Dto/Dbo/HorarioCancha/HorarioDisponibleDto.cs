@@ -4,9 +4,10 @@ namespace Reserva.Dto.Dbo.HorarioCancha;
 
 public class HorarioDisponibleDto
 {
-    public TimeOnly Hora { get; set; }
+    public int IdHorarioCancha { get; set; }
+    public TimeOnly HoraInicio { get; set; }
 
-    public string HoraTexto { get; set; } = null!;
+    public string HoraInicioTexto { get; set; } = null!;
 
     public decimal Precio { get; set; }
 }

@@ -1,6 +1,7 @@
 using AutoMapper;
 using Reclutamiento.Domain.Extensions;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Services;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Repository.Abstractions.Base;
@@ -37,8 +38,14 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 x => x.TipoDeporteCancha,
                 x => x.ServicioCancha);
 
-            if (request.UpdateDto.HorarioCanchas != null)
+            if (request.UpdateDto.HorarioCanchas != null && request.UpdateDto.HorarioCanchas.Any())
             {
+                // Expandir horarios: 1 hora → 2 bloques de 30 minutos
+                var horarioCanchaService = new HorarioCanchaService();
+                request.UpdateDto.HorarioCanchas = horarioCanchaService.ExpandirHorariosUpdate(
+                    request.UpdateDto.HorarioCanchas
+                );
+
                 Cancha.HorarioCancha.ActualizarColeccion(
                    request.UpdateDto.HorarioCanchas,
                    e => e.IdHorarioCancha,

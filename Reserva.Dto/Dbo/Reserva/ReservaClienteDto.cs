@@ -50,6 +50,6 @@ namespace Reserva.Dto.Dbo.Reserva
     {
         public TimeOnly HoraInicio { get; set; }
         public TimeOnly HoraFin { get; set; }
-        public string HorarioFormateado => $"{HoraInicio:hh\\:mm} - {HoraFin:hh\\:mm}";
+        public string? HorarioFormateado { get; set; }
     }
 }

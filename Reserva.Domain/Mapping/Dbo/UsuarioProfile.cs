@@ -1,5 +1,6 @@
 using AutoMapper;
 using Reserva.Dto.Dbo.Usuario;
+using Reserva.Entity;
 
 namespace Reserva.Domain.Mapping.Usuario
 {
@@ -29,6 +30,9 @@ namespace Reserva.Domain.Mapping.Usuario
             CreateMap<Entity.ApplicationUser, ListUsuarioDto>().ReverseMap();
             CreateMap<Entity.ApplicationUser, SearchUsuarioDto>().ReverseMap();
             CreateMap<Entity.ApplicationUser, CreateUsuarioProveedorDto>().ReverseMap();
+
+            CreateMap<Entity.AspNetUsers, ApplicationUser>()
+                .ReverseMap();
         }
     }
 }

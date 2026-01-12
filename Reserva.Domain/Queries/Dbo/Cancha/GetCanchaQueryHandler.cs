@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Reserva.Domain.Queries.Base;
 using Reserva.Domain.Queries.Dbo.HorarioCancha;
+using Reserva.Domain.Services;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Dto.Dbo.HorarioCancha;
@@ -74,7 +75,11 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 x => x.IdDiaSemanaNavigation,
                 x => x.IdHoraInicioNavigation
             );
-            CanchaDto.HorariosCancha = _mapper?.Map<List<GetHorarioCanchaDto>>(horariosCancha);
+
+            var horarioCanchaService = new HorarioCanchaService();
+            var horariosComprimidos = horarioCanchaService.ComprimirHorarios(horariosCancha.ToList());
+
+            CanchaDto.HorariosCancha = _mapper?.Map<List<GetHorarioCanchaDto>>(horariosComprimidos);
 
             var proveedor = await _ProveedorRepository.GetByAsync(p => p.IdProveedor == Cancha.IdProveedor,
                 x => x.ConfiguracionProveedor);

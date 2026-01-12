@@ -67,8 +67,9 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
 
                 var horarioDto = new HorarioDisponibleDto
                 {
-                    Hora = horario.IdHoraInicioNavigation.Hora1,
-                    HoraTexto = horario.IdHoraInicioNavigation.HoraTexto,
+                    IdHorarioCancha = horario.IdHorarioCancha,
+                    HoraInicio = horario.IdHoraInicioNavigation.Hora1,
+                    HoraInicioTexto = horario.IdHoraInicioNavigation.HoraTexto,
                     Precio = horario.PrecioHora
                 };
 
@@ -81,11 +82,11 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
             {
                 var horaActual = TimeOnly.FromDateTime(ahora.ToLocalTime().DateTime);
                 listaHorarios = listaHorarios
-                    .Where(h => h.Hora > horaActual)
+                    .Where(h => h.HoraInicio > horaActual)
                     .ToList();
             }
 
-            response.Data = listaHorarios.OrderBy(h => h.Hora).ToList();
+            response.Data = listaHorarios.OrderBy(h => h.HoraInicio).ToList();
 
             return response;
         }
