@@ -16,8 +16,10 @@ var configuration = builder.Configuration;
 //conexion a base de datos desde secretos de usuario
 var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim() ?? configuration["ConexionString"];
 
+//builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<ReservaCanchasContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseMySql(connectionString,
+        ServerVersion.AutoDetect(connectionString)));
 
 //Sentry
 //builder.WebHost.UseSentry(o =>

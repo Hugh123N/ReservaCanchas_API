@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Reserva.Entity;
 using Reserva.Repository.Security;
@@ -13,7 +14,9 @@ namespace Reserva.Api.Security
         {
             #region SecurityDbContext
             var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION") ??  configuration["ConexionString"];
-            services.AddSqlServer<SecurityDbContext>(connectionString, b => b.MigrationsAssembly("Reserva.Api"));
+            //services.AddSqlServer<SecurityDbContext>(connectionString, b => b.MigrationsAssembly("Reserva.Api"));
+            services.AddDbContext<SecurityDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), 
+                b => b.MigrationsAssembly("Reserva.Api")));
             #endregion
 
             #region IdentityOptions
