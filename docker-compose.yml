@@ -14,7 +14,7 @@ services:
       DOTNET_VERSION: 8.0
       ASPNET_VERSION: 8.0
       LOGGING__CONSOLE__FORMATTERNAME: Json
-      CN_CONECTION: "Server=canchas-bd-1aowzx;Port=3306;Database=ReservaCanchas;User=root;Password=Basamea1;"
+      CN_CONECTION: "Server=canchas-bd-1aowzx;Port=3306;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;"
       TZ: America/Lima
       DOTNET_gcServer: "0"
       DOTNET_GCHeapCount: "c"
