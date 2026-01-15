@@ -18,11 +18,13 @@ var isProduction = false; //builder.Environment.IsProduction() || !string.IsNull
 
 var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim() ?? configuration["ConexionString"];
 
+Console.WriteLine($"Connection String: {connectionString}");
+
 // Configurar ReservaCanchasContext
 if (isProduction)
     builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(connectionString));
 else
-    builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 7))));
 
 //Sentry
 //builder.WebHost.UseSentry(o =>
