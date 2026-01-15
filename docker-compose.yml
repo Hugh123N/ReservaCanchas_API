@@ -5,20 +5,9 @@ services:
     restart: always
     environment:
       ASPNETCORE_URLS: http://+:80
-      DOTNET_USE_POLLING_FILE_WATCHER: 1
-      NUGET_PACKAGES: c:\.nuget\fallbackpackages2
-      NUGET_FALLBACK_PACKAGES: c:\.nuget\fallbackpackages;c:\.nuget\fallbackpackages2
-      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_RUNNING_IN_CONTAINER: "true"
-      DOTNET_VERSION: 8.0
-      ASPNET_VERSION: 8.0
-      LOGGING__CONSOLE__FORMATTERNAME: Json
-      CN_CONECTION: "Server=38.242.128.50;Port=33060;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;ConnectionTimeout=30;"
       TZ: America/Lima
-      DOTNET_gcServer: "0"
-      DOTNET_GCHeapCount: "c"
-      DOTNET_gcConcurrent: "1"
     ports:
       - 80:80
     build:
