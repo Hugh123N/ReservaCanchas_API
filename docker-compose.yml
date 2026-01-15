@@ -3,8 +3,10 @@ services:
     image: reserva-service
     container_name: reserva-service
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      ASPNETCORE_URLS: http://+:80
+      ASPNETCORE_URLS: http://+:8080
       DOTNET_USE_POLLING_FILE_WATCHER: 1
       NUGET_PACKAGES: c:\.nuget\fallbackpackages2
       NUGET_FALLBACK_PACKAGES: c:\.nuget\fallbackpackages;c:\.nuget\fallbackpackages2
@@ -14,23 +16,23 @@ services:
       DOTNET_VERSION: 8.0
       ASPNET_VERSION: 8.0
       LOGGING__CONSOLE__FORMATTERNAME: Json
-      CN_CONECTION: "Server=canchas-bd-1aowzx;Port=3306;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;"
+      CN_CONECTION: "Server=host.docker.internal;Port=33060;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;ConnectionTimeout=30;"
       TZ: America/Lima
       DOTNET_gcServer: "0"
       DOTNET_GCHeapCount: "c"
       DOTNET_gcConcurrent: "1"
     ports:
-      - 9090:80
+      - 9090:8080
     build:
       context: ./
       dockerfile: Dockerfile
     volumes: 
       - reserva-service-log:/Logs
     networks:
-      - reserva-red
+      - dokploy-network
 networks:
-    reserva-red:
-      name: reserva-red
+    dokploy-network:
+      external: true
 volumes:
     reserva-service-log:
         name: reserva-service-log
