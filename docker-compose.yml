@@ -26,11 +26,6 @@ services:
       dockerfile: Dockerfile
     volumes: 
       - reserva-service-log:/Logs
-    networks:
-      - dokploy-network
-networks:
-    dokploy-network:
-      external: true
 volumes:
     reserva-service-log:
         name: reserva-service-log
