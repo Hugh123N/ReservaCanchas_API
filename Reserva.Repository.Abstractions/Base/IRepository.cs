@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Reserva.Entity.Base;
+using System.Data;
 using System.Linq.Expressions;
 
 namespace Reserva.Repository.Abstractions.Base
@@ -37,6 +38,6 @@ namespace Reserva.Repository.Abstractions.Base
         Task<int> SaveAsync();
         void UpdateAuditTrails(TEntity entity, bool creation = true);
         //EJECUCION DE STORED PROCEDURES
-        Task<T?> ExecuteScalarSPAsync<T>(string spName, params SqlParameter[] parameters);
+        Task<T?> ExecuteScalarSPAsync<T>(string spName, params IDbDataParameter[] parameters);
     }
 }

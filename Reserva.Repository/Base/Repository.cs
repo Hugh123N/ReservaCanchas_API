@@ -240,8 +240,9 @@ namespace Reserva.Repository.Base
 
         public void UpdateAuditTrails(TEntity entity, bool creation = true)
             => UpdateAuditTrailsDetails(entity, new List<Type>(), creation);
+
         //Para ejecutar stored procedures que retornan un valor escalar
-        public async Task<T?> ExecuteScalarSPAsync<T>(string spName, params SqlParameter[] parameters)
+        public async Task<T?> ExecuteScalarSPAsync<T>(string spName, params IDbDataParameter[] parameters)
         {
             var connection = _dbContext.Database.GetDbConnection();
             await using var command = connection.CreateCommand();

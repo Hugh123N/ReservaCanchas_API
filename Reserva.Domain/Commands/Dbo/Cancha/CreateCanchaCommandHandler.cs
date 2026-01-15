@@ -15,6 +15,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
     {
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.EstadoCancha> _EstadoCanchaRepository;
+        private readonly IDbParameterFactory _parameterFactory;
 
         public CreateCanchaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -22,11 +23,13 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             IMediator mediator,
             CreateCanchaCommandValidator validator,
             IRepository<Entity.Cancha> CanchaRepository,
-            IRepository<Entity.EstadoCancha> EstadoCanchaRepository
+            IRepository<Entity.EstadoCancha> EstadoCanchaRepository,
+            IDbParameterFactory parameterFactory
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _CanchaRepository = CanchaRepository;
             _EstadoCanchaRepository = EstadoCanchaRepository;
+            _parameterFactory = parameterFactory;
         }
 
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(CreateCanchaCommand request, CancellationToken cancellationToken)
@@ -85,7 +88,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
 
         private async Task<string> GenerarCodigoCancha(int idProveedor)
         {
-            var param = new SqlParameter("@idProveedor", idProveedor);
+            var param = _parameterFactory.CreateParameter("@idProveedor", idProveedor);
             var codigo = await _CanchaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoCancha", param);
             if (!string.IsNullOrWhiteSpace(codigo))
                 return codigo;

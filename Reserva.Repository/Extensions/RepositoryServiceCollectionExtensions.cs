@@ -20,11 +20,24 @@ namespace Reserva.Repository.Extensions
             string connectionString,
             string urlAuditService,
             string mainProjectAssemblyName,
+            bool isProduction,
             Assembly customRepositoryAssembly = null!,
             TimeZoneInfo timeZoneInfo = null!
         )
         {
-            services.AddSqlServer<ReservaCanchasContext>(connectionString, b => b.MigrationsAssembly(mainProjectAssemblyName));
+            // Configurar DbContext según el ambiente
+            if (isProduction)
+                services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(connectionString,
+                        b => b.MigrationsAssembly(mainProjectAssemblyName)));
+            else
+                services.AddDbContext<ReservaCanchasContext>(options => options.UseMySql(connectionString,
+                        ServerVersion.AutoDetect(connectionString), b => b.MigrationsAssembly(mainProjectAssemblyName)));
+
+            // Registrar factory de parámetros según el ambiente
+            if (isProduction)
+                services.AddScoped<IDbParameterFactory, SqlServerParameterFactory>();
+            else
+                services.AddScoped<IDbParameterFactory, MySqlParameterFactory>();
 
             services.AddScoped<DbContext, ReservaCanchasContext>();
             services.AddScoped<IUnitOfWork, UnitOfWork<DbContext>>();

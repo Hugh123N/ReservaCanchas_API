@@ -14,12 +14,15 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 //conexion a base de datos desde secretos de usuario
+var isProduction = false; //builder.Environment.IsProduction() || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CN_CONECTION"));
+
 var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim() ?? configuration["ConexionString"];
 
-//builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddDbContext<ReservaCanchasContext>(options =>
-    options.UseMySql(connectionString,
-        ServerVersion.AutoDetect(connectionString)));
+// Configurar ReservaCanchasContext
+if (isProduction)
+    builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(connectionString));
+else
+    builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 //Sentry
 //builder.WebHost.UseSentry(o =>
@@ -46,7 +49,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.UseRepositories(
     connectionString,
     configuration["AuditOptions:ApiUrl"]!,
-    typeof(Program).Assembly.GetName().Name!
+    typeof(Program).Assembly.GetName().Name!,
+    isProduction
  );
 
 // Domain Services
@@ -59,7 +63,7 @@ builder.Services.AddSingleton<Reserva.Domain.Services.Storage.IStorageService, R
 
 // Security
 builder.Services.AddHttpContextAccessor();
-builder.Services.UseSecurity(configuration);
+builder.Services.UseSecurity(configuration, isProduction);
 // Application Services
 builder.Services.UseApplicationServices();
 // Add services to the container.

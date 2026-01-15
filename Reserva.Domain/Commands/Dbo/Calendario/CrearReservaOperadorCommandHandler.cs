@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Base;
@@ -349,27 +350,32 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
         private async Task<string> GenerarCodigoReserva()
         {
-            try
+            var codigo = await _reservaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoReserva");
+
+            if (!string.IsNullOrWhiteSpace(codigo))
+                return codigo;
+
+            var año = DateTime.Now.Year;
+
+            var ultimoCodigoReserva = await _reservaRepository.FindAll().
+                Where(r => r.CodigoReserva != null && r.CodigoReserva.StartsWith($"RES-{año}-"))
+                .OrderByDescending(r => r.CodigoReserva)
+                .Select(r => r.CodigoReserva)
+                .FirstOrDefaultAsync();
+
+            int siguienteNumero = 1;
+
+            if (!string.IsNullOrEmpty(ultimoCodigoReserva))
             {
-                var codigoParam = new SqlParameter
+                var partes = ultimoCodigoReserva.Split('-');
+                if (partes.Length == 3 && int.TryParse(partes[2], out int numero))
                 {
-                    ParameterName = "@Codigo",
-                    SqlDbType = System.Data.SqlDbType.VarChar,
-                    Size = 50,
-                    Direction = System.Data.ParameterDirection.Output
-                };
-
-                await _reservaRepository.ExecuteScalarSPAsync<string>(
-                    "sp_GenerarCodigoReserva",
-                    codigoParam);
-
-                return codigoParam.Value?.ToString() ?? $"RES-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+                    siguienteNumero = numero + 1;
+                }
             }
-            catch
-            {
-                // Si el SP no existe, generar código manualmente
-                return $"RES-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
-            }
+
+            return $"RES-{año}-{siguienteNumero:D4}";
+            
         }
     }
 }

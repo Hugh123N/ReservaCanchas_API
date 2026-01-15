@@ -10,13 +10,17 @@ namespace Reserva.Api.Security
 {
     public static class SecurityServiceCollectionExtensions
     {
-        public static IServiceCollection UseSecurity(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection UseSecurity(this IServiceCollection services, IConfiguration configuration, bool isProduction)
         {
             #region SecurityDbContext
             var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION") ??  configuration["ConexionString"];
-            //services.AddSqlServer<SecurityDbContext>(connectionString, b => b.MigrationsAssembly("Reserva.Api"));
-            services.AddDbContext<SecurityDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), 
-                b => b.MigrationsAssembly("Reserva.Api")));
+
+            if (isProduction)
+                services.AddDbContext<SecurityDbContext>(options => options.UseSqlServer(connectionString,
+                        b => b.MigrationsAssembly("Reserva.Api")));
+            else
+                services.AddDbContext<SecurityDbContext>(options => options.UseMySql(connectionString,
+                        ServerVersion.AutoDetect(connectionString), b => b.MigrationsAssembly("Reserva.Api")));
             #endregion
 
             #region IdentityOptions
