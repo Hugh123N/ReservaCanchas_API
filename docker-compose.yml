@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       ASPNETCORE_URLS: http://+:80
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: "Production"
       DOTNET_RUNNING_IN_CONTAINER: "true"
       TZ: America/Lima
     ports:
@@ -15,6 +15,12 @@ services:
       dockerfile: Dockerfile
     volumes: 
       - reserva-service-log:/Logs
+    networks:
+      - dokploy-network
+networks:
+  dokploy-network:
+    external: true
+
 volumes:
     reserva-service-log:
         name: reserva-service-log
