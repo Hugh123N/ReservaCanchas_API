@@ -3,8 +3,6 @@ services:
     image: reserva-service
     container_name: reserva-service
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     environment:
       ASPNETCORE_URLS: http://+:8080
       DOTNET_USE_POLLING_FILE_WATCHER: 1
@@ -16,7 +14,7 @@ services:
       DOTNET_VERSION: 8.0
       ASPNET_VERSION: 8.0
       LOGGING__CONSOLE__FORMATTERNAME: Json
-      CN_CONECTION: "Server=host.docker.internal;Port=3306;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;ConnectionTimeout=30;"
+      CN_CONECTION: "Server=38.242.128.50;Port=33060;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;ConnectionTimeout=30;"
       TZ: America/Lima
       DOTNET_gcServer: "0"
       DOTNET_GCHeapCount: "c"
