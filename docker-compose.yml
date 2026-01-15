@@ -4,7 +4,7 @@ services:
     container_name: reserva-service
     restart: always
     environment:
-      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_URLS: http://+:9090
       DOTNET_USE_POLLING_FILE_WATCHER: 1
       NUGET_PACKAGES: c:\.nuget\fallbackpackages2
       NUGET_FALLBACK_PACKAGES: c:\.nuget\fallbackpackages;c:\.nuget\fallbackpackages2
@@ -20,7 +20,7 @@ services:
       DOTNET_GCHeapCount: "c"
       DOTNET_gcConcurrent: "1"
     ports:
-      - 8080:8080
+      - 9090:9090
     build:
       context: ./
       dockerfile: Dockerfile
