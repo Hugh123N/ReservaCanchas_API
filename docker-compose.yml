@@ -6,6 +6,7 @@ services:
       ASPNETCORE_URLS: "http://+:80"
       ASPNETCORE_ENVIRONMENT: "Development"
       DOTNET_RUNNING_IN_CONTAINER: "true"
+      CN_CONECTION: "Server=canchas-bd-1aowzx;Port=3306;Database=ReservaCanchas;User=root;Password=Basamea1;AllowPublicKeyRetrieval=True;SslMode=None;ConnectionTimeout=30;"
       TZ: "America/Lima"
     expose:
       - "80"
