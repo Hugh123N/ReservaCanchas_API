@@ -1,6 +1,7 @@
 services:
   reserva-service:
     image: reserva-service
+    container_name: hugo-backend-kgf5uh
     restart: always
     environment:
       ASPNETCORE_URLS: "http://+:80"
