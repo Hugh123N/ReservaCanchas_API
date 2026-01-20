@@ -46,7 +46,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     // Obtener todos los HorarioCancha en el rango
                     var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
                         hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
-                           && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin
+                           && hc.IdHorarioCancha < bloque.IdHorarioCanchaFin
                            && hc.IdCancha == request.IdCancha
                            && hc.IdDiaSemana == diaSemana
                            && hc.Activo,

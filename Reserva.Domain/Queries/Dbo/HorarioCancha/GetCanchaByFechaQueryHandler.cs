@@ -38,7 +38,8 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
 
             var horariosDisponibles = await _HorarioCanchaRepository.FindByAsNoTrackingAsync(
                 x => x.IdCancha == request.CanchaId && x.IdDiaSemanaNavigation.Nombre.Contains(diaSemana) && x.Activo,
-                x => x.IdHoraInicioNavigation
+                x => x.IdHoraInicioNavigation,
+                x => x.IdHoraFinNavigation
             );
 
             if (horariosDisponibles == null || !horariosDisponibles.Any())
@@ -70,6 +71,8 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
                     IdHorarioCancha = horario.IdHorarioCancha,
                     HoraInicio = horario.IdHoraInicioNavigation.Hora1,
                     HoraInicioTexto = horario.IdHoraInicioNavigation.HoraTexto,
+                    HoraFin = horario.IdHoraFinNavigation?.Hora1 ?? default,
+                    HoraFinTexto = horario.IdHoraFinNavigation?.HoraTexto ?? "",
                     Precio = horario.PrecioHora
                 };
 

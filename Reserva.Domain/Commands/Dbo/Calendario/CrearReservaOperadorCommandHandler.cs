@@ -223,9 +223,10 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 if (diaSemana == 0) diaSemana = 7;
 
                 // Obtener todos los HorarioCancha en el rango
+                // IdHorarioCanchaFin es EXCLUSIVO (representa el límite superior, no se incluye)
                 var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
                     hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
-                       && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin
+                       && hc.IdHorarioCancha < bloque.IdHorarioCanchaFin
                        && hc.IdCancha == idCancha
                        && hc.IdDiaSemana == diaSemana
                        && hc.Activo,
@@ -275,7 +276,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 // Obtener todos los HorarioCancha en el rango
                 var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
                     hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
-                       && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin
+                       && hc.IdHorarioCancha < bloque.IdHorarioCanchaFin
                        && hc.IdCancha == idCancha
                        && hc.IdDiaSemana == diaSemana
                        && hc.Activo);
