@@ -9,17 +9,11 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
     public class GetDisponibilidadSemanalQueryValidator : QueryValidatorBase<GetDisponibilidadSemanalQuery>
     {
         private readonly IRepository<Entity.Cancha> _canchaRepository;
-        private readonly IRepository<Entity.Proveedor> _proveedorRepository;
-        private readonly IRepository<Entity.OperadorCancha> _operadorCanchaRepository;
 
         public GetDisponibilidadSemanalQueryValidator(
-            IRepository<Entity.Cancha> canchaRepository,
-            IRepository<Entity.Proveedor> proveedorRepository,
-            IRepository<Entity.OperadorCancha> operadorCanchaRepository)
+            IRepository<Entity.Cancha> canchaRepository)
         {
             _canchaRepository = canchaRepository;
-            _proveedorRepository = proveedorRepository;
-            _operadorCanchaRepository = operadorCanchaRepository;
 
             // IdCancha debe ser mayor a 0
             RuleFor(x => x.IdCancha)

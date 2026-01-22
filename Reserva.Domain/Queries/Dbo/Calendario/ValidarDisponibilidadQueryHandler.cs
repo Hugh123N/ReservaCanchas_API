@@ -8,9 +8,6 @@ using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Queries.Dbo.Calendario
 {
-    /// <summary>
-    /// Handler para validar la disponibilidad de horarios
-    /// </summary>
     public class ValidarDisponibilidadQueryHandler : QueryHandlerBase<ValidarDisponibilidadQuery, ValidarDisponibilidadResponseDto>
     {
         private readonly IRepository<Entity.HorarioCancha> _horarioCanchaRepository;
@@ -43,8 +40,6 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     var diaSemana = (int)bloque.Fecha.DayOfWeek;
                     if (diaSemana == 0) diaSemana = 7;
 
-                    // Obtener todos los HorarioCancha en el rango
-                    // IdHorarioCanchaFin es INCLUSIVO (representa el último slot seleccionado)
                     var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
                         hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
                            && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin

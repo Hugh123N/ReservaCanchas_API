@@ -80,7 +80,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                         RuleFor(x => x.RequestDto.Cliente.Telefono)
                             .NotEmpty()
                             .WithMessage("El teléfono del cliente es obligatorio")
-                            .Matches(@"^\+?51?[9]\d{8}$")
+                            .Matches(@"^\d{7,15}$")
                             .WithMessage("El formato del teléfono no es válido")
                             .MustAsync(async (telefono, cancellationToken) =>
                             {

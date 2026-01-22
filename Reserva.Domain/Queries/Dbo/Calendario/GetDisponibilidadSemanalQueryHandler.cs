@@ -48,15 +48,11 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             try
             {
                 var cancha = await _canchaRepository.GetByAsync(c => c.IdCancha == request.IdCancha);
-                
-                // 2. Obtener todos los horarios de la cancha con navegaciones
-                var horariosCancha = await _horarioCanchaRepository
-                    .FindAll()
-                    .Where(hc => hc.IdCancha == request.IdCancha && hc.Activo)
-                    .Include(hc => hc.IdHoraInicioNavigation)
-                    .Include(hc => hc.IdHoraFinNavigation)
-                    .Include(hc => hc.IdDiaSemanaNavigation)
-                    .ToListAsync(cancellationToken);
+
+                var horariosCancha = await _horarioCanchaRepository.FindByAsNoTrackingAsync(hc => hc.IdCancha == request.IdCancha && hc.Activo,
+                    hc => hc.IdHoraInicioNavigation,
+                    hc => hc.IdHoraFinNavigation,
+                    hc => hc.IdDiaSemanaNavigation);
 
                 if (!horariosCancha.Any())
                 {
@@ -64,26 +60,24 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     return response;
                 }
 
-                // 3. Determinar hora mínima y máxima
+                //Determinar hora mínima y máxima
                 var horaMinima = horariosCancha
                     .Min(hc => hc.IdHoraInicioNavigation.HoraTexto);
-                // Obtener la hora fin del último bloque (ahora cada bloque tiene su hora fin real)
                 var ultimoHorario = horariosCancha
                     .OrderByDescending(hc => hc.IdHoraInicioNavigation.HoraTexto)
                     .First();
                 var horaMaxima = ultimoHorario.IdHoraFinNavigation?.HoraTexto
                     ?? TimeOnly.Parse(ultimoHorario.IdHoraInicioNavigation.HoraTexto).AddMinutes(30).ToString();
 
-                // 4. Obtener reservas del rango de fechas (solo estados PENDIENTE='01' y CONFIRMADO='02')
+                //Obtener reservas del rango de fechas (solo estados PENDIENTE='01' y CONFIRMADO='02')
                 var fechaInicioOffset = new DateTimeOffset(request.FechaInicio.Date);
                 var fechaFinOffset = new DateTimeOffset(request.FechaFin.Date.AddDays(1).AddSeconds(-1));
 
-                var reservas = await _reservaRepository
-                    .FindAll()
+                var reservas = await _reservaRepository.FindAll()
                     .Where(r => r.IdCancha == request.IdCancha &&
                                r.FechaReserva >= fechaInicioOffset &&
                                r.FechaReserva <= fechaFinOffset &&
-                               (r.IdEstadoReserva == 1 || r.IdEstadoReserva == 2) && // PENDIENTE o CONFIRMADO
+                               (r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente || r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado) && // PENDIENTE o CONFIRMADO
                                r.Activo)
                     .Include(r => r.IdClienteNavigation)
                     .Include(r => r.IdTipoDeporteNavigation)
@@ -91,37 +85,39 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     .Include(r => r.DetalleReserva)
                     .ToListAsync(cancellationToken);
 
-                // 5. Crear diccionario de reservas por IdHorarioCancha y fecha
+                //Crear diccionario de reservas por IdHorarioCancha y fecha
+                var reservaIds = reservas.Select(r => r.IdReserva).ToList();
+                var detallesReserva = await _detalleReservaRepository.FindByAsNoTrackingAsync(dr => reservaIds.Contains(dr.IdReserva) && dr.Activo && dr.IdHorarioCancha.HasValue);
+                
+                var detallesPorReserva = detallesReserva.GroupBy(d => d.IdReserva).ToDictionary(g => g.Key, g => g.ToList());
+
                 var reservasPorHorarioYFecha = new Dictionary<string, Entity.Reserva>();
+
                 foreach (var reserva in reservas)
                 {
+                    if (!detallesPorReserva.TryGetValue(reserva.IdReserva, out var detalles))
+                        continue;
+
                     var fechaReserva = reserva.FechaReserva.Date;
-                    var detalles = await _detalleReservaRepository
-                        .FindAll()
-                        .Where(dr => dr.IdReserva == reserva.IdReserva && dr.Activo)
-                        .ToListAsync(cancellationToken);
 
                     foreach (var detalle in detalles)
                     {
-                        if (detalle.IdHorarioCancha.HasValue)
+                        var key = $"{detalle.IdHorarioCancha!.Value}_{fechaReserva:yyyy-MM-dd}";
+
+                        if (!reservasPorHorarioYFecha.ContainsKey(key))
                         {
-                            var key = $"{detalle.IdHorarioCancha.Value}_{fechaReserva:yyyy-MM-dd}";
-                            if (!reservasPorHorarioYFecha.ContainsKey(key))
-                            {
-                                reservasPorHorarioYFecha[key] = reserva;
-                            }
+                            reservasPorHorarioYFecha[key] = reserva;
                         }
                     }
                 }
 
-                // 6. Generar disponibilidad para cada día de la semana
+                //Generar disponibilidad para cada día de la semana
                 var diasHorarios = new List<DiaHorarioDto>();
                 var fechaActual = request.FechaInicio.Date;
 
                 while (fechaActual <= request.FechaFin.Date)
                 {
                     var diaSemana = (int)fechaActual.DayOfWeek;
-                    // Ajustar: domingo=0 en .NET, pero en BD puede ser 1-7
                     var idDiaSemana = diaSemana == 0 ? 7 : diaSemana;
 
                     var horariosDelDia = horariosCancha
@@ -135,10 +131,8 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     {
                         var horaInicio = TimeOnly.Parse(horario.IdHoraInicioNavigation.HoraTexto);
                         var horaFin = horario.IdHoraFinNavigation != null
-                            ? TimeOnly.Parse(horario.IdHoraFinNavigation.HoraTexto)
-                            : horaInicio.AddMinutes(30);
+                            ? TimeOnly.Parse(horario.IdHoraFinNavigation.HoraTexto) : horaInicio.AddMinutes(30);
 
-                        // Convertimos a DateTime para poder comparar correctamente
                         var fechaBase = fechaActual.Date;
 
                         var inicio = fechaBase.Add(horaInicio.ToTimeSpan());
@@ -183,7 +177,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     fechaActual = fechaActual.AddDays(1);
                 }
 
-                // 7. Construir respuesta
+                //Construir respuesta
                 var resultado = new DisponibilidadSemanalResponseDto
                 {
                     Cancha = new CanchaDisponibilidadDto
@@ -206,9 +200,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             return await Task.FromResult(response);
         }
 
-        private async Task<ReservaSlotDto> MapearReservaSlot(
-            Entity.Reserva reserva,
-            int idHorarioCanchaActual,
+        private async Task<ReservaSlotDto> MapearReservaSlot(Entity.Reserva reserva,int idHorarioCanchaActual,
             CancellationToken cancellationToken)
         {
             // Obtener todos los detalles de la reserva ordenados por hora
@@ -246,19 +238,13 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             };
         }
 
-        /// <summary>
-        /// Encuentra el bloque de horarios consecutivos al que pertenece un horario específico
-        /// </summary>
-        private (string HoraInicio, string HoraFin, int CantidadBloques) EncontrarBloqueConsecutivo(
-            List<Entity.DetalleReserva> detalles,
-            int idHorarioCanchaActual)
+        private (string HoraInicio, string HoraFin, int CantidadBloques) EncontrarBloqueConsecutivo(List<Entity.DetalleReserva> detalles,int idHorarioCanchaActual)
         {
             if (!detalles.Any())
             {
                 return ("00:00", "00:00", 0);
             }
 
-            // Encontrar el índice del horario actual
             var indiceActual = detalles.FindIndex(d => d.IdHorarioCancha == idHorarioCanchaActual);
 
             if (indiceActual == -1)
