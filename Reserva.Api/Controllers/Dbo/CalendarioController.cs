@@ -10,7 +10,7 @@ namespace Reserva.Api.Controllers.Dbo
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Security.Authorize]
+    [Security.Authorize]
     public class CalendarioController : ControllerBase
     {
         private readonly ICalendarioApplication _calendarioApplication;
