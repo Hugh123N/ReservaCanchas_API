@@ -69,13 +69,12 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         public override async Task<ResponseDto<ReservaOperadorResponseDto>> HandleCommand(CrearReservaOperadorCommand request,CancellationToken cancellationToken)
         {
             var response = new ResponseDto<ReservaOperadorResponseDto>();
-
-            var idUserCurrent = Guid.Parse("08de5559-35e0-4b9d-8883-856a6c5188fa"); //_userIdentity.GetCurrentUserId();
-            /*if (idUserCurrent == null)
+            var idUserCurrent = _userIdentity.GetCurrentUserId();
+            if (idUserCurrent == null)
             {
                 response.AddErrorResult("No se pudo obtener el usuario actual");
                 return response;
-            }   */
+            }   
 
             try
             {
