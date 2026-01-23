@@ -18,6 +18,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
         private readonly IRepository<Entity.HorarioCancha> _horarioCanchaRepository;
         private readonly IRepository<Entity.Reserva> _reservaRepository;
         private readonly IRepository<Entity.DetalleReserva> _detalleReservaRepository;
+        private readonly IRepository<Entity.Pago> _pagoRepository;
         private readonly IRepository<Entity.AspNetUsers> _userRepository;
         private readonly IUserIdentity _userIdentity;
 
@@ -29,6 +30,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             IRepository<Entity.HorarioCancha> horarioCanchaRepository,
             IRepository<Entity.Reserva> reservaRepository,
             IRepository<Entity.DetalleReserva> detalleReservaRepository,
+            IRepository<Entity.Pago> pagoRepository,
             IRepository<Entity.AspNetUsers> userRepository,
             IUserIdentity userIdentity
         ) : base(mapper, mediator, validator)
@@ -37,6 +39,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             _horarioCanchaRepository = horarioCanchaRepository;
             _reservaRepository = reservaRepository;
             _detalleReservaRepository = detalleReservaRepository;
+            _pagoRepository = pagoRepository;
             _userRepository = userRepository;
             _userIdentity = userIdentity;
         }
@@ -214,28 +217,140 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                 .OrderBy(dr => dr.IdHorarioCanchaNavigation!.IdHoraInicio)
                 .ToListAsync(cancellationToken);
 
-            // Encontrar el bloque consecutivo al que pertenece el horario actual
-            var bloqueConsecutivo = EncontrarBloqueConsecutivo(detalles, idHorarioCanchaActual);
+            // Agrupar TODOS los horarios en bloques consecutivos
+            var horariosAgrupados = AgruparTodosLosHorariosConsecutivos(detalles);
+
+            // Obtener pago activo
+            var pagoActivo = await _pagoRepository.GetByAsNoTrackingAsync(
+                p => p.IdReserva == reserva.IdReserva && p.Activo,
+                p => p.IdEstadoPagoNavigation!
+            );
+
+            // Obtener información del operador que confirmó (si existe)
+            string? nombreOperador = null;
+            if (reserva.IdOperadorConfirmoNavigation != null)
+            {
+                nombreOperador = $"{reserva.IdOperadorConfirmoNavigation.IdUsuarioNavigation?.FirstName} {reserva.IdOperadorConfirmoNavigation.IdUsuarioNavigation?.LastName}".Trim();
+            }
+
+            // Obtener información de la cancha
+            var cancha = reserva.IdCanchaNavigation;
 
             return new ReservaSlotDto
             {
                 IdReserva = reserva.IdReserva,
-                CodigoReserva = reserva.CodigoReserva,
+                CodigoReserva = reserva.CodigoReserva ?? string.Empty,
+
+                // Cliente
                 Cliente = new ClienteSlotDto
                 {
                     IdCliente = reserva.IdCliente.ToString(),
-                    Nombre = reserva.IdClienteNavigation.UserName ?? "",
+                    Nombre = $"{reserva.IdClienteNavigation.FirstName} {reserva.IdClienteNavigation.LastName}".Trim(),
                     Telefono = reserva.IdClienteNavigation.PhoneNumber ?? "",
                     Email = reserva.IdClienteNavigation.Email ?? ""
                 },
-                Deporte = reserva.IdTipoDeporteNavigation.Nombre,
-                HoraInicio = bloqueConsecutivo.HoraInicio,
-                HoraFin = bloqueConsecutivo.HoraFin,
-                CantidadHoras = bloqueConsecutivo.CantidadBloques * 0.5m,  // Bloques de 30min
+
+                // Información básica
+                Deporte = reserva.IdTipoDeporteNavigation?.Nombre ?? "",
+                CantidadHoras = detalles.Count * 0.5m,  // Bloques de 30min
                 Monto = reserva.MontoTotal,
                 FechaExpiracion = reserva.FechaExpiracionPreReserva?.DateTime,
-                IdEstadoReserva = reserva.IdEstadoReservaNavigation.Codigo
+
+                // Estados de reserva
+                EstadoReserva = reserva.IdEstadoReservaNavigation?.Nombre ?? "Desconocido",
+                CodigoEstadoReserva = reserva.IdEstadoReservaNavigation?.Codigo ?? "",
+
+                // Estados de pago
+                EstadoPago = pagoActivo?.IdEstadoPagoNavigation?.Nombre ?? "Desconocido",
+                CodigoEstadoPago = pagoActivo?.IdEstadoPagoNavigation?.Codigo ?? "",
+
+                // Información de pago
+                MontoAdelanto = pagoActivo?.MontoAdelanto ?? 0,
+                MontoPendiente = pagoActivo?.MontoPendiente ?? reserva.MontoTotal,
+                NumeroRecibo = pagoActivo?.NumeroReferencia,
+
+                // Información adicional
+                NombreOperadorConfirmo = nombreOperador,
+                Observaciones = reserva.Observaciones,
+
+                // Información de la cancha
+                NombreCancha = cancha?.Nombre ?? "",
+                DireccionCancha = cancha?.Direccion,
+                TelefonoCancha = cancha?.TelefonoCancha,
+
+                // Horarios agrupados en bloques consecutivos
+                Horarios = horariosAgrupados
             };
+        }
+
+        /// <summary>
+        /// Agrupa TODOS los horarios de una reserva en bloques consecutivos
+        /// Devuelve una lista de HorarioDetalleDto para mostrar en el modal
+        /// </summary>
+        private List<HorarioDetalleDto> AgruparTodosLosHorariosConsecutivos(List<Entity.DetalleReserva> detalles)
+        {
+            var horariosAgrupados = new List<HorarioDetalleDto>();
+
+            if (!detalles.Any())
+            {
+                return horariosAgrupados;
+            }
+
+            // Iniciar el primer bloque
+            var bloqueActual = detalles.First();
+            var horaInicioBloque = bloqueActual.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+            var horaFinBloque = bloqueActual.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+
+            for (int i = 1; i < detalles.Count; i++)
+            {
+                var detalleActual = detalles[i];
+                var detalleAnterior = detalles[i - 1];
+
+                // Verificar si son consecutivos
+                var idHoraFinAnterior = detalleAnterior.IdHorarioCanchaNavigation!.IdHoraFin;
+                var idHoraInicioActual = detalleActual.IdHorarioCanchaNavigation!.IdHoraInicio;
+
+                if (idHoraFinAnterior == idHoraInicioActual)
+                {
+                    // Extender el bloque actual
+                    horaFinBloque = detalleActual.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                }
+                else
+                {
+                    // Guardar el bloque actual y comenzar uno nuevo
+                    horariosAgrupados.Add(new HorarioDetalleDto
+                    {
+                        HoraInicio = horaInicioBloque.ToString("HH:mm"),
+                        HoraFin = horaFinBloque.ToString("HH:mm"),
+                        HorarioFormateado = FormatearRangoHorario(horaInicioBloque, horaFinBloque)
+                    });
+
+                    // Iniciar nuevo bloque
+                    horaInicioBloque = detalleActual.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1;
+                    horaFinBloque = detalleActual.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1;
+                }
+            }
+
+            // Agregar el último bloque
+            horariosAgrupados.Add(new HorarioDetalleDto
+            {
+                HoraInicio = horaInicioBloque.ToString("HH:mm"),
+                HoraFin = horaFinBloque.ToString("HH:mm"),
+                HorarioFormateado = FormatearRangoHorario(horaInicioBloque, horaFinBloque)
+            });
+
+            return horariosAgrupados;
+        }
+
+        /// <summary>
+        /// Formatea un rango de horarios con la duración
+        /// Ejemplo: "09:00 - 10:30 (1.5 horas)"
+        /// </summary>
+        private string FormatearRangoHorario(TimeOnly horaInicio, TimeOnly horaFin)
+        {
+            var duracion = (horaFin - horaInicio).TotalHours;
+            var duracionTexto = duracion == 1 ? "1 hora" : $"{duracion:0.#} horas";
+            return $"{horaInicio:HH\\:mm} - {horaFin:HH\\:mm} ({duracionTexto})";
         }
 
         private (string HoraInicio, string HoraFin, int CantidadBloques) EncontrarBloqueConsecutivo(List<Entity.DetalleReserva> detalles,int idHorarioCanchaActual)

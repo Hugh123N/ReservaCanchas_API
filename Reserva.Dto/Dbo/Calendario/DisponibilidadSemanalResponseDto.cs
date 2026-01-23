@@ -53,12 +53,44 @@ namespace Reserva.Dto.Dbo.Calendario
         public string CodigoReserva { get; set; } = string.Empty;
         public ClienteSlotDto Cliente { get; set; } = new();
         public string Deporte { get; set; } = string.Empty;
-        public string HoraInicio { get; set; } = string.Empty;
-        public string HoraFin { get; set; } = string.Empty;
         public decimal CantidadHoras { get; set; }
         public decimal Monto { get; set; }
         public DateTime? FechaExpiracion { get; set; }
-        public string IdEstadoReserva { get; set; } = string.Empty;
+
+        // Estados de reserva
+        public string EstadoReserva { get; set; } = string.Empty;
+        public string CodigoEstadoReserva { get; set; } = string.Empty;
+
+        // Estados de pago
+        public string EstadoPago { get; set; } = string.Empty;
+        public string CodigoEstadoPago { get; set; } = string.Empty;
+
+        // Información de pago
+        public decimal MontoAdelanto { get; set; }
+        public decimal MontoPendiente { get; set; }
+        public string? NumeroRecibo { get; set; }
+
+        // Información adicional
+        public string? NombreOperadorConfirmo { get; set; }
+        public string? Observaciones { get; set; }
+
+        // Información de la cancha
+        public string NombreCancha { get; set; } = string.Empty;
+        public string? DireccionCancha { get; set; }
+        public string? TelefonoCancha { get; set; }
+
+        // Horarios de la reserva (agrupados en bloques consecutivos)
+        public List<HorarioDetalleDto> Horarios { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Detalle de un bloque horario de la reserva
+    /// </summary>
+    public class HorarioDetalleDto
+    {
+        public string HoraInicio { get; set; } = string.Empty;
+        public string HoraFin { get; set; } = string.Empty;
+        public string HorarioFormateado { get; set; } = string.Empty;
     }
 
     /// <summary>
