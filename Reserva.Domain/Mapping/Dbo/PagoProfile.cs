@@ -17,6 +17,7 @@ namespace Reserva.Domain.Mapping.Pago
                 .ReverseMap();
 
             CreateMap<Entity.Pago, GetPagoDto>()
+                .ForMember(dest => dest.EstadoPago, opt => opt.MapFrom(src => src.IdEstadoPagoNavigation))
                 .ReverseMap();
 
             CreateMap<Entity.Pago, ListPagoDto>()

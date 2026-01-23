@@ -85,7 +85,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             }
 
             var cancha = reserva.IdCanchaNavigation;
-            decimal porcentajeMinimoAdelanto = cancha?.IdProveedorNavigation.ConfiguracionProveedor.PorcentajeAdelantoMinimo ?? 50;
+            decimal porcentajeMinimoAdelanto = cancha?.IdProveedorNavigation.ConfiguracionProveedor.PorcentajeAdelantoMinimo ?? 0;
 
             //Procesar adelanto si fue proporcionado
             decimal montoAdelanto = request.ConfirmarDto.MontoAdelanto ?? 0;

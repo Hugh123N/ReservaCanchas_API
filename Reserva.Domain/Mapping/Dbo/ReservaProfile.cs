@@ -17,6 +17,7 @@ namespace Reserva.Domain.Mapping.Reserva
                 .ReverseMap();
 
             CreateMap<Entity.Reserva, GetReservaDto>()
+                .ForMember(dest => dest.EstadoReserva, opt => opt.MapFrom(src => src.IdEstadoReservaNavigation))
                 .ReverseMap();
 
             CreateMap<Entity.Reserva, ListReservaDto>()

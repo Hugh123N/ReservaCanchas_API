@@ -17,6 +17,10 @@ namespace Reserva.Domain.Mapping.DetalleReserva
                 .ReverseMap();
 
             CreateMap<Entity.DetalleReserva, GetDetalleReservaDto>()
+                .ForMember(dest => dest.HoraInicio,
+                    opt => opt.MapFrom(src => src.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1))
+                .ForMember(dest => dest.HoraFin,
+                    opt => opt.MapFrom(src => src.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1))
                 .ReverseMap();
 
             CreateMap<Entity.DetalleReserva, ListDetalleReservaDto>()
