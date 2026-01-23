@@ -24,7 +24,7 @@ namespace Reserva.Dto.Dbo.Reserva
         public DateTimeOffset? FechaModificacion { get; set; }
 
         public List<GetDetalleReservaDto> Horarios { get; set; } = new();
-        public GetPagoDto? Pago { get; set; }
+        public GetPagoDto? PagoReserva { get; set; }
         public GetConfiguracionProveedorDto? ConfiguracionProveedor { get; set; }
         public GetEstadoReservaDto? EstadoReserva { get; set; }
     }

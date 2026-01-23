@@ -90,7 +90,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
             reservaDto.ConfiguracionProveedor = configuracionDto;
             reservaDto.Horarios = horariosDto;
-            reservaDto.Pago = pagoDto;
+            reservaDto.PagoReserva = pagoDto;
 
             response.UpdateData(reservaDto);
             response.AddOkResult("Reserva obtenida exitosamente.");
