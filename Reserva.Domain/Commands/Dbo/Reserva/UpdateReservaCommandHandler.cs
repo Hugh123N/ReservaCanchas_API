@@ -61,33 +61,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                 _mapper?.Map(dto, reserva);
 
-                if (!string.IsNullOrEmpty(dto.CodigoEstadoReserva))
-                {
-                    var estadoReserva = await _estadoReservaRepository.GetByAsNoTrackingAsync(x => x.Codigo == dto.CodigoEstadoReserva && x.Activo);
-
-                    if (estadoReserva == null)
-                    {
-                        response.AddErrorResult($"Estado de reserva '{dto.CodigoEstadoReserva}' no encontrado");
-                        return response;
-                    }
-
-                    reserva.IdEstadoReserva = estadoReserva.IdEstadoReserva;
-                    reserva.MontoTotal = dto.MontoTotal;
-
-                    // Si es CONFIRMADO, actualizar operador y fecha
-                    if (dto.CodigoEstadoReserva == Constants.ESTADO_RESERVA.Confirmado)
-                    {
-                        var idUserCurrent = _userIdentity.GetCurrentUserId();
-                        if (idUserCurrent != null && idUserCurrent != Guid.Empty)
-                        {
-                            var operador = await _operadorRepository.GetByAsync(x => x.IdUsuario == idUserCurrent && x.Activo);
-
-                            reserva.IdOperadorConfirmo = operador?.IdOperador;
-                            reserva.FechaConfirmacion = DateTimeOffset.UtcNow;
-                        }
-                    }
-                }
-
                 if (dto.PagoReserva != null && dto.PagoReserva.Any())
                 {
                     var pagoDto = dto.PagoReserva.First();
@@ -95,7 +68,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                     if (pagoExistente != null)
                     {
-                        await ActualizarPago(pagoExistente, pagoDto, dto.MontoTotal);
+                        await ActualizarPago(pagoExistente, pagoDto, dto.MontoTotal, reserva);
                     }
                 }
 
@@ -114,7 +87,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     await ActualizarDetallesReserva(reserva, dto.IdCancha, dto.Horarios);
                 }
 
-
                 await _reservaRepository.UpdateAsync(reserva);
                 await _reservaRepository.SaveAsync();
 
@@ -132,26 +104,31 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             return await Task.FromResult(response);
         }
 
-        private async Task ActualizarPago(Entity.Pago pago, Dto.Dbo.Pago.UpdatePagoDto pagoDto, decimal montoTotal)
+        private async Task ActualizarPago(Entity.Pago pago, Dto.Dbo.Pago.UpdatePagoDto pagoDto, decimal montoTotal, Entity.Reserva reserva)
         {
             decimal montoPagado = pagoDto.MontoAdelanto;
             decimal montoPendiente = montoTotal - montoPagado;
 
             string codigoEstadoPago;
+            string codigoEstadoReserva;
             if (montoPagado == 0)
             {
                 codigoEstadoPago = Constants.ESTADO_PAGO.Pendiente;
+                codigoEstadoReserva = Constants.ESTADO_RESERVA.Pendiente;
             }
             else if (montoPagado >= montoTotal)
             {
                 codigoEstadoPago = Constants.ESTADO_PAGO.Pagado;
+                codigoEstadoReserva = Constants.ESTADO_RESERVA.Confirmado;
             }
             else
             {
                 codigoEstadoPago = Constants.ESTADO_PAGO.Parcial;
+                codigoEstadoReserva = Constants.ESTADO_RESERVA.Confirmado;
             }
 
-            var estadoPago = await _estadoPagoRepository.GetByAsync(x => x.Codigo == codigoEstadoPago && x.Activo);
+            var estadoPago = await _estadoPagoRepository.GetByAsync(x => x.Codigo.Equals(codigoEstadoPago) && x.Activo);
+            var estadoReserva = await _estadoReservaRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(codigoEstadoReserva) && x.Activo);
 
             pago.Monto = montoTotal;
             pago.MontoAdelanto = montoPagado;
@@ -159,6 +136,21 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             pago.IdEstadoPago = estadoPago?.IdEstadoPago ?? pago.IdEstadoPago;
             pago.CodigoOperacion = pagoDto.CodigoOperacion;
             pago.NumeroReferencia = pagoDto.NumeroReferencia;
+
+            reserva.MontoTotal = montoTotal;
+            reserva.IdEstadoReserva = estadoReserva.IdEstadoReserva;
+
+            if (codigoEstadoReserva.Equals(Constants.ESTADO_RESERVA.Confirmado) && reserva.FechaConfirmacion == null)
+            {
+                var idUserCurrent = _userIdentity.GetCurrentUserId();
+                if (idUserCurrent != null && idUserCurrent != Guid.Empty )
+                {
+                    var operador = await _operadorRepository.GetByAsync(x => x.IdUsuario == idUserCurrent && x.Activo);
+
+                    reserva.IdOperadorConfirmo = operador?.IdOperador;
+                    reserva.FechaConfirmacion = DateTimeOffset.UtcNow;
+                }
+            }
         }
 
         private async Task ActualizarDetallesReserva(Entity.Reserva reserva, int idCancha, List<Dto.Dbo.Calendario.BloqueHorarioDto> bloquesNuevos)

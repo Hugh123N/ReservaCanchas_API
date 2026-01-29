@@ -153,7 +153,6 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
                 await CrearDetallesReserva(reserva.IdReserva, dto.IdCancha, dto.Horarios);
 
-                // 11. Construir respuesta
                 var responseData = new ReservaOperadorResponseDto
                 {
                     IdReserva = reserva.IdReserva,
