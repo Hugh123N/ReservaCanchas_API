@@ -72,6 +72,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     }
 
                     reserva.IdEstadoReserva = estadoReserva.IdEstadoReserva;
+                    reserva.MontoTotal = dto.MontoTotal;
 
                     // Si es CONFIRMADO, actualizar operador y fecha
                     if (dto.CodigoEstadoReserva == Constants.ESTADO_RESERVA.Confirmado)
@@ -113,9 +114,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     await ActualizarDetallesReserva(reserva, dto.IdCancha, dto.Horarios);
                 }
 
-                
 
-                // 6. Guardar cambios
                 await _reservaRepository.UpdateAsync(reserva);
                 await _reservaRepository.SaveAsync();
 
