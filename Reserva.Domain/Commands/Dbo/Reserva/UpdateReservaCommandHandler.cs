@@ -68,7 +68,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                     if (pagoExistente != null)
                     {
-                        await ActualizarPago(pagoExistente, pagoDto, dto.MontoTotal, reserva);
+                        await ActualizarPago(pagoExistente, pagoDto, reserva);
                     }
                 }
 
@@ -104,10 +104,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             return await Task.FromResult(response);
         }
 
-        private async Task ActualizarPago(Entity.Pago pago, Dto.Dbo.Pago.UpdatePagoDto pagoDto, decimal montoTotal, Entity.Reserva reserva)
+        private async Task ActualizarPago(Entity.Pago pago, Dto.Dbo.Pago.UpdatePagoDto pagoDto, Entity.Reserva reserva)
         {
             decimal montoPagado = pagoDto.MontoAdelanto;
-            decimal montoPendiente = montoTotal - montoPagado;
+            decimal montoPendiente = pagoDto.Monto - montoPagado;
 
             string codigoEstadoPago;
             string codigoEstadoReserva;
@@ -116,7 +116,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 codigoEstadoPago = Constants.ESTADO_PAGO.Pendiente;
                 codigoEstadoReserva = Constants.ESTADO_RESERVA.Pendiente;
             }
-            else if (montoPagado >= montoTotal)
+            else if (montoPagado >= pagoDto.Monto)
             {
                 codigoEstadoPago = Constants.ESTADO_PAGO.Pagado;
                 codigoEstadoReserva = Constants.ESTADO_RESERVA.Confirmado;
@@ -130,14 +130,14 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var estadoPago = await _estadoPagoRepository.GetByAsync(x => x.Codigo.Equals(codigoEstadoPago) && x.Activo);
             var estadoReserva = await _estadoReservaRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(codigoEstadoReserva) && x.Activo);
 
-            pago.Monto = montoTotal;
+            pago.Monto = pagoDto.Monto;
             pago.MontoAdelanto = montoPagado;
             pago.MontoPendiente = montoPendiente;
             pago.IdEstadoPago = estadoPago?.IdEstadoPago ?? pago.IdEstadoPago;
             pago.CodigoOperacion = pagoDto.CodigoOperacion;
             pago.NumeroReferencia = pagoDto.NumeroReferencia;
 
-            reserva.MontoTotal = montoTotal;
+            reserva.MontoTotal = pagoDto.Monto;
             reserva.IdEstadoReserva = estadoReserva.IdEstadoReserva;
 
             if (codigoEstadoReserva.Equals(Constants.ESTADO_RESERVA.Confirmado) && reserva.FechaConfirmacion == null)
