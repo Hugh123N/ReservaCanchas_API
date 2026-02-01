@@ -14,5 +14,10 @@ namespace Reserva.Dto.Dbo.Reserva
         /// Motivo de la cancelación/liberación
         /// </summary>
         public string? MotivoLiberacion { get; set; }
+
+        /// <summary>
+        /// Monto del reembolso a procesar
+        /// </summary>
+        public decimal MontoReembolso { get; set; }
     }
 }

@@ -65,9 +65,10 @@ namespace Reserva.Common
         public struct ESTADO_PAGO
         {
             public const string Pagado = "01";
-            public const string Pendiente = "02";
-            public const string Rechazado = "03";
-            public const string Parcial = "04"; // Para adelantos en efectivo
+            public const string Parcial = "02";
+            public const string Pendiente = "03";
+            public const string Cancelado = "04"; // Para reembolsos
+            public const string Rechazado = "05";
         }
 
         public struct METODO_PAGO

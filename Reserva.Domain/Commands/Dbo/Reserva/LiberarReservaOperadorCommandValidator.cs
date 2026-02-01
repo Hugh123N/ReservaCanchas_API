@@ -15,6 +15,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 .MaximumLength(500)
                 .When(x => !string.IsNullOrEmpty(x.LiberarDto.MotivoLiberacion))
                 .WithMessage("El motivo no puede exceder 500 caracteres.");
+
+            RuleFor(x => x.LiberarDto.MontoReembolso)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage("El monto de reembolso no puede ser negativo.");
         }
     }
 }

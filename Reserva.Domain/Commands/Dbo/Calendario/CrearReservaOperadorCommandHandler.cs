@@ -121,10 +121,29 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     idOperador = operador?.IdOperador;
                 }
 
-                // 9. Obtener primera fecha de los horarios
                 var primeraFecha = dto.Horarios.Min(h => h.Fecha);
 
-                // 10. Crear registro de Reserva
+                var primerBloque = dto.Horarios
+                    .Where(h => h.Fecha.Date == primeraFecha.Date)
+                    .OrderBy(h => h.IdHorarioCanchaInicio)
+                    .First();
+
+                // Obtener la hora de inicio del primer horario
+                var primerHorarioCancha = await _horarioCanchaRepository.GetByAsync(
+                    hc => hc.IdHorarioCancha == primerBloque.IdHorarioCanchaInicio && hc.Activo,
+                    hc => hc.IdHoraInicioNavigation);
+
+                if (primerHorarioCancha == null || primerHorarioCancha.IdHoraInicioNavigation == null)
+                {
+                    response.AddErrorResult("No se encontró el horario de inicio");
+                    return response;
+                }
+
+                // Combinar la fecha con la hora del primer horario
+                var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+                var fechaReservaCompleta = new DateTimeOffset(primeraFecha.Year, primeraFecha.Month, primeraFecha.Day,
+                    horaInicio.Hour,horaInicio.Minute,horaInicio.Second, primeraFecha.Offset);
+
                 var pago = await CrearRegistroPago(dto.Pago.MontoTotal, dto.Pago, dto.TipoReserva, idUserCurrent ?? new Guid());
 
                 var reserva = new Entity.Reserva
@@ -133,10 +152,12 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     IdCliente = cliente.Id,
                     IdCancha = dto.IdCancha,
                     IdTipoDeporte = dto.IdTipoDeporte,
-                    FechaReserva = primeraFecha,
+                    FechaReserva = fechaReservaCompleta,
                     MontoTotal = dto.Pago.MontoTotal,
                     IdEstadoReserva = estadoReserva.IdEstadoReserva,
                     Observaciones = dto.Observaciones,
+                    RecordatorioEnviado = false,
+                    NotificacionAdvertenciaEnviada = false,
                     Pago = new List<Entity.Pago> { pago },
                 };
 

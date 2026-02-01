@@ -31,9 +31,10 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 .WithMessage("El email ya está registrado.");
 
             RuleFor(x => x.CreateDto.PhoneNumber)
-                .Matches(@"^\d{9}$").WithMessage("El número debe tener 9 dígitos.")
+                .Matches(@"^\+?\d{8,15}$")
+                .WithMessage("El teléfono debe tener entre 8 y 15 dígitos y puede incluir el prefijo internacional (+).")
                 .MustAsync(async (phone, _) =>
-                    await applicationUserRepository.FindByLoginAsync("PhoneNumber", phone) is null)
+                await applicationUserRepository.FindByLoginAsync("PhoneNumber", phone) is null)
                 .WithMessage("El teléfono ya está registrado.");
 
             RuleFor(x => x.CreateDto.FirstName)

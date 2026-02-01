@@ -85,6 +85,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     }
 
                     await ActualizarDetallesReserva(reserva, dto.IdCancha, dto.Horarios);
+
+                    await ActualizarFechaReservaConPrimerHorario(reserva, dto.FechaReserva);
                 }
 
                 await _reservaRepository.UpdateAsync(reserva);
@@ -253,6 +255,37 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             }
 
             return (true, string.Empty);
+        }
+
+        private async Task ActualizarFechaReservaConPrimerHorario(Entity.Reserva reserva, DateTimeOffset fechaOriginal)
+        {
+            // Obtener todos los detalles activos de la reserva
+            var detallesActivos = reserva.DetalleReserva.Where(d => d.Activo && d.IdHorarioCancha.HasValue).ToList();
+
+            if (!detallesActivos.Any())
+                return;
+
+            // Obtener el primer ID de horario (el más pequeño, que generalmente corresponde a la hora más temprana)
+            var primerIdHorario = detallesActivos.Min(d => d.IdHorarioCancha!.Value);
+
+            // Buscar el horario en la base de datos con su navegación a la hora de inicio
+            var primerHorarioCancha = await _horarioCanchaRepository.GetByAsync(
+                hc => hc.IdHorarioCancha == primerIdHorario && hc.Activo,
+                hc => hc.IdHoraInicioNavigation);
+
+            if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
+            {
+                var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+
+                reserva.FechaReserva = new DateTimeOffset(
+                    fechaOriginal.Year,
+                    fechaOriginal.Month,
+                    fechaOriginal.Day,
+                    horaInicio.Hour,
+                    horaInicio.Minute,
+                    horaInicio.Second,
+                    fechaOriginal.Offset);
+            }
         }
     }
 }

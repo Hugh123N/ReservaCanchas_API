@@ -24,6 +24,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
         private readonly IRepository<Entity.Operador> _OperadorRepository;
         private readonly IRepository<Entity.DetalleReserva> _DetalleReservaRepository;
+        private readonly IRepository<Entity.HorarioCancha> _HorarioCanchaRepository;
         private readonly IConfiguration _configuration;
         private readonly INotificacionService _notificacionService;
 
@@ -40,6 +41,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.MetodoPago> MetodoPagoRepository,
             IRepository<Entity.Operador> OperadorRepository,
             IRepository<Entity.DetalleReserva> DetalleReservaRepository,
+            IRepository<Entity.HorarioCancha> HorarioCanchaRepository,
             IConfiguration configuration,
             INotificacionService notificacionService
         ) : base(unitOfWork, mapper, mediator, validator)
@@ -52,6 +54,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _MetodoPagoRepository = MetodoPagoRepository;
             _OperadorRepository = OperadorRepository;
             _DetalleReservaRepository = DetalleReservaRepository;
+            _HorarioCanchaRepository = HorarioCanchaRepository;
             _configuration = configuration;
             _notificacionService = notificacionService;
         }
@@ -105,6 +108,26 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             {
                 IdHorarioCancha = idHorario
             }).ToList();
+
+            // Obtener el primer horario para combinar la fecha con su hora de inicio
+            if (request.CreateDto.IdsHorarioCancha != null && request.CreateDto.IdsHorarioCancha.Any())
+            {
+                var primerIdHorario = request.CreateDto.IdsHorarioCancha.OrderBy(id => id).First();
+
+                var primerHorarioCancha = await _HorarioCanchaRepository.GetByAsync(
+                    hc => hc.IdHorarioCancha == primerIdHorario && hc.Activo,
+                    hc => hc.IdHoraInicioNavigation);
+
+                if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
+                {
+                    var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+                    var fechaOriginal = request.CreateDto.FechaReserva;
+
+                    // Combinar la fecha con la hora del primer horario
+                    nuevaReserva.FechaReserva = new DateTimeOffset(fechaOriginal.Year, fechaOriginal.Month, fechaOriginal.Day,
+                        horaInicio.Hour, horaInicio.Minute, horaInicio.Second, fechaOriginal.Offset);
+                }
+            }
 
             int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor!.DuracionPreReserva ?? 12;
             nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.Now.AddHours(duracionPreReservaHoras);
