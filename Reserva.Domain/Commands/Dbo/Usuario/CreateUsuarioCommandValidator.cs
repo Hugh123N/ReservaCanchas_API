@@ -45,10 +45,11 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 
         private async Task<bool> CorreoNoExiste(string? email, CancellationToken cancellationToken)
         {
-            if (email.Equals(null))
-                return true;
-            var user = await _userManager.FindByEmailAsync(email);
-            return user == null;
+            if (email != null) { 
+                var user = await _userManager.FindByEmailAsync(email);
+                return user == null;
+            }
+            return true;
         }
 
         private async Task<bool> TelefonoNoExiste(string telefono, CancellationToken cancellationToken)
