@@ -83,6 +83,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 if (!addRolesResult.Succeeded)
                     addRolesResult.Errors.ToList().ForEach(e => { response.AddErrorResult($"{e.Code}: {e.Description}"); });
             }
+
             if (request.CreateDto.Host != null && request.CreateDto.Password == null) {
                 try
                 {

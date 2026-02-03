@@ -1,15 +1,19 @@
 using AutoMapper;
+using Azure;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Commands.Dbo.Usuario;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Calendario;
+using Reserva.Dto.Dbo.Usuario;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Security;
+using System.Threading;
 
 namespace Reserva.Domain.Commands.Dbo.Calendario
 {
@@ -81,7 +85,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             {
                 var dto = request.RequestDto;
 
-                var cliente = await ObtenerOCrearCliente(dto.Cliente);
+                var cliente = await ObtenerOCrearCliente(dto.Cliente, cancellationToken);
                 if (cliente == null)
                 {
                     response.AddErrorResult("No se pudo obtener o crear el cliente");
@@ -200,7 +204,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             return response;
         }
 
-        private async Task<Entity.AspNetUsers?> ObtenerOCrearCliente(ClienteReservaDto clienteDto)
+        private async Task<Entity.AspNetUsers?> ObtenerOCrearCliente(ClienteReservaDto clienteDto, CancellationToken cancellationToken)
         {
             if (clienteDto.IdCliente.HasValue)
             {
@@ -218,30 +222,22 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     ? clienteDto.Email
                     : clienteDto.Telefono;
 
-                var nuevoClienteId = Guid.NewGuid();
-                var nuevoCliente = new Entity.ApplicationUser
+                var createUserDto = new CreateUsuarioDto
                 {
-                    Id = nuevoClienteId,
                     FirstName = firstName,
                     LastName = lastName,
                     PhoneNumber = clienteDto.Telefono,
                     Email = clienteDto.Email,
                     UserName = userName,
-                    EmailConfirmed = false,
                 };
 
-                _applicationUserRepository.UpdateAuditTrails(nuevoCliente);
-
-                var result = await _UserManager.CreateAsync(nuevoCliente);
-
-                if (!result.Succeeded)
+                var resultUser = await _mediator!.Send(new CreateUsuarioCommand(createUserDto), cancellationToken);
+                if (!resultUser.IsValid)
                 {
-                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                    throw new Exception($"Error al crear cliente: {errors}");
+                    throw new Exception($"Error al crear cliente: {resultUser.Messages}");
                 }
 
-                var clienteCreado = await _userRepository.GetByAsync(
-                    x => x.Id == nuevoClienteId && x.Activo);
+                var clienteCreado = await _userRepository.GetByAsync(x => x.Id == resultUser.Data.Id && x.Activo);
 
                 return clienteCreado;
             }
