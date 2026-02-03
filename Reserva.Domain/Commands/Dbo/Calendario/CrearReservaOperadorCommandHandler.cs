@@ -214,23 +214,36 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 var firstName = nombres[0];
                 var lastName = nombres.Length > 1 ? nombres[1] : "";
 
+                var userName = !string.IsNullOrEmpty(clienteDto.Email)
+                    ? clienteDto.Email
+                    : clienteDto.Telefono;
+
+                var nuevoClienteId = Guid.NewGuid();
                 var nuevoCliente = new Entity.ApplicationUser
                 {
-                    Id = Guid.NewGuid(),
+                    Id = nuevoClienteId,
                     FirstName = firstName,
                     LastName = lastName,
                     PhoneNumber = clienteDto.Telefono,
                     Email = clienteDto.Email,
-                    UserName = clienteDto.Email,
+                    UserName = userName,
                     EmailConfirmed = false,
                 };
 
                 _applicationUserRepository.UpdateAuditTrails(nuevoCliente);
-                await _UserManager.CreateAsync(nuevoCliente);
 
-                var cliente = _mapper!.Map<Entity.AspNetUsers>(nuevoCliente);
+                var result = await _UserManager.CreateAsync(nuevoCliente);
 
-                return cliente;
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    throw new Exception($"Error al crear cliente: {errors}");
+                }
+
+                var clienteCreado = await _userRepository.GetByAsync(
+                    x => x.Id == nuevoClienteId && x.Activo);
+
+                return clienteCreado;
             }
 
             return null;
