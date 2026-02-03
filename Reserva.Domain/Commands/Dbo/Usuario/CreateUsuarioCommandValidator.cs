@@ -29,7 +29,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                     .Matches(@"^[\p{L}\s]+$").WithMessage("El apellido solo debe contener letras y espacios.");
 
                 RuleFor(x => x.CreateDto.Email)
-                    .NotEmpty().WithMessage("El correo electronico es obligatorio.")
+                    //.NotEmpty().WithMessage("El correo electronico es obligatorio.")
                     .EmailAddress().WithMessage("El correo electronico no tiene un formato válido.")
                     .MaximumLength(100)
                     .MustAsync(CorreoNoExiste)
@@ -43,8 +43,10 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             });
         }
 
-        private async Task<bool> CorreoNoExiste(string email, CancellationToken cancellationToken)
+        private async Task<bool> CorreoNoExiste(string? email, CancellationToken cancellationToken)
         {
+            if (email.Equals(null))
+                return true;
             var user = await _userManager.FindByEmailAsync(email);
             return user == null;
         }
