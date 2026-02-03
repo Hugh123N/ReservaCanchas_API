@@ -237,7 +237,14 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     throw new Exception($"Error al crear cliente: {resultUser.Messages}");
                 }
 
-                var clienteCreado = await _userRepository.GetByAsync(x => x.Id == resultUser.Data.Id && x.Activo);
+                var clienteCreado = new Entity.AspNetUsers
+                {
+                    Id = resultUser.Data.Id,
+                    FirstName = resultUser.Data.FirstName,
+                    LastName = resultUser.Data.LastName,
+                    PhoneNumber = resultUser.Data.PhoneNumber,
+                    Email = resultUser.Data.Email
+                };
 
                 return clienteCreado;
             }
@@ -253,7 +260,6 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 if (diaSemana == 0) diaSemana = 7;
 
                 // Obtener todos los HorarioCancha en el rango
-                // IdHorarioCanchaFin es INCLUSIVO (representa el último slot seleccionado)
                 var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
                     hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
                        && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin
