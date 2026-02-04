@@ -32,14 +32,25 @@ namespace Reserva.Domain.Services
                 // Dividir el precio entre 2 bloques
                 decimal precioPorBloque = horario.PrecioHora / BLOQUES_POR_HORA;
 
+                // Calcular IdHoraFin con lógica circular (después de 48 viene 1)
+                int idHoraFinBloque1 = horario.IdHoraInicio + 1;
+                int idHoraInicioBloque2 = horario.IdHoraInicio + 1;
+                int idHoraFinBloque2 = horario.IdHoraInicio + 2;
+
+                // Si excede 48, volver a 1 (00:00)
+                if (idHoraFinBloque2 > MAX_ID_HORA)
+                {
+                    idHoraFinBloque2 = 1;
+                }
+
                 // Bloque 1: Hora en punto (ej: 06:00 - 06:30)
                 horariosExpandidos.Add(new CreateHorarioCanchaDto
                 {
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
-                    IdHoraInicio = horario.IdHoraInicio,        
-                    IdHoraFin = horario.IdHoraInicio + 1,       
-                    PrecioHora = precioPorBloque               
+                    IdHoraInicio = horario.IdHoraInicio,
+                    IdHoraFin = idHoraFinBloque1,
+                    PrecioHora = precioPorBloque
                 });
 
                 // Bloque 2: Media hora (ej: 06:30 - 07:00)
@@ -47,9 +58,9 @@ namespace Reserva.Domain.Services
                 {
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
-                    IdHoraInicio = horario.IdHoraInicio + 1,   
-                    IdHoraFin = horario.IdHoraInicio + 2,       
-                    PrecioHora = precioPorBloque                
+                    IdHoraInicio = idHoraInicioBloque2,
+                    IdHoraFin = idHoraFinBloque2,
+                    PrecioHora = precioPorBloque
                 });
             }
 
@@ -78,6 +89,17 @@ namespace Reserva.Domain.Services
 
                 decimal precioPorBloque = horario.PrecioHora / BLOQUES_POR_HORA;
 
+                // Calcular IdHoraFin con lógica circular (después de 48 viene 1)
+                int idHoraFinBloque1 = horario.IdHoraInicio + 1;
+                int idHoraInicioBloque2 = horario.IdHoraInicio + 1;
+                int idHoraFinBloque2 = horario.IdHoraInicio + 2;
+
+                // Si excede 48, volver a 1 (00:00)
+                if (idHoraFinBloque2 > MAX_ID_HORA)
+                {
+                    idHoraFinBloque2 = 1;
+                }
+
                 // Bloque 1: Hora en punto - usa el ID que viene del frontend
                 horariosExpandidos.Add(new UpdateHorarioCanchaDto
                 {
@@ -85,7 +107,7 @@ namespace Reserva.Domain.Services
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
                     IdHoraInicio = horario.IdHoraInicio,
-                    IdHoraFin = horario.IdHoraInicio + 1,
+                    IdHoraFin = idHoraFinBloque1,
                     PrecioHora = precioPorBloque
                 });
 
@@ -93,7 +115,7 @@ namespace Reserva.Domain.Services
                 var segundoBloque = horariosExistentes.FirstOrDefault(h =>
                     h.IdCancha == horario.IdCancha &&
                     h.IdDiaSemana == horario.IdDiaSemana &&
-                    h.IdHoraInicio == horario.IdHoraInicio + 1
+                    h.IdHoraInicio == idHoraInicioBloque2
                 );
 
                 horariosExpandidos.Add(new UpdateHorarioCanchaDto
@@ -101,8 +123,8 @@ namespace Reserva.Domain.Services
                     IdHorarioCancha = segundoBloque?.IdHorarioCancha ?? 0,  // ID encontrado o 0 si es nuevo
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
-                    IdHoraInicio = horario.IdHoraInicio + 1,
-                    IdHoraFin = horario.IdHoraInicio + 2,
+                    IdHoraInicio = idHoraInicioBloque2,
+                    IdHoraFin = idHoraFinBloque2,
                     PrecioHora = precioPorBloque
                 });
             }
