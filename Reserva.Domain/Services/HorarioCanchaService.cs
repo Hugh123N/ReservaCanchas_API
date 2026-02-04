@@ -56,7 +56,9 @@ namespace Reserva.Domain.Services
             return horariosExpandidos;
         }
 
-        public List<UpdateHorarioCanchaDto> ExpandirHorariosUpdate(List<UpdateHorarioCanchaDto> horariosUsuario)
+        public List<UpdateHorarioCanchaDto> ExpandirHorariosUpdate(
+            List<UpdateHorarioCanchaDto> horariosUsuario,
+            ICollection<Entity.HorarioCancha> horariosExistentes)
         {
             if (horariosUsuario == null || !horariosUsuario.Any())
                 return new List<UpdateHorarioCanchaDto>();
@@ -76,9 +78,10 @@ namespace Reserva.Domain.Services
 
                 decimal precioPorBloque = horario.PrecioHora / BLOQUES_POR_HORA;
 
+                // Bloque 1: Hora en punto - usa el ID que viene del frontend
                 horariosExpandidos.Add(new UpdateHorarioCanchaDto
                 {
-                    IdHorarioCancha = 0,                        
+                    IdHorarioCancha = horario.IdHorarioCancha,  // ID del primer bloque
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
                     IdHoraInicio = horario.IdHoraInicio,
@@ -86,9 +89,16 @@ namespace Reserva.Domain.Services
                     PrecioHora = precioPorBloque
                 });
 
+                // Bloque 2: Media hora - buscar en horarios existentes por combinación única
+                var segundoBloque = horariosExistentes.FirstOrDefault(h =>
+                    h.IdCancha == horario.IdCancha &&
+                    h.IdDiaSemana == horario.IdDiaSemana &&
+                    h.IdHoraInicio == horario.IdHoraInicio + 1
+                );
+
                 horariosExpandidos.Add(new UpdateHorarioCanchaDto
                 {
-                    IdHorarioCancha = 0,                        
+                    IdHorarioCancha = segundoBloque?.IdHorarioCancha ?? 0,  // ID encontrado o 0 si es nuevo
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
                     IdHoraInicio = horario.IdHoraInicio + 1,

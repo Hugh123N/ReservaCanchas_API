@@ -41,9 +41,11 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             if (request.UpdateDto.HorarioCanchas != null && request.UpdateDto.HorarioCanchas.Any())
             {
                 // Expandir horarios: 1 hora → 2 bloques de 30 minutos
+                // Pasar horarios existentes para buscar IDs del segundo bloque por combinación única
                 var horarioCanchaService = new HorarioCanchaService();
                 request.UpdateDto.HorarioCanchas = horarioCanchaService.ExpandirHorariosUpdate(
-                    request.UpdateDto.HorarioCanchas
+                    request.UpdateDto.HorarioCanchas,
+                    Cancha.HorarioCancha
                 );
 
                 Cancha.HorarioCancha.ActualizarColeccion(
