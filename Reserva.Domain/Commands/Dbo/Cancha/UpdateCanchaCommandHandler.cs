@@ -34,7 +34,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             var response = new ResponseDto<GetCanchaDto>();
 
             var Cancha = await _CanchaRepository.GetByAsync(x => x.IdCancha == request.UpdateDto.IdCancha,
-                x => x.HorarioCancha.Where(x => x.Activo),
+                x => x.HorarioCancha, 
                 x => x.TipoDeporteCancha,
                 x => x.ServicioCancha);
 
@@ -52,6 +52,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                    d => d.IdHorarioCancha,
                    (dto, entidad) => {
                        _mapper.Map(dto, entidad);
+                       entidad.Activo = true; 
                    },
                    dto => {
                        var nuevo = _mapper.Map<Entity.HorarioCancha>(dto);
