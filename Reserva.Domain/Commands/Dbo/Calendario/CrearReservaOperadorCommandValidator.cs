@@ -129,7 +129,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                         bloque.RuleFor(h => h.IdHorarioCanchaFin)
                             .GreaterThan(0)
                             .WithMessage("El horario de fin es obligatorio")
-                            .Must((bloque, idHorarioCanchaFin) => idHorarioCanchaFin > bloque.IdHorarioCanchaInicio)
+                            .Must((bloque, idHorarioCanchaFin) => idHorarioCanchaFin >= bloque.IdHorarioCanchaInicio)
                             .WithMessage("El horario de fin debe ser mayor que el horario de inicio");
                     });
                 });
