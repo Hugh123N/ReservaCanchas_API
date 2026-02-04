@@ -130,7 +130,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
                 if (detallesPorReserva.TryGetValue(r.IdReserva, out var detallesReserva))
                 {
-                    horarios = detallesReserva
+                    var horariosBase = detallesReserva
                         .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
                                     && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
                         .Select(d => new HorarioReservadoDto
@@ -140,6 +140,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                         })
                         .OrderBy(h => h.HoraInicio)
                         .ToList();
+
+                    horarios = UnirHorariosConsecutivos(horariosBase);
                 }
 
                 Entity.Pago? pagoActivo = null;
@@ -189,6 +191,44 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             response.AddOkResult($"Se encontraron {reservasPaginadas.Total} reservas.");
             
             return response;
+        }
+
+        private static List<HorarioReservadoDto> UnirHorariosConsecutivos(
+    List<HorarioReservadoDto> horarios)
+        {
+            if (!horarios.Any())
+                return horarios;
+
+            var resultado = new List<HorarioReservadoDto>();
+
+            var actual = new HorarioReservadoDto
+            {
+                HoraInicio = horarios[0].HoraInicio,
+                HoraFin = horarios[0].HoraFin
+            };
+
+            for (int i = 1; i < horarios.Count; i++)
+            {
+                var siguiente = horarios[i];
+
+                // ¿Es consecutivo?
+                if (siguiente.HoraInicio == actual.HoraFin)
+                {
+                    actual.HoraFin = siguiente.HoraFin;
+                }
+                else
+                {
+                    resultado.Add(actual);
+                    actual = new HorarioReservadoDto
+                    {
+                        HoraInicio = siguiente.HoraInicio,
+                        HoraFin = siguiente.HoraFin
+                    };
+                }
+            }
+
+            resultado.Add(actual);
+            return resultado;
         }
     }
 }
