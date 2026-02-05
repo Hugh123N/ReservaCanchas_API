@@ -20,6 +20,7 @@ namespace Reserva.Dto.Dbo.Reserva
 
         public string? NombreOperadorConfirmo { get; set; }
         public string? NombreDeporte { get; set; }
+        public string? UserCreateReserva { get; set; }
         public DateTimeOffset FechaCreacion { get; set; }
         public DateTimeOffset? FechaModificacion { get; set; }
 

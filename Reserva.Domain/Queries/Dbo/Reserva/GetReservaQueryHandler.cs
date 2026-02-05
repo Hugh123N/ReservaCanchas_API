@@ -84,7 +84,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 ? reserva.IdOperadorConfirmoNavigation.IdUsuarioNavigation.FirstName + " " + reserva.IdOperadorConfirmoNavigation.IdUsuarioNavigation.LastName
                 : null; // TODO: en caso no tengo operador y solo eata encargado el proveedor deberia pasar el proveedor
 
-            reservaDto.NombreDeporte = reserva.IdTipoDeporteNavigation?.Nombre; //TODO SE PUEDE RESERVAR VARIOS DEPORTES EN UNA SOLO RESERVA
+            reservaDto.NombreDeporte = reserva.IdTipoDeporteNavigation?.Nombre; //TODO: SE PUEDE RESERVAR VARIOS DEPORTES EN UNA SOLO RESERVA
+            reservaDto.UserCreateReserva = reserva.UserNameCreate;
             reservaDto.FechaCreacion = reserva.CreateDate;
             reservaDto.FechaModificacion = reserva.UpdateDate;
 
