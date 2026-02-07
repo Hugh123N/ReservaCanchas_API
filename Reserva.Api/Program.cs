@@ -37,7 +37,7 @@ else
 // Cors
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
 {
-    builder.WithOrigins("https://reserva-canchas-admin-web.vercel.app") //ANTES -> (configuration.GetValue<string>("AllowedHosts")!)
+    builder.WithOrigins("https://reserva-canchas-admin-web.vercel.app", "http://localhost:4200") //ANTES -> (configuration.GetValue<string>("AllowedHosts")!)
            .AllowAnyMethod()
            .AllowAnyHeader();
 }));
