@@ -36,9 +36,12 @@ else
 
 // Cors
 var corsOrigins = configuration.GetSection("Cors:Origins").Get<string[]>();
+if (corsOrigins == null || corsOrigins.Length == 0)
+    throw new InvalidOperationException("La configuración 'Cors:Origins' es requerida y no puede estar vacía.");
+
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
 {
-    builder.WithOrigins(corsOrigins!) //ANTES -> (configuration.GetValue<string>("AllowedHosts")!)
+    builder.WithOrigins(corsOrigins) //ANTES -> (configuration.GetValue<string>("AllowedHosts")!)
            .AllowAnyMethod()
            .AllowAnyHeader()
            .AllowCredentials();
@@ -92,6 +95,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRouting();
 
 // Cors
 app.UseCors("CorsPolicy");
