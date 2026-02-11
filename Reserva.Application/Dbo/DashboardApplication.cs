@@ -13,5 +13,8 @@ namespace Reserva.Application.Dbo
 
         public async Task<ResponseDto<GetDashboardProveedorDto>> GetDashboardProveedor()
             => await _mediator.Send(new GetDashboardProveedorQuery());
+
+        public async Task<ResponseDto<GetDashboardOperadorDto>> GetDashboardOperador()
+            => await _mediator.Send(new GetDashboardOperadorQuery());
     }
 }

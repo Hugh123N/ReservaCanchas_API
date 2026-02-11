@@ -20,5 +20,9 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpGet("proveedor")]
         public async Task<ResponseDto<GetDashboardProveedorDto>> GetDashboardProveedor()
             => await _dashboardApplication.GetDashboardProveedor();
+
+        [HttpGet("operador")]
+        public async Task<ResponseDto<GetDashboardOperadorDto>> GetDashboardOperador()
+            => await _dashboardApplication.GetDashboardOperador();
     }
 }
