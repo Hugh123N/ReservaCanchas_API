@@ -86,14 +86,11 @@ namespace Reserva.Domain.Queries.Dbo.Dashboard
 
             // ─── Reservas pendientes (sin filtro de fecha) ────────────────────────────
             var reservasPendientes = (await _reservaRepository.FindByAsNoTrackingAsync(
-                r => r.Activo &&
-                     idCanchasList.Contains(r.IdCancha) &&
+                r => r.Activo && idCanchasList.Contains(r.IdCancha) &&
                      r.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente,
                 r => r.IdClienteNavigation,
                 r => r.IdEstadoReservaNavigation))
-            .OrderBy(r => r.FechaReserva)
-            .Take(10)
-            .ToList();
+            .OrderBy(r => r.FechaReserva).ToList();
 
             // ─── Detalles de reservas de hoy (para HoraInicio / HoraFin) ─────────────
             var idsReservasHoy = reservasHoyConfirmadas.Select(r => r.IdReserva).ToList();
