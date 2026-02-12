@@ -202,7 +202,7 @@ Actualmente Pago tiene campo `Activo` pero no se usa consistentemente:
 // En vez de eliminar físicamente, marcar como inactivo
 pago.Activo = false;
 pago.UserNameUpdate = currentUser;
-pago.UpdateDate = DateTimeOffset.Now;
+pago.UpdateDate = DateTimeOffset.UtcNow;
 ```
 
 ### 6. **Mejoras de Usuario**

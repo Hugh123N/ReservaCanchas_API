@@ -218,7 +218,7 @@ namespace Reserva.Domain.Queries.Dbo.Dashboard
                 IdReserva         = r.IdReserva,
                 NombreCliente     = $"{r.IdClienteNavigation.FirstName} {r.IdClienteNavigation.LastName}",
                 NombreCancha      = canchasNombreDict.TryGetValue(r.IdCancha, out var nombre) ? nombre : string.Empty,
-                FechaHora         = r.FechaReserva.UtcDateTime.ToString("yyyy-MM-dd HH:mm"),
+                FechaReserva      = r.FechaReserva,
                 Monto             = r.MontoTotal,
                 MinutosParaInicio = Math.Max(0, (int)(r.FechaReserva - now).TotalMinutes)
             }).ToList();

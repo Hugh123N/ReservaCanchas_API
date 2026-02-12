@@ -122,7 +122,7 @@ namespace Reserva.Domain.Services.Notificacion
             try
             {
                 var horasRestantes = reserva.FechaExpiracionPreReserva.HasValue
-                    ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.Now).TotalHours
+                    ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.UtcNow).TotalHours
                     : 0;
 
                 var htmlBody = ConstruirEmailReservaProximaExpirar(reserva, cancha, cliente, horasRestantes);
@@ -238,7 +238,7 @@ namespace Reserva.Domain.Services.Notificacion
         private string ConstruirEmailNuevaReservaPendiente(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, string horariosFormateado)
         {
             var horasRestantes = reserva.FechaExpiracionPreReserva.HasValue
-                ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.Now).TotalHours
+                ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.UtcNow).TotalHours
                 : 0;
 
             return $@"
@@ -641,7 +641,7 @@ namespace Reserva.Domain.Services.Notificacion
         </div>
         <div class='footer'>
             <p>Este es un mensaje automático. Por favor no respondas a este correo.</p>
-            <p>© {DateTimeOffset.Now.Year} Sistema de Reserva de Canchas</p>
+            <p>© {DateTimeOffset.UtcNow.Year} Sistema de Reserva de Canchas</p>
         </div>
     </div>
 </body>

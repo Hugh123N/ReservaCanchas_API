@@ -91,7 +91,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     FechaCreacion = r.CreateDate,
                     FechaExpiracion = r.FechaExpiracionPreReserva,
                     HorasRestantes = r.FechaExpiracionPreReserva.HasValue
-                        ? (r.FechaExpiracionPreReserva.Value - DateTimeOffset.Now).TotalHours
+                        ? (r.FechaExpiracionPreReserva.Value - DateTimeOffset.UtcNow).TotalHours
                         : 0,
                     NombreCancha = r.IdCanchaNavigation.Nombre,
                     IdCliente = r.IdCliente,
@@ -116,7 +116,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             if (!fechaExpiracion.HasValue)
                 return "BAJA";
 
-            var horasRestantes = (fechaExpiracion.Value - DateTimeOffset.Now).TotalHours;
+            var horasRestantes = (fechaExpiracion.Value - DateTimeOffset.UtcNow).TotalHours;
 
             if (horasRestantes < 0)
                 return "EXPIRADA";

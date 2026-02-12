@@ -75,8 +75,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private bool BeValidDate(DateTimeOffset fecha)
         {
             // Obtener la fecha de hoy sin hora
-            var hoy = DateTimeOffset.Now.Date;
-            return fecha >= hoy;
+            var hoy = DateTimeOffset.UtcNow.Date;
+            return fecha.UtcDateTime.Date >= hoy;
         }
     }
 }

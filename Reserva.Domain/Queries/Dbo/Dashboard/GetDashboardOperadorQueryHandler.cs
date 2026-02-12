@@ -127,7 +127,7 @@ namespace Reserva.Domain.Queries.Dbo.Dashboard
                     NombreCliente     = $"{r.IdClienteNavigation.FirstName} {r.IdClienteNavigation.LastName}",
                     TelefonoCliente   = r.IdClienteNavigation.PhoneNumber,
                     NombreCancha      = canchasNombreDict.TryGetValue(r.IdCancha, out var nombre) ? nombre : string.Empty,
-                    FechaHora         = r.FechaReserva.UtcDateTime.ToString("yyyy-MM-dd HH:mm"),
+                    FechaReserva         = r.FechaReserva,
                     Monto             = r.MontoTotal,
                     MinutosParaInicio = minutos,
                     Prioridad         = minutos < 180 ? "Alta" : minutos < 300 ? "Media" : "Baja"

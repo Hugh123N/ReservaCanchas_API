@@ -59,7 +59,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             var operadorRepository = scope.ServiceProvider.GetRequiredService<IRepository<Operador>>();
             var notificacionService = scope.ServiceProvider.GetRequiredService<INotificacionService>();
 
-            var ahora = DateTimeOffset.Now;
+            var ahora = DateTimeOffset.UtcNow;
 
             // Buscar reservas pendientes que hayan expirado
             var reservasExpiradas = await reservaRepository.FindByAsync(
@@ -143,7 +143,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             var operadorRepository = scope.ServiceProvider.GetRequiredService<IRepository<Operador>>();
             var notificacionService = scope.ServiceProvider.GetRequiredService<INotificacionService>();
 
-            var ahora = DateTimeOffset.Now;
+            var ahora = DateTimeOffset.UtcNow;
             var limiteAdvertencia = ahora.Add(_warningThreshold);
 
             // Buscar reservas pendientes que expiran pronto (menos de 6 horas)
@@ -218,7 +218,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             var detalleReservaRepository = scope.ServiceProvider.GetRequiredService<IRepository<DetalleReserva>>();
             var notificacionService = scope.ServiceProvider.GetRequiredService<INotificacionService>();
 
-            var ahora = DateTimeOffset.Now;
+            var ahora = DateTimeOffset.UtcNow;
 
             // Buscar reservas CONFIRMADAS que empiezan en menos de 1 hora
             // y que NO hayan sido notificadas aún (recordatorioEnviado = false)

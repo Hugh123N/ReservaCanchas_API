@@ -66,7 +66,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var cancha = await _CanchaRepository.GetByAsync(
                 c => c.IdCancha == request.CreateDto.IdCancha,
                 c => c.IdProveedorNavigation!,
-                c => c.IdProveedorNavigation!.ConfiguracionProveedor!,
+                c => c.IdProveedorNavigation!.ConfiguracionProveedor ?? new Entity.ConfiguracionProveedor(),
                 c => c.IdProveedorNavigation!.IdUsuarioNavigation,
                 c => c.OperadorCancha);
 
@@ -129,8 +129,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 }
             }
 
-            int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor!.DuracionPreReserva ?? 12;
-            nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.Now.AddHours(duracionPreReservaHoras);
+            int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor!.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
+            nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.UtcNow.AddHours(duracionPreReservaHoras);
             nuevaReserva.CodigoReserva = await GenerarCodigoReserva();
             nuevaReserva.IdEstadoReserva = estadoPendienteReserva!.IdEstadoReserva;
             //nuevaReserva.IdCanchaNavigation = null;

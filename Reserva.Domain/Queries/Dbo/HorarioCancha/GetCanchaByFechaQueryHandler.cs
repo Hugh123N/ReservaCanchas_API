@@ -80,7 +80,7 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
             }
 
             // Si la fecha es HOY, eliminar horas pasadas
-            var ahora = DateTimeOffset.Now;
+            var ahora = DateTimeOffset.UtcNow;
             if (request.Fecha.Date == ahora.Date)
             {
                 var horaActual = TimeOnly.FromDateTime(ahora.ToLocalTime().DateTime);

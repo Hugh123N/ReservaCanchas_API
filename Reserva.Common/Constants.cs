@@ -79,6 +79,10 @@ namespace Reserva.Common
             public const string Yape = "04";
             public const string Plin = "05";
         }
+        public struct DEFECT
+        {
+            public const int PRE_RESERVA = 12;
+        }
 
     }
 }

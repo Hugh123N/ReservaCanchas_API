@@ -71,7 +71,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             }
 
             //Validar que la reserva no haya expirado
-            if (reserva.FechaExpiracionPreReserva.HasValue && reserva.FechaExpiracionPreReserva.Value < DateTimeOffset.Now)
+            if (reserva.FechaExpiracionPreReserva.HasValue && reserva.FechaExpiracionPreReserva.Value < DateTimeOffset.UtcNow)
             {
                 response.AddErrorResult("La reserva ha expirado y no puede ser confirmada.");
                 return response;
