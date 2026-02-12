@@ -100,7 +100,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 }
 
                 var cancha = await _canchaRepository.GetByAsync(x => x.IdCancha == dto.IdCancha && x.Activo,
-                    x => x.IdProveedorNavigation!.ConfiguracionProveedor ?? new Entity.ConfiguracionProveedor());
+                    x => x.IdProveedorNavigation.ConfiguracionProveedor!);
                 
                 var codigoReserva = await GenerarCodigoReserva();
 
@@ -149,7 +149,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 var fechaReservaCompleta = new DateTimeOffset(primeraFecha.Year, primeraFecha.Month, primeraFecha.Day,
                     horaInicio.Hour,horaInicio.Minute,horaInicio.Second, primeraFecha.Offset);
 
-                int duracionPreReservaHoras = cancha.IdProveedorNavigation.ConfiguracionProveedor!.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
+                int duracionPreReservaHoras = cancha!.IdProveedorNavigation.ConfiguracionProveedor?.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
 
                 var pago = await CrearRegistroPago(dto.Pago.MontoTotal, dto.Pago, dto.TipoReserva, idUserCurrent ?? new Guid());
 
@@ -271,7 +271,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                        && hc.IdDiaSemana == diaSemana
                        && hc.Activo,
                     hc => hc.IdHoraInicioNavigation,
-                    hc => hc.IdHoraFinNavigation);
+                    hc => hc.IdHoraFinNavigation!);
 
                 if (!horariosEnRango.Any())
                 {
