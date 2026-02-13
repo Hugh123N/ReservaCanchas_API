@@ -212,11 +212,12 @@ namespace Reserva.Domain.Queries.Dbo.Dashboard
                      r.FechaReserva >= now,
                 x => x.IdClienteNavigation))
             .OrderBy(r => r.FechaReserva)
-            .Take(10)
             .Select(r => new DashboardReservaPendienteProveedorDto
             {
                 IdReserva         = r.IdReserva,
+                CodigoReserva     = r.CodigoReserva,
                 NombreCliente     = $"{r.IdClienteNavigation.FirstName} {r.IdClienteNavigation.LastName}",
+                TelefonoCliente   = r.IdClienteNavigation.PhoneNumber,
                 NombreCancha      = canchasNombreDict.TryGetValue(r.IdCancha, out var nombre) ? nombre : string.Empty,
                 FechaReserva      = r.FechaReserva,
                 Monto             = r.MontoTotal,

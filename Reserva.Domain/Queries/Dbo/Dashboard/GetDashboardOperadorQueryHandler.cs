@@ -121,6 +121,7 @@ namespace Reserva.Domain.Queries.Dbo.Dashboard
                 return new DashboardReservaPendienteOperadorDto
                 {
                     IdReserva         = r.IdReserva,
+                    CodigoReserva     = r.CodigoReserva,
                     NombreCliente     = $"{r.IdClienteNavigation.FirstName} {r.IdClienteNavigation.LastName}",
                     TelefonoCliente   = r.IdClienteNavigation.PhoneNumber,
                     NombreCancha      = canchasNombreDict.TryGetValue(r.IdCancha, out var nombre) ? nombre : string.Empty,
