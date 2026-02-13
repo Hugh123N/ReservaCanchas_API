@@ -66,8 +66,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                         return response;
                     }
 
-                    canchas = (await _canchaRepository
-                        .FindByAsync(c => operadorCanchas.Contains(c.IdCancha) && c.Activo)).ToList();
+                    canchas = (await _canchaRepository.FindByAsync(c => operadorCanchas.Contains(c.IdCancha) && c.Activo)).ToList();
                 }
                 else
                 {

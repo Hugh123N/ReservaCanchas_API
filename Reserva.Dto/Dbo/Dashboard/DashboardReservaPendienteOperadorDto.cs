@@ -3,7 +3,7 @@ namespace Reserva.Dto.Dbo.Dashboard
     public class DashboardReservaPendienteOperadorDto
     {
         public int IdReserva { get; set; }
-        public string? CodigoReserva { get; set; }
+        public string CodigoReserva { get; set; } = string.Empty;
         public string NombreCliente { get; set; } = string.Empty;
         public string? TelefonoCliente { get; set; }
         public string NombreCancha { get; set; } = string.Empty;
