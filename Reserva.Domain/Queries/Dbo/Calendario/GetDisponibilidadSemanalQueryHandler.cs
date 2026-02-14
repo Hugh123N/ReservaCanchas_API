@@ -68,7 +68,8 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     r.FechaReserva >= fechaInicioOffset &&
                     r.FechaReserva <= fechaFinOffset &&
                     (r.IdEstadoReservaNavigation.Codigo.Equals(Constants.ESTADO_RESERVA.Pendiente) || r.IdEstadoReservaNavigation.Codigo.Equals(Constants.ESTADO_RESERVA.Confirmado)),
-                    r => r.IdClienteNavigation);
+                    r => r.IdClienteNavigation,
+                    r => r.IdEstadoReservaNavigation);
 
                 //Crear diccionario de reservas por IdHorarioCancha y fecha
                 var reservaIds = reservas.Select(r => r.IdReserva).ToList();
@@ -176,7 +177,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             }
             catch (Exception ex)
             {
-                response.AddErrorResult("Error al obtener la disponibilidad semanal", ex);
+                response.AddErrorResult("Error al obtener la disponibilidad semanal: ", ex);
             }
 
             return await Task.FromResult(response);
