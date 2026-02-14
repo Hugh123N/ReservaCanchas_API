@@ -31,6 +31,8 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new SelectComboCanchaQuery());
         public async Task<ResponseDto<SearchResultDto<SelectCanchaDto>>> Select(SearchParamsDto<SelectCanchaFilterDto> searchParams)
              => await _mediator.Send(new SelectCanchaQuery(searchParams));
+        public async Task<ResponseDto<GetCanchaConfigDto>> GetConfig(int id)
+            => await _mediator.Send(new GetCanchaConfigQuery(id));
 
     }
 }

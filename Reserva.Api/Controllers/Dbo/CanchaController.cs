@@ -11,7 +11,7 @@ namespace Reserva.Api.Controllers.Dbo
 {
     [ApiController]
     [Route("api/Cancha")]
-    [Security.Authorize]
+    //[Security.Authorize]
     public class CanchaController : ICanchaApplication
     {
         private readonly ICanchaApplication _CanchaApplication;
@@ -49,6 +49,9 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("select")]
         public async Task<ResponseDto<SearchResultDto<SelectCanchaDto>>> Select(SearchParamsDto<SelectCanchaFilterDto> searchParams)
             => await _CanchaApplication.Select(searchParams);
+        [HttpGet("config/{id}")]
+        public async Task<ResponseDto<GetCanchaConfigDto>> GetConfig(int id)
+            => await _CanchaApplication.GetConfig(id);
 
         [HttpPost("{idCancha}/imagenes")]
         [RequestSizeLimit(26_214_400)] // 25MB total

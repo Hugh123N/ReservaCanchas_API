@@ -15,14 +15,7 @@ namespace Reserva.Dto.Dbo.Cancha
         public string Codigo { get; set; } = null!;
         public int IdCancha { get; set; }
 
-        /// <summary>
-        /// Duración en horas de la pre-reserva antes de expirar
-        /// </summary>
         public int? DuracionPreReserva { get; set; }
-
-        /// <summary>
-        /// Porcentaje mínimo de adelanto requerido para confirmar reserva (0-100)
-        /// </summary>
         public decimal? PorcentajeAdelantoMinimo { get; set; }
 
         public List<GetImagenCanchaDto>? ImagenesCancha { get; set; }

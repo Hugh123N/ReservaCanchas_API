@@ -13,6 +13,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboCanchaDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectCanchaDto>>> Select(SearchParamsDto<SelectCanchaFilterDto> searchParams);
+        Task<ResponseDto<GetCanchaConfigDto>> GetConfig(int id);
 
     }
 }
