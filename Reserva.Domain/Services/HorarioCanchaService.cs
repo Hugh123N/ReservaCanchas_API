@@ -100,10 +100,18 @@ namespace Reserva.Domain.Services
                     idHoraFinBloque2 = 1;
                 }
 
-                // Bloque 1: Hora en punto - usa el ID que viene del frontend
+                // Bloque 1: buscar en existentes por combinación única (IdCancha + IdDiaSemana + IdHoraInicio)
+                // Si el front envía ID=0 (nuevo), puede que ya exista en BD como Activo=false
+                var primerBloque = horariosExistentes
+                    .Where(h => h.IdCancha == horario.IdCancha &&
+                                h.IdDiaSemana == horario.IdDiaSemana &&
+                                h.IdHoraInicio == horario.IdHoraInicio)
+                    .OrderByDescending(h => h.Activo)
+                    .FirstOrDefault();
+
                 horariosExpandidos.Add(new UpdateHorarioCanchaDto
                 {
-                    IdHorarioCancha = horario.IdHorarioCancha,  // ID del primer bloque
+                    IdHorarioCancha = primerBloque?.IdHorarioCancha ?? horario.IdHorarioCancha,
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
                     IdHoraInicio = horario.IdHoraInicio,
@@ -111,16 +119,17 @@ namespace Reserva.Domain.Services
                     PrecioHora = precioPorBloque
                 });
 
-                // Bloque 2: Media hora - buscar en horarios existentes por combinación única
-                var segundoBloque = horariosExistentes.FirstOrDefault(h =>
-                    h.IdCancha == horario.IdCancha &&
-                    h.IdDiaSemana == horario.IdDiaSemana &&
-                    h.IdHoraInicio == idHoraInicioBloque2
-                );
+                // Bloque 2: buscar en horarios existentes por combinación única
+                var segundoBloque = horariosExistentes
+                    .Where(h => h.IdCancha == horario.IdCancha &&
+                                h.IdDiaSemana == horario.IdDiaSemana &&
+                                h.IdHoraInicio == idHoraInicioBloque2)
+                    .OrderByDescending(h => h.Activo)
+                    .FirstOrDefault();
 
                 horariosExpandidos.Add(new UpdateHorarioCanchaDto
                 {
-                    IdHorarioCancha = segundoBloque?.IdHorarioCancha ?? 0,  // ID encontrado o 0 si es nuevo
+                    IdHorarioCancha = segundoBloque?.IdHorarioCancha ?? 0,
                     IdCancha = horario.IdCancha,
                     IdDiaSemana = horario.IdDiaSemana,
                     IdHoraInicio = idHoraInicioBloque2,

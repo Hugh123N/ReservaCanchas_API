@@ -71,7 +71,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 CanchaDto.TipoDeportes = _mapper?.Map<List<GetTipoDeporteDto>>(tipoDeportes);
             }
 
-            var horariosCancha = await _HorarioCanchaRepository.FindByAsync(hc => hc.IdCancha == Cancha.IdCancha,
+            var horariosCancha = await _HorarioCanchaRepository.FindByAsync(hc => hc.IdCancha == Cancha.IdCancha && hc.Activo,
                 x => x.IdDiaSemanaNavigation,
                 x => x.IdHoraInicioNavigation
             );

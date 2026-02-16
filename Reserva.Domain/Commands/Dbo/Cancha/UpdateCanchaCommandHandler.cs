@@ -37,6 +37,8 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 x => x.HorarioCancha, 
                 x => x.TipoDeporteCancha,
                 x => x.ServicioCancha);
+            
+            _mapper?.Map(request.UpdateDto, Cancha);
 
             if (request.UpdateDto.HorarioCanchas != null && request.UpdateDto.HorarioCanchas.Any())
             {
@@ -53,11 +55,11 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                    e => e.IdHorarioCancha,
                    d => d.IdHorarioCancha,
                    (dto, entidad) => {
-                       _mapper.Map(dto, entidad);
-                       entidad.Activo = true; 
+                       _mapper!.Map(dto, entidad);
+                       entidad.Activo = true;
                    },
                    dto => {
-                       var nuevo = _mapper.Map<Entity.HorarioCancha>(dto);
+                       var nuevo = _mapper!.Map<Entity.HorarioCancha>(dto);
                        nuevo.IdCancha = Cancha.IdCancha;
                        nuevo.UserNameCreate = Cancha.UserNameCreate;
                        nuevo.CreateDate = Cancha.CreateDate;
@@ -115,7 +117,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 }
             }
 
-            _mapper?.Map(request.UpdateDto, Cancha);
+            
 
             await _CanchaRepository.UpdateAsync(Cancha);
             await _CanchaRepository.SaveAsync();
