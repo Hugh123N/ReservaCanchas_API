@@ -52,7 +52,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
              
             var applicationUser = _mapper?.Map<Entity.ApplicationUser>(request.CreateDto);
 
-            applicationUser.EmailConfirmed = true;
+            applicationUser!.EmailConfirmed = true;
             applicationUser.IdEstadoUsuario = estadoUsuario!.IdEstadoUsuario;
 
             _applicationUserRepository.UpdateAuditTrails(applicationUser);
@@ -91,7 +91,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 }
                 catch (Exception ex)
                 {
-                    response.AddWarningResult("Error al enviar Email de forgot password");
+                    response.AddWarningResult("Error al enviar Email de forgot password" + ex);
                 }
             }
             
