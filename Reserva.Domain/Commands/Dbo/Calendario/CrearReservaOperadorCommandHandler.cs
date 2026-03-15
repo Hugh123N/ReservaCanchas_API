@@ -13,6 +13,7 @@ using Reserva.Dto.Dbo.Usuario;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Security;
+using Reserva.Repository.Utils;
 using System.Threading;
 
 namespace Reserva.Domain.Commands.Dbo.Calendario
@@ -74,7 +75,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         {
             var response = new ResponseDto<ReservaOperadorResponseDto>();
             Guid? idUserCurrent = null;
-            idUserCurrent = Guid.Parse("08de5559-35e0-4b9d-8883-856a6c5188fa");//_userIdentity.GetCurrentUserId();
+            idUserCurrent = _userIdentity.GetCurrentUserId(); //Guid.Parse("08de81e6-d268-4d7e-8c8f-e1bb72b454e6");
             if (idUserCurrent == null)
             {
                 response.AddErrorResult("No se pudo obtener el usuario actual");
@@ -126,11 +127,13 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     idOperador = operador?.IdOperador;
                 }
 
-                var primeraFecha = dto.Horarios.Min(h => h.Fecha);
+                // Normalizar la fecha a UTC para evitar problemas de timezone
+                var primeraFechaDto = dto.Horarios.Min(h => h.Fecha);
+                var primeraFecha = DateTimeHelper.NormalizarFechaUtc(primeraFechaDto);
 
                 var primerBloque = dto.Horarios
-                    .Where(h => h.Fecha.Date == primeraFecha.Date)
-                    .OrderBy(h => h.IdHorarioCanchaInicio)
+                    .OrderBy(h => h.Fecha)
+                    .ThenBy(h => h.IdHorarioCanchaInicio)
                     .First();
 
                 // Obtener la hora de inicio del primer horario
@@ -144,10 +147,12 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     return response;
                 }
 
-                // Combinar la fecha con la hora del primer horario
+                // Combinar la fecha con la hora del primer horario (todo en UTC)
                 var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
-                var fechaReservaCompleta = new DateTimeOffset(primeraFecha.Year, primeraFecha.Month, primeraFecha.Day,
-                    horaInicio.Hour,horaInicio.Minute,horaInicio.Second, primeraFecha.Offset);
+                var fechaReservaCompleta = new DateTimeOffset(
+                    primeraFecha.Year, primeraFecha.Month, primeraFecha.Day,
+                    horaInicio.Hour, horaInicio.Minute, horaInicio.Second,
+                    TimeSpan.Zero); // UTC offset
 
                 int duracionPreReservaHoras = cancha!.IdProveedorNavigation.ConfiguracionProveedor?.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
 
@@ -260,7 +265,9 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         {
             foreach (var bloque in horarios)
             {
-                var diaSemana = (int)bloque.Fecha.DayOfWeek;
+                var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(bloque.Fecha);
+
+                var diaSemana = (int)fechaNormalizada.DayOfWeek;
                 if (diaSemana == 0) diaSemana = 7;
 
                 // Obtener todos los HorarioCancha en el rango
@@ -281,21 +288,24 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 // Verificar disponibilidad de cada horario
                 foreach (var horarioCancha in horariosEnRango.OrderBy(h => h.IdHoraInicio))
                 {
-                    var reservasExistentes = await _detalleReservaRepository.FindByAsync(dr =>
+                    var todasReservas = await _detalleReservaRepository.FindByAsync(dr =>
                         dr.IdHorarioCancha == horarioCancha.IdHorarioCancha
                         && dr.Activo
                         && dr.IdReservaNavigation != null
                         && dr.IdReservaNavigation.Activo
-                        && dr.IdReservaNavigation.FechaReserva.Date == bloque.Fecha.Date
                         && (dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado
                             || dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente),
                         dr => dr.IdReservaNavigation!,
                         dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
 
+                    var reservasExistentes = todasReservas
+                        .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaNormalizada.Date)
+                        .ToList();
+
                     if (reservasExistentes.Any())
                     {
                         var hora = horarioCancha.IdHoraInicioNavigation?.HoraTexto ?? horarioCancha.IdHoraInicio.ToString();
-                        return (false, $"El horario del {bloque.Fecha:dd/MM/yyyy} a las {hora} ya está reservado");
+                        return (false, $"El horario del {fechaNormalizada:dd/MM/yyyy} a las {hora} ya está reservado");
                     }
                 }
             }
@@ -417,7 +427,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             }
 
             return $"RES-{año}-{siguienteNumero:D4}";
-            
+
         }
     }
 }

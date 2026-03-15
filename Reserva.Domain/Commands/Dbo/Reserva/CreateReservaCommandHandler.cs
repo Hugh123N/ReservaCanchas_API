@@ -11,6 +11,7 @@ using Reserva.Dto.Dbo.Reserva;
 using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Repository.Utils;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -72,23 +73,28 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 
+            // Normalizar la fecha para comparaciones consistentes
+            var fechaBuscada = DateTimeHelper.NormalizarFechaUtc(request.CreateDto.FechaReserva);
+
+            // Obtener todas las reservas activas de la cancha
             var reservasDelDia = await _ReservaRepository.FindByAsNoTrackingAsync(
                 r => r.IdCancha == request.CreateDto.IdCancha
-                     && r.FechaReserva.Date == request.CreateDto.FechaReserva.Date
                      && r.Activo
                      && r.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Cancelado
                      && r.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Expirado,
                 r => r.DetalleReserva
             );
 
-            // Obtener los IDs de horarios ya reservados
-            var horariosReservados = reservasDelDia
+            var reservasDelDiaFiltradas = reservasDelDia
+                .Where(r => DateTimeHelper.NormalizarFechaUtc(r.FechaReserva).Date == fechaBuscada.Date)
+                .ToList();
+
+            var horariosReservados = reservasDelDiaFiltradas
                 .SelectMany(r => r.DetalleReserva)
                 .Where(d => d.IdHorarioCancha.HasValue && d.Activo)
                 .Select(d => d.IdHorarioCancha.Value)
                 .ToHashSet();
 
-            // Validar si algún horario ya está reservado
             var horariosConflicto = request.CreateDto.IdsHorarioCancha
                 .Where(id => horariosReservados.Contains(id))
                 .ToList();
@@ -121,11 +127,13 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
                 {
                     var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
-                    var fechaOriginal = request.CreateDto.FechaReserva;
+                    var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(request.CreateDto.FechaReserva);
 
-                    // Combinar la fecha con la hora del primer horario
-                    nuevaReserva.FechaReserva = new DateTimeOffset(fechaOriginal.Year, fechaOriginal.Month, fechaOriginal.Day,
-                        horaInicio.Hour, horaInicio.Minute, horaInicio.Second, fechaOriginal.Offset);
+                    // Combinar la fecha normalizada con la hora del primer horario (en UTC)
+                    nuevaReserva.FechaReserva = new DateTimeOffset(
+                        fechaNormalizada.Year, fechaNormalizada.Month, fechaNormalizada.Day,
+                        horaInicio.Hour, horaInicio.Minute, horaInicio.Second,
+                        TimeSpan.Zero); // UTC offset
                 }
             }
 

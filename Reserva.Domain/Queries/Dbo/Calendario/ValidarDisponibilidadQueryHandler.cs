@@ -5,6 +5,7 @@ using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Calendario;
 using Reserva.Repository.Abstractions.Base;
+using Reserva.Repository.Utils;
 
 namespace Reserva.Domain.Queries.Dbo.Calendario
 {
@@ -37,7 +38,9 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             {
                 foreach (var bloque in request.Horarios)
                 {
-                    var diaSemana = (int)bloque.Fecha.DayOfWeek;
+                    var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(bloque.Fecha);
+
+                    var diaSemana = (int)fechaNormalizada.DayOfWeek;
                     if (diaSemana == 0) diaSemana = 7;
 
                     var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
@@ -53,7 +56,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     {
                         horariosNoDisponibles.Add(new HorarioNoDisponibleDto
                         {
-                            Fecha = bloque.Fecha,
+                            Fecha = fechaNormalizada,
                             IdHoraInicio = 0,
                             IdHoraFin = 0,
                             HoraInicio = "N/A",
@@ -63,20 +66,22 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                         continue;
                     }
 
-                    // Verificar disponibilidad de cada horario
                     foreach (var horarioCancha in horariosEnRango.OrderBy(h => h.IdHoraInicio))
                     {
-                        // Verificar si ya está reservado
-                        var reservasExistentes = await _detalleReservaRepository.FindByAsync(dr =>
+                        // Obtener todas las reservas para este horario
+                        var todasReservas = await _detalleReservaRepository.FindByAsync(dr =>
                             dr.IdHorarioCancha == horarioCancha.IdHorarioCancha
                             && dr.Activo
                             && dr.IdReservaNavigation != null
                             && dr.IdReservaNavigation.Activo
-                            && dr.IdReservaNavigation.FechaReserva.Date == bloque.Fecha.Date
                             && (dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente
                              || dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado),
                             dr => dr.IdReservaNavigation!,
                             dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
+
+                        var reservasExistentes = todasReservas
+                            .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaNormalizada.Date)
+                            .ToList();
 
                         if (reservasExistentes.Any())
                         {
@@ -85,7 +90,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
 
                             horariosNoDisponibles.Add(new HorarioNoDisponibleDto
                             {
-                                Fecha = bloque.Fecha,
+                                Fecha = fechaNormalizada,
                                 IdHoraInicio = horarioCancha.IdHoraInicio,
                                 IdHoraFin = horarioCancha.IdHoraFin ?? 0,
                                 HoraInicio = horaInicio,

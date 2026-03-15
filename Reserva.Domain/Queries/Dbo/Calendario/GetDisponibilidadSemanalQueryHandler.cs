@@ -8,6 +8,7 @@ using Reserva.Dto.Dbo.Calendario;
 using Reserva.Dto.Dbo.Hora;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Security;
+using Reserva.Repository.Utils;
 using System.Globalization;
 
 namespace Reserva.Domain.Queries.Dbo.Calendario
@@ -84,11 +85,11 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     if (!detallesPorReserva.TryGetValue(reserva.IdReserva, out var detalles))
                         continue;
 
-                    var fechaReserva = reserva.FechaReserva.Date;
+                    var fechaReservaNormalizada = DateTimeHelper.NormalizarFechaUtc(reserva.FechaReserva);
 
                     foreach (var detalle in detalles)
                     {
-                        var key = $"{detalle.IdHorarioCancha!.Value}_{fechaReserva:yyyy-MM-dd}";
+                        var key = $"{detalle.IdHorarioCancha!.Value}_{fechaReservaNormalizada:yyyy-MM-dd}";
 
                         if (!reservasPorHorarioYFecha.ContainsKey(key))
                         {
