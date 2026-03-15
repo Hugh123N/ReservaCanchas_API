@@ -31,9 +31,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                 RuleFor(x => x.CreateDto.FechaReserva)
                     .NotEmpty()
-                    .WithMessage("La fecha de la reserva es obligatoria.")
-                    .Must(BeValidDate)
-                    .WithMessage("La fecha de la reserva no puede ser una fecha pasada.");
+                    .WithMessage("La fecha de la reserva es obligatoria.");
 
                 RuleFor(x => x.CreateDto.MontoTotal)
                     .NotNull()
@@ -70,13 +68,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var exists = await _MetodoPagoRepository.FindAll().Where(x => x.Codigo == codigoMetodoPago).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
             return true;
-        }
-
-        private bool BeValidDate(DateTimeOffset fecha)
-        {
-            // Obtener la fecha de hoy sin hora
-            var hoy = DateTimeOffset.UtcNow.Date;
-            return fecha.UtcDateTime.Date >= hoy;
         }
     }
 }

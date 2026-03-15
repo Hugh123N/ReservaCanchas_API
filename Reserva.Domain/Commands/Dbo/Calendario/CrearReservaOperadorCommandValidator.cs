@@ -2,7 +2,6 @@ using FluentValidation;
 using Reserva.Domain.Commands.Base;
 using Reserva.Dto.Dbo.Calendario;
 using Reserva.Repository.Abstractions.Base;
-using Reserva.Repository.Utils;
 
 namespace Reserva.Domain.Commands.Dbo.Calendario
 {
@@ -119,15 +118,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     {
                         bloque.RuleFor(h => h.Fecha)
                             .NotEmpty()
-                            .WithMessage("La fecha es obligatoria")
-                            .Must(fecha =>
-                            {
-                                // Normalizar ambas fechas a UTC antes de comparar
-                                var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(fecha);
-                                var hoyNormalizado = DateTimeHelper.NormalizarFechaUtc(DateTimeOffset.UtcNow);
-                                return fechaNormalizada.Date >= hoyNormalizado.Date;
-                            })
-                            .WithMessage("La fecha no puede ser anterior a hoy");
+                            .WithMessage("La fecha es obligatoria");
 
                         bloque.RuleFor(h => h.IdHorarioCanchaInicio)
                             .GreaterThan(0)

@@ -75,9 +75,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
                 if (dto.Horarios != null && dto.Horarios.Any())
                 {
+                    await ActualizarFechaReservaConPrimerHorario(reserva, dto.FechaReserva);
                     // Validar disponibilidad de horarios nuevos
                     var validacion = await ValidarDisponibilidadHorariosNuevos(
-                        dto.IdCancha, dto.Horarios, reserva.DetalleReserva.ToList());
+                        dto.IdCancha, dto.Horarios, reserva.DetalleReserva.ToList(), dto.FechaReserva);
 
                     if (!validacion.Item1)
                     {
@@ -86,8 +87,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     }
 
                     await ActualizarDetallesReserva(reserva, dto.IdCancha, dto.Horarios);
-
-                    await ActualizarFechaReservaConPrimerHorario(reserva, dto.FechaReserva);
                 }
 
                 await _reservaRepository.UpdateAsync(reserva);
@@ -207,7 +206,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private async Task<(bool, string)> ValidarDisponibilidadHorariosNuevos(
             int idCancha,
             List<Dto.Dbo.Calendario.BloqueHorarioDto> bloquesNuevos,
-            List<Entity.DetalleReserva> detallesActuales)
+            List<Entity.DetalleReserva> detallesActuales, DateTimeOffset fechaReserva)
         {
             var idsActuales = detallesActuales.Select(d => d.IdHorarioCancha).ToList();
 
@@ -248,7 +247,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
 
                     var reservasExistentes = todasReservas
-                        .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaNormalizada.Date)
+                        .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaReserva.Date)
                         .ToList();
 
                     if (reservasExistentes.Any())

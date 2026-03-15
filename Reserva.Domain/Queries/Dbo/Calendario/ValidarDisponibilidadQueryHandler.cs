@@ -27,15 +27,14 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             _horaRepository = horaRepository;
         }
 
-        protected override async Task<ResponseDto<ValidarDisponibilidadResponseDto>> HandleQuery(
-            ValidarDisponibilidadQuery request,
-            CancellationToken cancellationToken)
+        protected override async Task<ResponseDto<ValidarDisponibilidadResponseDto>> HandleQuery(ValidarDisponibilidadQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<ValidarDisponibilidadResponseDto>();
             var horariosNoDisponibles = new List<HorarioNoDisponibleDto>();
 
             try
             {
+                var fechaReserva = await FechaReservaConPrimerHorario(request.Horarios);
                 foreach (var bloque in request.Horarios)
                 {
                     var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(bloque.Fecha);
@@ -80,7 +79,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                             dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
 
                         var reservasExistentes = todasReservas
-                            .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaNormalizada.Date)
+                            .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaReserva.Date)
                             .ToList();
 
                         if (reservasExistentes.Any())
@@ -119,6 +118,37 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             }
 
             return response;
+        }
+
+        private async Task<DateTimeOffset>  FechaReservaConPrimerHorario(List<BloqueHorarioDto> horarios)
+        {
+            var primeraFechaDto = horarios.Min(h => h.Fecha);
+            var primeraFecha = DateTimeHelper.NormalizarFechaUtc(primeraFechaDto);
+
+            var primerBloque = horarios
+                    .OrderBy(h => h.Fecha)
+                    .ThenBy(h => h.IdHorarioCanchaInicio)
+                    .First();
+
+            var primerHorarioCancha = await _horarioCanchaRepository.GetByAsync(
+                hc => hc.IdHorarioCancha == primerBloque.IdHorarioCanchaInicio && hc.Activo,
+                hc => hc.IdHoraInicioNavigation);
+
+            if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
+            {
+                var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+
+                return new DateTimeOffset(
+                    primeraFecha.Year,
+                    primeraFecha.Month,
+                    primeraFecha.Day,
+                    horaInicio.Hour,
+                    horaInicio.Minute,
+                    horaInicio.Second,
+                    TimeSpan.Zero); // UTC offset
+            }
+
+            return primeraFecha;
         }
     }
 }
