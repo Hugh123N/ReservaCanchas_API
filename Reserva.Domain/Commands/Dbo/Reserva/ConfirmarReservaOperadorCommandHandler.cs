@@ -9,6 +9,7 @@ using Reserva.Dto.Dbo.Reserva;
 using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Repository.Utils;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -70,8 +71,11 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 return response;
             }
 
-            //Validar que la reserva no haya expirado
-            if (reserva.FechaExpiracionPreReserva.HasValue && reserva.FechaExpiracionPreReserva.Value < DateTimeOffset.UtcNow)
+            var cancha = reserva.IdCanchaNavigation;
+
+            var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(cancha?.ZonaHoraria ?? "America/Lima");
+            var ahoraLocal = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria);
+            if (reserva.FechaExpiracionPreReserva.HasValue && reserva.FechaExpiracionPreReserva.Value < ahoraLocal)
             {
                 response.AddErrorResult("La reserva ha expirado y no puede ser confirmada.");
                 return response;
@@ -84,8 +88,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 return response;
             }
 
-            var cancha = reserva.IdCanchaNavigation;
-            decimal porcentajeMinimoAdelanto = cancha?.IdProveedorNavigation.ConfiguracionProveedor.PorcentajeAdelantoMinimo ?? 0;
+            decimal porcentajeMinimoAdelanto = cancha?.IdProveedorNavigation.ConfiguracionProveedor!.PorcentajeAdelantoMinimo ?? 0;
 
             //Procesar adelanto si fue proporcionado
             decimal montoAdelanto = request.ConfirmarDto.MontoAdelanto ?? 0;

@@ -93,8 +93,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     return response;
                 }
 
+                var canchaParaTz = await _canchaRepository.GetByAsync(x => x.IdCancha == dto.IdCancha && x.Activo);
+                var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(canchaParaTz!.ZonaHoraria);
+
                 var primeraFechaDto = dto.Horarios.Min(h => h.Fecha);
-                var primeraFecha = DateTimeHelper.NormalizarFechaUtc(primeraFechaDto);
+                var primeraFecha = DateTimeHelper.NormalizarFechaLocal(primeraFechaDto, zonaHoraria);
 
                 var primerBloque = dto.Horarios
                     .OrderBy(h => h.Fecha)
@@ -112,12 +115,13 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     return response;
                 }
 
-                // Combinar la fecha con la hora del primer horario (todo en UTC)
+                // Combinar la fecha con la hora del primer horario (en zona horaria de la cancha)
                 var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+                var offsetLocal = zonaHoraria.GetUtcOffset(primeraFecha.DateTime);
                 var fechaReservaCompleta = new DateTimeOffset(
                     primeraFecha.Year, primeraFecha.Month, primeraFecha.Day,
                     horaInicio.Hour, horaInicio.Minute, horaInicio.Second,
-                    TimeSpan.Zero); // UTC offset
+                    offsetLocal);
 
                 var disponible = await ValidarDisponibilidadHorarios(dto.IdCancha, dto.Horarios, fechaReservaCompleta);
                 if (!disponible.Item1)
@@ -169,7 +173,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     Observaciones = dto.Observaciones,
                     RecordatorioEnviado = false,
                     NotificacionAdvertenciaEnviada = false,
-                    FechaExpiracionPreReserva = DateTimeOffset.UtcNow.AddHours(duracionPreReservaHoras),
+                    FechaExpiracionPreReserva = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria).AddHours(duracionPreReservaHoras),
                     Pago = new List<Entity.Pago> { pago },
                 };
 
@@ -177,7 +181,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 if (dto.TipoReserva == TipoReservaOperador.Inmediata)
                 {
                     reserva.IdOperadorConfirmo = idOperador;
-                    reserva.FechaConfirmacion = DateTimeOffset.UtcNow;
+                    reserva.FechaConfirmacion = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria);
                     // TODO: ENVIAR NOTIFICAICON AL CLIENTE
                 }
 
@@ -262,9 +266,12 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
         private async Task<(bool, string)> ValidarDisponibilidadHorarios(int idCancha,List<BloqueHorarioDto> horarios, DateTimeOffset fechaReserva)
         {
+            var canchaVal = await _canchaRepository.GetByAsync(x => x.IdCancha == idCancha && x.Activo);
+            var zonaHorariaVal = TimezoneUtils.ObtenerZonaHoraria(canchaVal!.ZonaHoraria);
+
             foreach (var bloque in horarios)
             {
-                var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(bloque.Fecha);
+                var fechaNormalizada = DateTimeHelper.NormalizarFechaLocal(bloque.Fecha, zonaHorariaVal);
 
                 var diaSemana = (int)fechaNormalizada.DayOfWeek;
                 if (diaSemana == 0) diaSemana = 7;
@@ -296,7 +303,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                         dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
 
                     var reservasExistentes = todasReservas
-                        .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaReserva.Date)
+                        .Where(dr => DateTimeHelper.NormalizarFechaLocal(dr.IdReservaNavigation!.FechaReserva, zonaHorariaVal).Date == fechaReserva.Date)
                         .ToList();
 
                     if (reservasExistentes.Any())
@@ -403,7 +410,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             if (!string.IsNullOrWhiteSpace(codigo))
                 return codigo;
 
-            var año = DateTime.Now.Year;
+            var año = DateTimeOffset.UtcNow.Year;
 
             var ultimoCodigoReserva = await _reservaRepository.FindAll().
                 Where(r => r.CodigoReserva != null && r.CodigoReserva.StartsWith($"RES-{año}-"))

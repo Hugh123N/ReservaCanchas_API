@@ -44,6 +44,8 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             {
                 var cancha = await _canchaRepository.GetByAsync(c => c.IdCancha == request.IdCancha);
 
+                var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(cancha!.ZonaHoraria);
+
                 var horariosCancha = await _horarioCanchaRepository.FindByAsNoTrackingAsync(hc => hc.IdCancha == request.IdCancha && hc.Activo,
                     hc => hc.IdHoraInicioNavigation,
                     hc => hc.IdHoraFinNavigation!,
@@ -62,12 +64,15 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                 var horaMaxima = ultimoHorario.IdHoraFinNavigation?.HoraTexto
                     ?? TimeOnly.Parse(ultimoHorario.IdHoraInicioNavigation.HoraTexto).AddMinutes(30).ToString();
 
-                var fechaInicioOffset = new DateTimeOffset(request.FechaInicio.Date);
-                var fechaFinOffset = new DateTimeOffset(request.FechaFin.Date.AddDays(1).AddSeconds(-1));
+                var fechaInicioLocal = DateTimeHelper.NormalizarFechaLocal(request.FechaInicio, zonaHoraria);
+                var fechaFinLocal = DateTimeHelper.NormalizarFechaLocal(request.FechaFin, zonaHoraria);
+
+                var fechaInicioUtc = fechaInicioLocal.ToUniversalTime();
+                var fechaFinUtc = fechaFinLocal.AddDays(1).AddSeconds(-1).ToUniversalTime();
 
                 var reservas = await _reservaRepository.FindByAsNoTrackingAsync(r => r.Activo && r.IdCancha == request.IdCancha &&
-                    r.FechaReserva >= fechaInicioOffset &&
-                    r.FechaReserva <= fechaFinOffset &&
+                    r.FechaReserva >= fechaInicioUtc &&
+                    r.FechaReserva <= fechaFinUtc &&
                     (r.IdEstadoReservaNavigation.Codigo.Equals(Constants.ESTADO_RESERVA.Pendiente) || r.IdEstadoReservaNavigation.Codigo.Equals(Constants.ESTADO_RESERVA.Confirmado)),
                     r => r.IdClienteNavigation,
                     r => r.IdEstadoReservaNavigation);
@@ -75,7 +80,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                 //Crear diccionario de reservas por IdHorarioCancha y fecha
                 var reservaIds = reservas.Select(r => r.IdReserva).ToList();
                 var detallesReserva = await _detalleReservaRepository.FindByAsNoTrackingAsync(dr => reservaIds.Contains(dr.IdReserva) && dr.Activo && dr.IdHorarioCancha.HasValue);
-                
+
                 var detallesPorReserva = detallesReserva.GroupBy(d => d.IdReserva).ToDictionary(g => g.Key, g => g.ToList());
 
                 var reservasPorHorarioYFecha = new Dictionary<string, Entity.Reserva>();
@@ -85,7 +90,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     if (!detallesPorReserva.TryGetValue(reserva.IdReserva, out var detalles))
                         continue;
 
-                    var fechaReservaNormalizada = DateTimeHelper.NormalizarFechaUtc(reserva.FechaReserva);
+                    var fechaReservaNormalizada = DateTimeHelper.NormalizarFechaLocal(reserva.FechaReserva, zonaHoraria);
 
                     foreach (var detalle in detalles)
                     {

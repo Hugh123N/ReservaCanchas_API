@@ -12,6 +12,7 @@ using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Utils;
+using System;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -67,16 +68,16 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var cancha = await _CanchaRepository.GetByAsync(
                 c => c.IdCancha == request.CreateDto.IdCancha,
                 c => c.IdProveedorNavigation!,
-                c => c.IdProveedorNavigation.ConfiguracionProveedor,
+                c => c.IdProveedorNavigation.ConfiguracionProveedor!,
                 c => c.IdProveedorNavigation!.IdUsuarioNavigation,
                 c => c.OperadorCancha);
 
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 
-            // Normalizar la fecha para comparaciones consistentes
-            var fechaBuscada = DateTimeHelper.NormalizarFechaUtc(request.CreateDto.FechaReserva);
+            var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(cancha!.ZonaHoraria);
 
-            // Obtener todas las reservas activas de la cancha
+            var fechaBuscada = DateTimeHelper.NormalizarFechaLocal(request.CreateDto.FechaReserva, zonaHoraria);
+
             var reservasDelDia = await _ReservaRepository.FindByAsNoTrackingAsync(
                 r => r.IdCancha == request.CreateDto.IdCancha
                      && r.Activo
@@ -86,7 +87,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             );
 
             var reservasDelDiaFiltradas = reservasDelDia
-                .Where(r => DateTimeHelper.NormalizarFechaUtc(r.FechaReserva).Date == fechaBuscada.Date)
+                .Where(r => DateTimeHelper.NormalizarFechaLocal(r.FechaReserva, zonaHoraria).Date == fechaBuscada.Date)
                 .ToList();
 
             var horariosReservados = reservasDelDiaFiltradas
@@ -127,18 +128,19 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
                 {
                     var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
-                    var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(request.CreateDto.FechaReserva);
+                    var fechaNormalizada = DateTimeHelper.NormalizarFechaLocal(request.CreateDto.FechaReserva, zonaHoraria);
 
-                    // Combinar la fecha normalizada con la hora del primer horario (en UTC)
+                    // Combinar la fecha normalizada con la hora del primer horario (en zona horaria de la cancha)
+                    var offsetLocal = zonaHoraria.GetUtcOffset(fechaNormalizada.DateTime);
                     nuevaReserva.FechaReserva = new DateTimeOffset(
                         fechaNormalizada.Year, fechaNormalizada.Month, fechaNormalizada.Day,
                         horaInicio.Hour, horaInicio.Minute, horaInicio.Second,
-                        TimeSpan.Zero); // UTC offset
+                        offsetLocal);
                 }
             }
 
             int duracionPreReservaHoras = cancha!.IdProveedorNavigation.ConfiguracionProveedor?.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
-            nuevaReserva.FechaExpiracionPreReserva = DateTimeOffset.UtcNow.AddHours(duracionPreReservaHoras);
+            nuevaReserva.FechaExpiracionPreReserva = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria).AddHours(duracionPreReservaHoras);
             nuevaReserva.CodigoReserva = await GenerarCodigoReserva();
             nuevaReserva.IdEstadoReserva = estadoPendienteReserva!.IdEstadoReserva;
             //nuevaReserva.IdCanchaNavigation = null;
@@ -271,7 +273,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             if (!string.IsNullOrWhiteSpace(codigo))
                 return codigo;
 
-            var año = DateTime.Now.Year;
+            var año = DateTimeOffset.UtcNow.Year;
 
             var ultimoCodigoReserva = await _ReservaRepository.FindAll().
                 Where(r => r.CodigoReserva != null && r.CodigoReserva.StartsWith($"RES-{año}-"))

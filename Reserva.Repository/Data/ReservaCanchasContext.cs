@@ -304,6 +304,15 @@ public partial class ReservaCanchasContext : DbContext
                 .HasDefaultValue(true)
                 .HasColumnName("tieneIluminacion");
             entity.Property(e => e.TieneTecho).HasColumnName("tieneTecho");
+            entity.Property(e => e.Pais)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("pais");
+            entity.Property(e => e.ZonaHoraria)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasDefaultValue("America/Lima")
+                .HasColumnName("zonaHoraria");
             entity.Property(e => e.UpdateDate).HasColumnName("updateDate");
             entity.Property(e => e.UserNameCreate)
                 .HasMaxLength(250)

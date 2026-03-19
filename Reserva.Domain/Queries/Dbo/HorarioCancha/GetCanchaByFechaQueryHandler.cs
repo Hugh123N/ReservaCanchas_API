@@ -3,6 +3,7 @@ using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.HorarioCancha;
 using Reserva.Repository.Abstractions.Base;
+using Reserva.Repository.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,15 +17,18 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
     {
         private readonly IRepository<Entity.HorarioCancha> _HorarioCanchaRepository;
         private readonly IRepository<Entity.Reserva> _ReservaRepository;
+        private readonly IRepository<Entity.Cancha> _CanchaRepository;
 
         public GetCanchaByFechaQueryHandler(
             IMapper mapper,
             IRepository<Entity.HorarioCancha> HorarioCanchaRepository,
-            IRepository<Entity.Reserva> ReservaRepository
+            IRepository<Entity.Reserva> ReservaRepository,
+            IRepository<Entity.Cancha> CanchaRepository
         ) : base(mapper)
         {
             _HorarioCanchaRepository = HorarioCanchaRepository;
             _ReservaRepository = ReservaRepository;
+            _CanchaRepository = CanchaRepository;
         }
 
         protected override async Task<ResponseDto<List<HorarioDisponibleDto>>> HandleQuery(GetCanchaByFechaQuery request, CancellationToken cancellationToken)
@@ -34,29 +38,37 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
                 Data = new List<HorarioDisponibleDto>()
             };
 
+            var cancha = await _CanchaRepository.GetByAsync(c => c.IdCancha == request.CanchaId && c.Activo);
+            var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(cancha!.ZonaHoraria);
+
             var diaSemana = request.Fecha.ToString("dddd", new CultureInfo("es-ES")).ToLowerInvariant();
 
             var horariosDisponibles = await _HorarioCanchaRepository.FindByAsNoTrackingAsync(
                 x => x.IdCancha == request.CanchaId && x.IdDiaSemanaNavigation.Nombre.Contains(diaSemana) && x.Activo,
                 x => x.IdHoraInicioNavigation,
-                x => x.IdHoraFinNavigation
+                x => x.IdHoraFinNavigation!
             );
 
             if (horariosDisponibles == null || !horariosDisponibles.Any())
                 return response;
 
+            var fechaBuscadaLocal = DateTimeHelper.NormalizarFechaLocal(request.Fecha, zonaHoraria);
+
             var reservas = await _ReservaRepository.FindByAsNoTrackingAsync(
                 x => x.IdCancha == request.CanchaId
-                     && x.FechaReserva.Date == request.Fecha.Date
                      && x.Activo,
                 x => x.DetalleReserva
             );
 
+            var reservasDelDia = reservas
+                .Where(r => DateTimeHelper.NormalizarFechaLocal(r.FechaReserva, zonaHoraria).Date == fechaBuscadaLocal.Date)
+                .ToList();
+
             // Obtener los IDs de horarios ya reservados
-            var horariosReservadosIds = reservas
+            var horariosReservadosIds = reservasDelDia
                 .SelectMany(r => r.DetalleReserva)
                 .Where(d => d.IdHorarioCancha.HasValue && d.Activo)
-                .Select(d => d.IdHorarioCancha.Value)
+                .Select(d => d.IdHorarioCancha!.Value)
                 .ToHashSet();
 
             var listaHorarios = new List<HorarioDisponibleDto>();
@@ -79,11 +91,11 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
                 listaHorarios.Add(horarioDto);
             }
 
-            // Si la fecha es HOY, eliminar horas pasadas
-            var ahora = DateTimeOffset.UtcNow;
-            if (request.Fecha.Date == ahora.Date)
+            // Si la fecha es HOY (en la zona horaria de la cancha), eliminar horas pasadas
+            var ahoraLocal = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria);
+            if (fechaBuscadaLocal.Date == ahoraLocal.Date)
             {
-                var horaActual = TimeOnly.FromDateTime(ahora.ToLocalTime().DateTime);
+                var horaActual = TimeOnly.FromDateTime(ahoraLocal.DateTime);
                 listaHorarios = listaHorarios
                     .Where(h => h.HoraInicio > horaActual)
                     .ToList();

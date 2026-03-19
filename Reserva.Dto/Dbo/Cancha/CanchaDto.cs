@@ -31,6 +31,8 @@ namespace Reserva.Dto.Dbo.Cancha
 
         public bool TieneIluminacion { get; set; }
 
-        
+        public string? Pais { get; set; }
+
+        //public string ZonaHoraria { get; set; } = "America/Lima";
     }
 }

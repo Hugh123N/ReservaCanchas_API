@@ -14,17 +14,20 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
         private readonly IRepository<Entity.HorarioCancha> _horarioCanchaRepository;
         private readonly IRepository<Entity.DetalleReserva> _detalleReservaRepository;
         private readonly IRepository<Entity.Hora> _horaRepository;
+        private readonly IRepository<Entity.Cancha> _canchaRepository;
 
         public ValidarDisponibilidadQueryHandler(
             IMapper mapper,
             IMediator mediator,
             IRepository<Entity.HorarioCancha> horarioCanchaRepository,
             IRepository<Entity.DetalleReserva> detalleReservaRepository,
-            IRepository<Entity.Hora> horaRepository) : base(mapper, mediator)
+            IRepository<Entity.Hora> horaRepository,
+            IRepository<Entity.Cancha> canchaRepository) : base(mapper, mediator)
         {
             _horarioCanchaRepository = horarioCanchaRepository;
             _detalleReservaRepository = detalleReservaRepository;
             _horaRepository = horaRepository;
+            _canchaRepository = canchaRepository;
         }
 
         protected override async Task<ResponseDto<ValidarDisponibilidadResponseDto>> HandleQuery(ValidarDisponibilidadQuery request, CancellationToken cancellationToken)
@@ -34,10 +37,13 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
 
             try
             {
-                var fechaReserva = await FechaReservaConPrimerHorario(request.Horarios);
+                var cancha = await _canchaRepository.GetByAsync(c => c.IdCancha == request.IdCancha && c.Activo);
+                var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(cancha!.ZonaHoraria);
+
+                var fechaReserva = await FechaReservaConPrimerHorario(request.Horarios, zonaHoraria);
                 foreach (var bloque in request.Horarios)
                 {
-                    var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(bloque.Fecha);
+                    var fechaNormalizada = DateTimeHelper.NormalizarFechaLocal(bloque.Fecha, zonaHoraria);
 
                     var diaSemana = (int)fechaNormalizada.DayOfWeek;
                     if (diaSemana == 0) diaSemana = 7;
@@ -49,7 +55,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                            && hc.IdDiaSemana == diaSemana
                            && hc.Activo,
                         hc => hc.IdHoraInicioNavigation,
-                        hc => hc.IdHoraFinNavigation);
+                        hc => hc.IdHoraFinNavigation!);
 
                     if (!horariosEnRango.Any())
                     {
@@ -79,7 +85,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                             dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
 
                         var reservasExistentes = todasReservas
-                            .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaReserva.Date)
+                            .Where(dr => DateTimeHelper.NormalizarFechaLocal(dr.IdReservaNavigation!.FechaReserva, zonaHoraria).Date == fechaReserva.Date)
                             .ToList();
 
                         if (reservasExistentes.Any())
@@ -93,7 +99,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                                 IdHoraInicio = horarioCancha.IdHoraInicio,
                                 IdHoraFin = horarioCancha.IdHoraFin ?? 0,
                                 HoraInicio = horaInicio,
-                                HoraFin = horaFin,
+                                HoraFin = horaFin!,
                                 Motivo = "Ya está reservado"
                             });
                         }
@@ -120,10 +126,10 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             return response;
         }
 
-        private async Task<DateTimeOffset>  FechaReservaConPrimerHorario(List<BloqueHorarioDto> horarios)
+        private async Task<DateTimeOffset> FechaReservaConPrimerHorario(List<BloqueHorarioDto> horarios, TimeZoneInfo zonaHoraria)
         {
             var primeraFechaDto = horarios.Min(h => h.Fecha);
-            var primeraFecha = DateTimeHelper.NormalizarFechaUtc(primeraFechaDto);
+            var primeraFecha = DateTimeHelper.NormalizarFechaLocal(primeraFechaDto, zonaHoraria);
 
             var primerBloque = horarios
                     .OrderBy(h => h.Fecha)
@@ -137,6 +143,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
             {
                 var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+                var offsetLocal = zonaHoraria.GetUtcOffset(primeraFecha.DateTime);
 
                 return new DateTimeOffset(
                     primeraFecha.Year,
@@ -145,7 +152,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                     horaInicio.Hour,
                     horaInicio.Minute,
                     horaInicio.Second,
-                    TimeSpan.Zero); // UTC offset
+                    offsetLocal);
             }
 
             return primeraFecha;
