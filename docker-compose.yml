@@ -14,11 +14,11 @@ services:
       - "traefik.enable=true"
 
       # HTTP
-      - "traefik.http.routers.api.rule=Host(`canchas-aplication-9ehfnl-7b4c70-38-242-128-50.traefik.me`)"
+      - "traefik.http.routers.api.rule=Host(`canchas-back-qm3iu4-5efd82-38-242-128-50.traefik.me`)"
       - "traefik.http.routers.api.entrypoints=web"
 
       # HTTPS  🔴 ESTE ES EL QUE TE FALTA
-      - "traefik.http.routers.api-secure.rule=Host(`canchas-aplication-9ehfnl-7b4c70-38-242-128-50.traefik.me`)"
+      - "traefik.http.routers.api-secure.rule=Host(`canchas-back-qm3iu4-5efd82-38-242-128-50.traefik.me`)"
       - "traefik.http.routers.api-secure.entrypoints=websecure"
       - "traefik.http.routers.api-secure.tls=true"
       - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"
