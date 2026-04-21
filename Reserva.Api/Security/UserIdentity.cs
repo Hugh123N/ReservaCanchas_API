@@ -27,7 +27,7 @@ namespace Reserva.Api.Security
             => GetCurrentUserClaims()?.FirstOrDefault(x => x.Type == "Roles")?.Value!;
 
         public string GetCurrentUser()
-            => GetUserNameClaim() ?? Constants.Security.User.Admin;
+            => GetUserName() ?? Constants.Security.User.Admin;
 
         public Guid? GetCurrentUserId()
         {

@@ -75,7 +75,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 
             var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(cancha!.ZonaHoraria);
-
             var fechaBuscada = DateTimeHelper.NormalizarFechaLocal(request.CreateDto.FechaReserva, zonaHoraria);
 
             var reservasDelDia = await _ReservaRepository.FindByAsNoTrackingAsync(

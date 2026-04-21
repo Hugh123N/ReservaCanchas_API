@@ -21,6 +21,8 @@ namespace Reserva.Domain.Mapping.DetalleReserva
                     opt => opt.MapFrom(src => src.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1))
                 .ForMember(dest => dest.HoraFin,
                     opt => opt.MapFrom(src => src.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1))
+                .ForMember(dest => dest.Precio,
+                    opt => opt.MapFrom(src => src.IdHorarioCanchaNavigation!.PrecioHora))
                 .ReverseMap();
 
             CreateMap<Entity.DetalleReserva, ListDetalleReservaDto>()

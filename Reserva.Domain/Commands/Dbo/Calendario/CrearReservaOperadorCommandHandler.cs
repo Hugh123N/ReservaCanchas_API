@@ -75,7 +75,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         {
             var response = new ResponseDto<ReservaOperadorResponseDto>();
             Guid? idUserCurrent = null;
-            idUserCurrent = Guid.Parse("08de81e6-d268-4d7e-8c8f-e1bb72b454e6"); //_userIdentity.GetCurrentUserId(); 
+            idUserCurrent = _userIdentity.GetCurrentUserId(); 
             if (idUserCurrent == null)
             {
                 response.AddErrorResult("No se pudo obtener el usuario actual");
@@ -149,7 +149,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 }
 
                 // Buscar operador si es necesario
-                int? idOperador = null;
+                int? idOperador = null; // TODO: en caso no tengo operador y solo eata encargado el proveedor deberia pasar el proveedor
                 if (dto.TipoReserva == TipoReservaOperador.Inmediata && idUserCurrent != Guid.Empty)
                 {
                     var operador = await _operadorRepository.GetByAsync(
@@ -226,21 +226,15 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
             if (clienteDto.EsNuevoCliente)
             {
-                var nombres = clienteDto.NombreCompleto?.Split(' ', 2) ?? new[] { "", "" };
-                var firstName = nombres[0];
-                var lastName = nombres.Length > 1 ? nombres[1] : "";
-
-                var userName = !string.IsNullOrEmpty(clienteDto.Email)
-                    ? clienteDto.Email
-                    : clienteDto.Telefono;
+                //var userName = !string.IsNullOrEmpty(clienteDto.Email)
+                //    ? clienteDto.Email : clienteDto.Telefono;
 
                 var createUserDto = new CreateUsuarioDto
                 {
-                    FirstName = firstName,
-                    LastName = lastName,
+                    FirstName = clienteDto.Nombre,
+                    LastName = clienteDto.Apellidos,
                     PhoneNumber = clienteDto.Telefono,
-                    Email = clienteDto.Email,
-                    UserName = userName,
+                    Email = clienteDto.Email
                 };
 
                 var resultUser = await _mediator!.Send(new CreateUsuarioCommand(createUserDto), cancellationToken);

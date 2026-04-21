@@ -71,11 +71,15 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     // Si es cliente nuevo
                     When(x => x.RequestDto.Cliente.EsNuevoCliente, () =>
                     {
-                        RuleFor(x => x.RequestDto.Cliente.NombreCompleto)
+                        RuleFor(x => x.RequestDto.Cliente.Nombre)
                             .NotEmpty()
                             .WithMessage("El nombre del cliente es obligatorio")
                             .MinimumLength(3)
                             .WithMessage("El nombre debe tener al menos 3 caracteres");
+
+                        RuleFor(x => x.RequestDto.Cliente.Apellidos)
+                            .NotEmpty()
+                            .WithMessage("El Appellido del cliente es obligatorio");
 
                         RuleFor(x => x.RequestDto.Cliente.Telefono)
                             .NotEmpty()

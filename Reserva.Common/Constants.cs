@@ -81,7 +81,7 @@ namespace Reserva.Common
         }
         public struct DEFECT
         {
-            public const int PRE_RESERVA = 12;
+            public const int PRE_RESERVA = 24;
         }
 
     }
