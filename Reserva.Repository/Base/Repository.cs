@@ -63,9 +63,7 @@ namespace Reserva.Repository.Base
 
             UpdateAuditTrails(entity, false);
 
-            _dbContext.Set<TEntity>().Attach(entity);
             _dbContext.Entry(entity).State = EntityState.Modified;
-            _dbContext.Update(entity);
 
             //_auditService.AuditEntity(Operation.Update, _userIdentity.GetCurrentUser(), entity);
 

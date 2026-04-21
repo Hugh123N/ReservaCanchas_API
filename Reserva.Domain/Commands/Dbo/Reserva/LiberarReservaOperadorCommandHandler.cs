@@ -41,6 +41,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         {
             var response = new ResponseDto<GetReservaDto>();
 
+            var estadoPagoCancelado = await _EstadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Cancelado);
+
             var reserva = await _ReservaRepository.GetByAsync(r => r.IdReserva == request.LiberarDto.IdReserva && r.Activo,
                 r => r.IdEstadoReservaNavigation,
                 r => r.IdCanchaNavigation,
@@ -93,13 +95,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     porcentajeDevolucion = configuracionProveedor.PorcentajeDevolucionParcial;
 
                 var montoReembolsoEsperado = pago.Monto * (porcentajeDevolucion / 100);
-
-                //Validar que el monto de reembolso no exceda el monto pagado
-                if (request.LiberarDto.MontoReembolso > pago.Monto)
-                {
-                    response.AddErrorResult("El monto de reembolso no puede exceder el monto pagado.");
-                    return response;
-                }
+                if (montoReembolsoEsperado > pago.MontoAdelanto)
+                    montoReembolsoEsperado = pago.MontoAdelanto; // No reembolsar más de lo pagado
 
                 //Validar que el monto coincida con el esperado (tolerancia de 0.01)
                 var diferencia = Math.Abs(request.LiberarDto.MontoReembolso - montoReembolsoEsperado);
@@ -109,20 +106,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     return response;
                 }
 
-                var estadoPagoCancelado = await _EstadoPagoRepository.GetByAsNoTrackingAsync(
-                    e => e.Codigo == Constants.ESTADO_PAGO.Cancelado);
-
-                if (estadoPagoCancelado == null)
-                {
-                    response.AddErrorResult("Error del sistema: Estado de pago cancelado no encontrado.");
-                    return response;
-                }
-
                 pago.MontoReembolso = request.LiberarDto.MontoReembolso;
-                pago.IdEstadoPago = estadoPagoCancelado.IdEstadoPago;
-
-                await _PagoRepository.UpdateAsync(pago);
-                await _PagoRepository.SaveAsync();
             }
             else
             {
@@ -145,8 +129,11 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             reserva.IdEstadoReserva = estadoReservaCancelado.IdEstadoReserva;
             reserva.FechaExpiracionPreReserva = null;
+            pago.IdEstadoPago = estadoPagoCancelado.IdEstadoPago;
 
             await _ReservaRepository.UpdateAsync(reserva);
+            await _PagoRepository.UpdateAsync(pago);
+
             await _ReservaRepository.SaveAsync();
 
             var reservaDto = _mapper?.Map<GetReservaDto>(reserva);
