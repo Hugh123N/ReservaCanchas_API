@@ -107,6 +107,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 }
 
                 pago.MontoReembolso = request.LiberarDto.MontoReembolso;
+                pago.IdEstadoPago = estadoPagoCancelado.IdEstadoPago;
+
+                await _PagoRepository.UpdateAsync(pago);
+                await _PagoRepository.SaveAsync();
             }
             else
             {
@@ -129,11 +133,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             reserva.IdEstadoReserva = estadoReservaCancelado.IdEstadoReserva;
             reserva.FechaExpiracionPreReserva = null;
-            pago.IdEstadoPago = estadoPagoCancelado.IdEstadoPago;
 
             await _ReservaRepository.UpdateAsync(reserva);
-            await _PagoRepository.UpdateAsync(pago);
-
             await _ReservaRepository.SaveAsync();
 
             var reservaDto = _mapper?.Map<GetReservaDto>(reserva);
