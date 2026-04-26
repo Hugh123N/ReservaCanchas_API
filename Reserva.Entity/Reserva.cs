@@ -55,7 +55,5 @@ public partial class Reserva
 
     public virtual TipoDeporte IdTipoDeporteNavigation { get; set; } = null!;
 
-    public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
-
     public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
 }

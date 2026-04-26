@@ -30,9 +30,9 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<CanchaFavorita> CanchaFavorita { get; set; }
 
-    public virtual DbSet<Comision> Comision { get; set; }
-
     public virtual DbSet<ComprobantePago> ComprobantePago { get; set; }
+
+    public virtual DbSet<ComprobantePagoPlan> ComprobantePagoPlan { get; set; }
 
     public virtual DbSet<ConfiguracionProveedor> ConfiguracionProveedor { get; set; }
 
@@ -66,7 +66,19 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Pago> Pago { get; set; }
 
+    public virtual DbSet<PagoPlan> PagoPlan { get; set; }
+
+    public virtual DbSet<PlanCaracteristica> PlanCaracteristica { get; set; }
+
+    public virtual DbSet<PlanLimite> PlanLimite { get; set; }
+
+    public virtual DbSet<PlanTarifa> PlanTarifa { get; set; }
+
+    public virtual DbSet<Plane> Plane { get; set; }
+
     public virtual DbSet<Proveedor> Proveedor { get; set; }
+
+    public virtual DbSet<ProveedorPlan> ProveedorPlan { get; set; }
 
     public virtual DbSet<Entity.Reserva> Reserva { get; set; }
 
@@ -84,16 +96,18 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Ubigeo> Ubigeo { get; set; }
 
+    public virtual DbSet<UsoPlan> UsoPlan { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AspNetRoleClaims>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__AspNetRo__3214EC07F44C81A5");
+            entity.HasKey(e => e.Id).HasName("PK__AspNetRo__3214EC072F149AFE");
         });
 
         modelBuilder.Entity<AspNetRoles>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__AspNetRo__3214EC07FB1B488B");
+            entity.HasKey(e => e.Id).HasName("PK__AspNetRo__3214EC07AAE1F1A0");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.Activo)
@@ -117,7 +131,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<AspNetUserClaims>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__AspNetUs__3214EC07F4F7A8F4");
+            entity.HasKey(e => e.Id).HasName("PK__AspNetUs__3214EC075309F19B");
         });
 
         modelBuilder.Entity<AspNetUserLogins>(entity =>
@@ -127,7 +141,7 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.AspNetUserLogins)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__AspNetUse__UserI__412EB0B6");
+                .HasConstraintName("FK__AspNetUse__UserI__66603565");
         });
 
         modelBuilder.Entity<AspNetUserTokens>(entity =>
@@ -137,9 +151,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<AspNetUsers>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__AspNetUs__3214EC0760C3852E");
+            entity.HasKey(e => e.Id).HasName("PK__AspNetUs__3214EC074F0C5F9E");
 
-            entity.HasIndex(e => e.Email, "UQ__AspNetUs__A9D1053429CD95B1").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__AspNetUs__A9D105341ECDEFE5").IsUnique();
 
             entity.HasIndex(e => e.Email, "idx_email");
 
@@ -177,7 +191,7 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdEstadoUsuarioNavigation).WithMany(p => p.AspNetUsers)
                 .HasForeignKey(d => d.IdEstadoUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__AspNetUse__idEst__300424B4");
+                .HasConstraintName("FK__AspNetUse__idEst__5535A963");
 
             entity.HasMany(d => d.Role).WithMany(p => p.User)
                 .UsingEntity<Dictionary<string, object>>(
@@ -185,11 +199,11 @@ public partial class ReservaCanchasContext : DbContext
                     r => r.HasOne<AspNetRoles>().WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__AspNetUse__RoleI__3A81B327"),
+                        .HasConstraintName("FK__AspNetUse__RoleI__5FB337D6"),
                     l => l.HasOne<AspNetUsers>().WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__AspNetUse__UserI__398D8EEE"),
+                        .HasConstraintName("FK__AspNetUse__UserI__5EBF139D"),
                     j =>
                     {
                         j.HasKey("UserId", "RoleId");
@@ -198,7 +212,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<BloqueoHorario>(entity =>
         {
-            entity.HasKey(e => e.IdBloqueoHorario).HasName("PK__BloqueoH__59C495F4872AE1F5");
+            entity.HasKey(e => e.IdBloqueoHorario).HasName("PK__BloqueoH__59C495F451FEFC30");
 
             entity.HasIndex(e => e.IdCancha, "idx_cancha");
 
@@ -232,23 +246,23 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.BloqueoHorario)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__BloqueoHo__idCan__236943A5");
+                .HasConstraintName("FK__BloqueoHo__idCan__489AC854");
 
             entity.HasOne(d => d.IdHoraFinNavigation).WithMany(p => p.BloqueoHorarioIdHoraFinNavigation)
                 .HasForeignKey(d => d.IdHoraFin)
-                .HasConstraintName("FK__BloqueoHo__idHor__25518C17");
+                .HasConstraintName("FK__BloqueoHo__idHor__4A8310C6");
 
             entity.HasOne(d => d.IdHoraInicioNavigation).WithMany(p => p.BloqueoHorarioIdHoraInicioNavigation)
                 .HasForeignKey(d => d.IdHoraInicio)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__BloqueoHo__idHor__245D67DE");
+                .HasConstraintName("FK__BloqueoHo__idHor__498EEC8D");
         });
 
         modelBuilder.Entity<Cancha>(entity =>
         {
-            entity.HasKey(e => e.IdCancha).HasName("PK__Cancha__7ECD19EE288E93FB");
+            entity.HasKey(e => e.IdCancha).HasName("PK__Cancha__7ECD19EE4012DD4E");
 
-            entity.HasIndex(e => e.Codigo, "UQ__Cancha__40F9A206D5971518").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__Cancha__40F9A20663CD8F85").IsUnique();
 
             entity.HasIndex(e => e.Codigo, "idx_codigo");
 
@@ -293,6 +307,10 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(200)
                 .IsUnicode(false)
                 .HasColumnName("nombre");
+            entity.Property(e => e.Pais)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("pais");
             entity.Property(e => e.Precio)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("precio");
@@ -304,15 +322,6 @@ public partial class ReservaCanchasContext : DbContext
                 .HasDefaultValue(true)
                 .HasColumnName("tieneIluminacion");
             entity.Property(e => e.TieneTecho).HasColumnName("tieneTecho");
-            entity.Property(e => e.Pais)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("pais");
-            entity.Property(e => e.ZonaHoraria)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasDefaultValue("America/Lima")
-                .HasColumnName("zonaHoraria");
             entity.Property(e => e.UpdateDate).HasColumnName("updateDate");
             entity.Property(e => e.UserNameCreate)
                 .HasMaxLength(250)
@@ -322,30 +331,35 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(250)
                 .IsUnicode(false)
                 .HasColumnName("userNameUpdate");
+            entity.Property(e => e.ZonaHoraria)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasDefaultValue("America/Lima")
+                .HasColumnName("zonaHoraria");
 
             entity.HasOne(d => d.CodigoUbigeoNavigation).WithMany(p => p.Cancha)
                 .HasForeignKey(d => d.CodigoUbigeo)
-                .HasConstraintName("FK__Cancha__codigoUb__74AE54BC");
+                .HasConstraintName("FK__Cancha__codigoUb__19DFD96B");
 
             entity.HasOne(d => d.IdEstadoCanchaNavigation).WithMany(p => p.Cancha)
                 .HasForeignKey(d => d.IdEstadoCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Cancha__idEstado__73BA3083");
+                .HasConstraintName("FK__Cancha__idEstado__18EBB532");
 
             entity.HasOne(d => d.IdProveedorNavigation).WithMany(p => p.Cancha)
                 .HasForeignKey(d => d.IdProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Cancha__idProvee__71D1E811");
+                .HasConstraintName("FK__Cancha__idProvee__17036CC0");
 
             entity.HasOne(d => d.IdTipoSuperficieNavigation).WithMany(p => p.Cancha)
                 .HasForeignKey(d => d.IdTipoSuperficie)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Cancha__idTipoSu__72C60C4A");
+                .HasConstraintName("FK__Cancha__idTipoSu__17F790F9");
         });
 
         modelBuilder.Entity<CanchaFavorita>(entity =>
         {
-            entity.HasKey(e => new { e.IdUsuario, e.IdCancha }).HasName("PK__CanchaFa__93BBF23880606E12");
+            entity.HasKey(e => new { e.IdUsuario, e.IdCancha }).HasName("PK__CanchaFa__93BBF2381D73E04E");
 
             entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
             entity.Property(e => e.IdCancha).HasColumnName("idCancha");
@@ -359,52 +373,19 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.CanchaFavorita)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__CanchaFav__idCan__07C12930");
+                .HasConstraintName("FK__CanchaFav__idCan__2CF2ADDF");
 
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.CanchaFavorita)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__CanchaFav__idUsu__06CD04F7");
-        });
-
-        modelBuilder.Entity<Comision>(entity =>
-        {
-            entity.HasKey(e => e.IdComision).HasName("PK__Comision__12A3EDC271C7B4D6");
-
-            entity.Property(e => e.IdComision).HasColumnName("idComision");
-            entity.Property(e => e.Activo)
-                .HasDefaultValue(true)
-                .HasColumnName("activo");
-            entity.Property(e => e.CreateDate)
-                .HasDefaultValueSql("(sysdatetimeoffset())")
-                .HasColumnName("createDate");
-            entity.Property(e => e.Descripcion)
-                .HasMaxLength(500)
-                .IsUnicode(false)
-                .HasColumnName("descripcion");
-            entity.Property(e => e.FechaFin).HasColumnName("fechaFin");
-            entity.Property(e => e.FechaInicio)
-                .HasDefaultValueSql("(sysdatetimeoffset())")
-                .HasColumnName("fechaInicio");
-            entity.Property(e => e.Porcentaje)
-                .HasColumnType("decimal(5, 2)")
-                .HasColumnName("porcentaje");
-            entity.Property(e => e.UpdateDate).HasColumnName("updateDate");
-            entity.Property(e => e.UserNameCreate)
-                .HasMaxLength(250)
-                .IsUnicode(false)
-                .HasColumnName("userNameCreate");
-            entity.Property(e => e.UserNameUpdate)
-                .HasMaxLength(250)
-                .IsUnicode(false)
-                .HasColumnName("userNameUpdate");
+                .HasConstraintName("FK__CanchaFav__idUsu__2BFE89A6");
         });
 
         modelBuilder.Entity<ComprobantePago>(entity =>
         {
-            entity.HasKey(e => e.IdComprobantePago).HasName("PK__Comproba__31D0A1D99A51AFE9");
+            entity.HasKey(e => e.IdComprobantePago).HasName("PK__Comproba__31D0A1D9DFD34CE1");
 
-            entity.HasIndex(e => e.NumeroComprobante, "UQ__Comproba__20F00E4D9616C337").IsUnique();
+            entity.HasIndex(e => e.NumeroComprobante, "UQ__Comproba__20F00E4D6F54FA0E").IsUnique();
 
             entity.HasIndex(e => e.NumeroComprobante, "idx_numero");
 
@@ -435,12 +416,68 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdPagoNavigation).WithMany(p => p.ComprobantePago)
                 .HasForeignKey(d => d.IdPago)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Comproban__idPag__58D1301D");
+                .HasConstraintName("FK__Comproban__idPag__7E02B4CC");
+        });
+
+        modelBuilder.Entity<ComprobantePagoPlan>(entity =>
+        {
+            entity.HasKey(e => e.IdComprobantePagoPlan).HasName("PK__Comproba__C668D0CE686958B9");
+
+            entity.Property(e => e.IdComprobantePagoPlan).HasColumnName("idComprobantePagoPlan");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Direccion)
+                .HasMaxLength(300)
+                .IsUnicode(false)
+                .HasColumnName("direccion");
+            entity.Property(e => e.EstadoSunat)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("estadoSunat");
+            entity.Property(e => e.FechaEmision).HasColumnName("fechaEmision");
+            entity.Property(e => e.Hash)
+                .IsUnicode(false)
+                .HasColumnName("hash");
+            entity.Property(e => e.IdPagoPlan).HasColumnName("idPagoPlan");
+            entity.Property(e => e.Numero)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("numero");
+            entity.Property(e => e.RazonSocial)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("razonSocial");
+            entity.Property(e => e.Ruc)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("ruc");
+            entity.Property(e => e.Serie)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("serie");
+            entity.Property(e => e.TipoComprobante)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("tipoComprobante");
+            entity.Property(e => e.UrlPdf)
+                .HasMaxLength(500)
+                .IsUnicode(false)
+                .HasColumnName("urlPdf");
+            entity.Property(e => e.UrlXml)
+                .HasMaxLength(500)
+                .IsUnicode(false)
+                .HasColumnName("urlXml");
+
+            entity.HasOne(d => d.IdPagoPlanNavigation).WithMany(p => p.ComprobantePagoPlan)
+                .HasForeignKey(d => d.IdPagoPlan)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Comproban__idPag__2BC97F7C");
         });
 
         modelBuilder.Entity<ConfiguracionProveedor>(entity =>
         {
-            entity.HasKey(e => e.IdConfiguracionProveedor).HasName("PK__Configur__23C7C60DCB371627");
+            entity.HasKey(e => e.IdConfiguracionProveedor).HasName("PK__Configur__23C7C60DAE7CF726");
 
             entity.HasIndex(e => e.IdProveedor, "UQ_ConfiguracionProveedor_Proveedor").IsUnique();
 
@@ -483,12 +520,12 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdProveedorNavigation).WithOne(p => p.ConfiguracionProveedor)
                 .HasForeignKey<ConfiguracionProveedor>(d => d.IdProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Configura__idPro__5CD6CB2B");
+                .HasConstraintName("FK__Configura__idPro__02084FDA");
         });
 
         modelBuilder.Entity<DetalleReserva>(entity =>
         {
-            entity.HasKey(e => e.IdDetalleReserva).HasName("PK__DetalleR__74EEC7D1DCCD6896");
+            entity.HasKey(e => e.IdDetalleReserva).HasName("PK__DetalleR__74EEC7D1EEC7C9E7");
 
             entity.HasIndex(e => e.IdReserva, "idx_reserva");
 
@@ -501,17 +538,17 @@ public partial class ReservaCanchasContext : DbContext
 
             entity.HasOne(d => d.IdHorarioCanchaNavigation).WithMany(p => p.DetalleReserva)
                 .HasForeignKey(d => d.IdHorarioCancha)
-                .HasConstraintName("FK__DetalleRe__idHor__4B7734FF");
+                .HasConstraintName("FK__DetalleRe__idHor__70A8B9AE");
 
             entity.HasOne(d => d.IdReservaNavigation).WithMany(p => p.DetalleReserva)
                 .HasForeignKey(d => d.IdReserva)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__DetalleRe__idRes__4A8310C6");
+                .HasConstraintName("FK__DetalleRe__idRes__6FB49575");
         });
 
         modelBuilder.Entity<DiaSemana>(entity =>
         {
-            entity.HasKey(e => e.IdDiaSemana).HasName("PK__DiaSeman__10EB836BA8B27509");
+            entity.HasKey(e => e.IdDiaSemana).HasName("PK__DiaSeman__10EB836BCE2E37FD");
 
             entity.Property(e => e.IdDiaSemana)
                 .ValueGeneratedNever()
@@ -527,9 +564,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoCancha>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoCancha).HasName("PK__EstadoCa__3B089FABB8E15D5C");
+            entity.HasKey(e => e.IdEstadoCancha).HasName("PK__EstadoCa__3B089FAB12B2368B");
 
-            entity.HasIndex(e => e.Codigo, "UQ__EstadoCa__40F9A20662F4848E").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__EstadoCa__40F9A206B46F1F24").IsUnique();
 
             entity.Property(e => e.IdEstadoCancha).HasColumnName("idEstadoCancha");
             entity.Property(e => e.Activo)
@@ -552,9 +589,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoPago>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoPago).HasName("PK__EstadoPa__03C5BA2293078E1D");
+            entity.HasKey(e => e.IdEstadoPago).HasName("PK__EstadoPa__03C5BA222ABB18CF");
 
-            entity.HasIndex(e => e.Codigo, "UQ__EstadoPa__40F9A2062DC73681").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__EstadoPa__40F9A206BDE1F2EF").IsUnique();
 
             entity.Property(e => e.IdEstadoPago).HasColumnName("idEstadoPago");
             entity.Property(e => e.Activo)
@@ -577,9 +614,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoProveedor>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoProveedor).HasName("PK__EstadoPr__B0AF2C73137029F8");
+            entity.HasKey(e => e.IdEstadoProveedor).HasName("PK__EstadoPr__B0AF2C73265D54F7");
 
-            entity.HasIndex(e => e.Codigo, "UQ__EstadoPr__40F9A2067877D64F").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__EstadoPr__40F9A206C66C9A08").IsUnique();
 
             entity.Property(e => e.IdEstadoProveedor).HasColumnName("idEstadoProveedor");
             entity.Property(e => e.Activo)
@@ -602,9 +639,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoReserva>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoReserva).HasName("PK__EstadoRe__AC7BB7062ED81D62");
+            entity.HasKey(e => e.IdEstadoReserva).HasName("PK__EstadoRe__AC7BB706704764FF");
 
-            entity.HasIndex(e => e.Codigo, "UQ__EstadoRe__40F9A206408C1FF2").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__EstadoRe__40F9A206CEF02BED").IsUnique();
 
             entity.Property(e => e.IdEstadoReserva).HasColumnName("idEstadoReserva");
             entity.Property(e => e.Activo)
@@ -627,9 +664,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<EstadoUsuario>(entity =>
         {
-            entity.HasKey(e => e.IdEstadoUsuario).HasName("PK__EstadoUs__570885732D8ADF08");
+            entity.HasKey(e => e.IdEstadoUsuario).HasName("PK__EstadoUs__57088573EC940C96");
 
-            entity.HasIndex(e => e.Codigo, "UQ__EstadoUs__40F9A206C874810E").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__EstadoUs__40F9A206483882AA").IsUnique();
 
             entity.Property(e => e.IdEstadoUsuario).HasColumnName("idEstadoUsuario");
             entity.Property(e => e.Activo)
@@ -652,11 +689,11 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Hora>(entity =>
         {
-            entity.HasKey(e => e.IdHora).HasName("PK__Hora__770403DB5B7AEE3D");
+            entity.HasKey(e => e.IdHora).HasName("PK__Hora__770403DB579C38BE");
 
-            entity.HasIndex(e => e.Hora1, "UQ__Hora__7F3086DB0C970F02").IsUnique();
+            entity.HasIndex(e => e.Hora1, "UQ__Hora__7F3086DBB70BAE3D").IsUnique();
 
-            entity.HasIndex(e => e.HoraTexto, "UQ__Hora__BFA371CECBF0F10D").IsUnique();
+            entity.HasIndex(e => e.HoraTexto, "UQ__Hora__BFA371CEB2F0261A").IsUnique();
 
             entity.Property(e => e.IdHora).HasColumnName("idHora");
             entity.Property(e => e.Activo)
@@ -671,7 +708,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<HorarioCancha>(entity =>
         {
-            entity.HasKey(e => e.IdHorarioCancha).HasName("PK__HorarioC__825B785D4031E651");
+            entity.HasKey(e => e.IdHorarioCancha).HasName("PK__HorarioC__825B785D12363DA5");
 
             entity.HasIndex(e => new { e.IdCancha, e.IdDiaSemana, e.IdHoraInicio }, "UQ_HorarioCancha").IsUnique();
 
@@ -706,26 +743,26 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.HorarioCancha)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__HorarioCa__idCan__1AD3FDA4");
+                .HasConstraintName("FK__HorarioCa__idCan__40058253");
 
             entity.HasOne(d => d.IdDiaSemanaNavigation).WithMany(p => p.HorarioCancha)
                 .HasForeignKey(d => d.IdDiaSemana)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__HorarioCa__idDia__1BC821DD");
+                .HasConstraintName("FK__HorarioCa__idDia__40F9A68C");
 
             entity.HasOne(d => d.IdHoraFinNavigation).WithMany(p => p.HorarioCanchaIdHoraFinNavigation)
                 .HasForeignKey(d => d.IdHoraFin)
-                .HasConstraintName("FK__HorarioCa__idHor__1DB06A4F");
+                .HasConstraintName("FK__HorarioCa__idHor__42E1EEFE");
 
             entity.HasOne(d => d.IdHoraInicioNavigation).WithMany(p => p.HorarioCanchaIdHoraInicioNavigation)
                 .HasForeignKey(d => d.IdHoraInicio)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__HorarioCa__idHor__1CBC4616");
+                .HasConstraintName("FK__HorarioCa__idHor__41EDCAC5");
         });
 
         modelBuilder.Entity<ImagenCancha>(entity =>
         {
-            entity.HasKey(e => e.IdImagenCancha).HasName("PK__ImagenCa__A5EF7FB1A1D2ADBC");
+            entity.HasKey(e => e.IdImagenCancha).HasName("PK__ImagenCa__A5EF7FB15A71E14D");
 
             entity.HasIndex(e => e.IdCancha, "idx_cancha");
 
@@ -757,14 +794,14 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.ImagenCancha)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ImagenCan__idCan__01142BA1");
+                .HasConstraintName("FK__ImagenCan__idCan__2645B050");
         });
 
         modelBuilder.Entity<MetodoPago>(entity =>
         {
-            entity.HasKey(e => e.IdMetodoPago).HasName("PK__MetodoPa__817BFC32D5DB5102");
+            entity.HasKey(e => e.IdMetodoPago).HasName("PK__MetodoPa__817BFC327CC780EF");
 
-            entity.HasIndex(e => e.Codigo, "UQ__MetodoPa__40F9A2068A373C37").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__MetodoPa__40F9A206EBFB1349").IsUnique();
 
             entity.Property(e => e.IdMetodoPago).HasColumnName("idMetodoPago");
             entity.Property(e => e.Activo)
@@ -786,52 +823,51 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Notificacion>(entity =>
         {
-            entity.HasKey(e => e.IdNotificacion).HasName("PK__Notifica__AFE1D7E4954D7622");
-
-            entity.HasIndex(e => e.FechaCreacion, "idx_fecha");
-
-            entity.HasIndex(e => e.Leido, "idx_leido");
-
-            entity.HasIndex(e => e.IdUsuario, "idx_usuario");
+            entity.HasKey(e => e.IdNotificacion).HasName("PK__Notifica__AFE1D7E492BE10F9");
 
             entity.Property(e => e.IdNotificacion).HasColumnName("idNotificacion");
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true)
                 .HasColumnName("activo");
-            entity.Property(e => e.FechaCreacion)
+            entity.Property(e => e.Canal)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("canal");
+            entity.Property(e => e.CreateDate)
                 .HasDefaultValueSql("(sysdatetimeoffset())")
-                .HasColumnName("fechaCreacion");
-            entity.Property(e => e.FechaLeido).HasColumnName("fechaLeido");
+                .HasColumnName("createDate");
+            entity.Property(e => e.Destinatario)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("destinatario");
+            entity.Property(e => e.FechaEnvio).HasColumnName("fechaEnvio");
+            entity.Property(e => e.FechaProgramada).HasColumnName("fechaProgramada");
+            entity.Property(e => e.IdPago).HasColumnName("idPago");
+            entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
+            entity.Property(e => e.IdProveedorPlan).HasColumnName("idProveedorPlan");
             entity.Property(e => e.IdReserva).HasColumnName("idReserva");
             entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
-            entity.Property(e => e.Leido)
-                .HasDefaultValue(false)
-                .HasColumnName("leido");
-            entity.Property(e => e.Mensaje)
-                .HasColumnType("text")
-                .HasColumnName("mensaje");
+            entity.Property(e => e.Intentos).HasColumnName("intentos");
+            entity.Property(e => e.Metadata)
+                .IsUnicode(false)
+                .HasColumnName("metadata");
+            entity.Property(e => e.Modulo)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("modulo");
             entity.Property(e => e.Tipo)
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("tipo");
-            entity.Property(e => e.Titulo)
-                .HasMaxLength(200)
+            entity.Property(e => e.UserNameCreate)
+                .HasMaxLength(250)
                 .IsUnicode(false)
-                .HasColumnName("titulo");
-
-            entity.HasOne(d => d.IdReservaNavigation).WithMany(p => p.Notificacion)
-                .HasForeignKey(d => d.IdReserva)
-                .HasConstraintName("FK__Notificac__idRes__5E8A0973");
-
-            entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Notificacion)
-                .HasForeignKey(d => d.IdUsuario)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Notificac__idUsu__5CA1C101");
+                .HasColumnName("userNameCreate");
         });
 
         modelBuilder.Entity<Operador>(entity =>
         {
-            entity.HasKey(e => e.IdOperador).HasName("PK__Operador__D9DC4D4EEE7439D3");
+            entity.HasKey(e => e.IdOperador).HasName("PK__Operador__D9DC4D4E29383BAD");
 
             entity.Property(e => e.IdOperador).HasColumnName("idOperador");
             entity.Property(e => e.Activo)
@@ -853,17 +889,17 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdProveedorNavigation).WithMany(p => p.Operador)
                 .HasForeignKey(d => d.IdProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Operador__idProv__2B0A656D");
+                .HasConstraintName("FK__Operador__idProv__503BEA1C");
 
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Operador)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Operador__idUsua__2A164134");
+                .HasConstraintName("FK__Operador__idUsua__4F47C5E3");
         });
 
         modelBuilder.Entity<OperadorCancha>(entity =>
         {
-            entity.HasKey(e => e.IdOperadorCancha).HasName("PK__Operador__D96203134F79CAD5");
+            entity.HasKey(e => e.IdOperadorCancha).HasName("PK__Operador__D9620313B29E282C");
 
             entity.HasIndex(e => new { e.IdOperador, e.IdCancha }, "UQ_OperadorCancha").IsUnique();
 
@@ -881,17 +917,17 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.OperadorCancha)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__OperadorC__idCan__30C33EC3");
+                .HasConstraintName("FK__OperadorC__idCan__55F4C372");
 
             entity.HasOne(d => d.IdOperadorNavigation).WithMany(p => p.OperadorCancha)
                 .HasForeignKey(d => d.IdOperador)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__OperadorC__idOpe__2FCF1A8A");
+                .HasConstraintName("FK__OperadorC__idOpe__55009F39");
         });
 
         modelBuilder.Entity<Pago>(entity =>
         {
-            entity.HasKey(e => e.IdPago).HasName("PK__Pago__BD2295AD8FB630B0");
+            entity.HasKey(e => e.IdPago).HasName("PK__Pago__BD2295AD3C7C0EF0");
 
             entity.HasIndex(e => e.CulqiChargeId, "idx_culqiChargeId");
 
@@ -958,25 +994,188 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdEstadoPagoNavigation).WithMany(p => p.Pago)
                 .HasForeignKey(d => d.IdEstadoPago)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Pago__idEstadoPa__5224328E");
+                .HasConstraintName("FK__Pago__idEstadoPa__7755B73D");
 
             entity.HasOne(d => d.IdMetodoPagoNavigation).WithMany(p => p.Pago)
                 .HasForeignKey(d => d.IdMetodoPago)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Pago__idMetodoPa__51300E55");
+                .HasConstraintName("FK__Pago__idMetodoPa__76619304");
 
             entity.HasOne(d => d.IdOperadorNavigation).WithMany(p => p.Pago)
                 .HasForeignKey(d => d.IdOperador)
-                .HasConstraintName("FK__Pago__idOperador__531856C7");
+                .HasConstraintName("FK__Pago__idOperador__7849DB76");
 
             entity.HasOne(d => d.IdReservaNavigation).WithMany(p => p.Pago)
                 .HasForeignKey(d => d.IdReserva)
-                .HasConstraintName("FK__Pago__idReserva__4F47C5E3");
+                .HasConstraintName("FK__Pago__idReserva__74794A92");
+        });
+
+        modelBuilder.Entity<PagoPlan>(entity =>
+        {
+            entity.HasKey(e => e.IdPagoPlan).HasName("PK__PagoPlan__4C6BAB987F4D8A6E");
+
+            entity.Property(e => e.IdPagoPlan).HasColumnName("idPagoPlan");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.CodigoOperacion)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("codigoOperacion");
+            entity.Property(e => e.CulqiChargeId)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .HasColumnName("culqiChargeId");
+            entity.Property(e => e.FechaPago)
+                .HasDefaultValueSql("(sysdatetimeoffset())")
+                .HasColumnName("fechaPago");
+            entity.Property(e => e.IdEstadoPago).HasColumnName("idEstadoPago");
+            entity.Property(e => e.IdMetodoPago).HasColumnName("idMetodoPago");
+            entity.Property(e => e.IdProveedorPlan).HasColumnName("idProveedorPlan");
+            entity.Property(e => e.Moneda)
+                .HasMaxLength(3)
+                .IsUnicode(false)
+                .HasDefaultValue("PEN")
+                .IsFixedLength()
+                .HasColumnName("moneda");
+            entity.Property(e => e.Monto)
+                .HasColumnType("decimal(10, 2)")
+                .HasColumnName("monto");
+            entity.Property(e => e.RespuestaGateway)
+                .HasMaxLength(500)
+                .IsUnicode(false)
+                .HasColumnName("respuestaGateway");
+
+            entity.HasOne(d => d.IdEstadoPagoNavigation).WithMany(p => p.PagoPlan)
+                .HasForeignKey(d => d.IdEstadoPago)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PagoPlan__idEsta__24285DB4");
+
+            entity.HasOne(d => d.IdMetodoPagoNavigation).WithMany(p => p.PagoPlan)
+                .HasForeignKey(d => d.IdMetodoPago)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PagoPlan__idMeto__2334397B");
+
+            entity.HasOne(d => d.IdProveedorPlanNavigation).WithMany(p => p.PagoPlan)
+                .HasForeignKey(d => d.IdProveedorPlan)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PagoPlan__idProv__214BF109");
+        });
+
+        modelBuilder.Entity<PlanCaracteristica>(entity =>
+        {
+            entity.HasKey(e => e.IdPlanCaracteristica).HasName("PK__PlanCara__BBB5CA8798739DCF");
+
+            entity.Property(e => e.IdPlanCaracteristica).HasColumnName("idPlanCaracteristica");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("descripcion");
+            entity.Property(e => e.IdPlane).HasColumnName("idPlane");
+            entity.Property(e => e.Orden).HasColumnName("orden");
+
+            entity.HasOne(d => d.IdPlaneNavigation).WithMany(p => p.PlanCaracteristica)
+                .HasForeignKey(d => d.IdPlane)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PlanCarac__idPla__1209AD79");
+        });
+
+        modelBuilder.Entity<PlanLimite>(entity =>
+        {
+            entity.HasKey(e => e.IdPlanLimite).HasName("PK__PlanLimi__A89B181A79B038ED");
+
+            entity.Property(e => e.IdPlanLimite).HasColumnName("idPlanLimite");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Codigo)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("codigo");
+            entity.Property(e => e.IdPlane).HasColumnName("idPlane");
+            entity.Property(e => e.Valor).HasColumnName("valor");
+
+            entity.HasOne(d => d.IdPlaneNavigation).WithMany(p => p.PlanLimite)
+                .HasForeignKey(d => d.IdPlane)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PlanLimit__idPla__15DA3E5D");
+        });
+
+        modelBuilder.Entity<PlanTarifa>(entity =>
+        {
+            entity.HasKey(e => e.IdPlanTarifa).HasName("PK__PlanTari__2D9DDEB143BB4B8D");
+
+            entity.Property(e => e.IdPlanTarifa).HasColumnName("idPlanTarifa");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Codigo)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("codigo");
+            entity.Property(e => e.DuracionDias).HasColumnName("duracionDias");
+            entity.Property(e => e.IdPlane).HasColumnName("idPlane");
+            entity.Property(e => e.Moneda)
+                .HasMaxLength(3)
+                .IsUnicode(false)
+                .HasDefaultValue("PEN")
+                .IsFixedLength()
+                .HasColumnName("moneda");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+            entity.Property(e => e.PermiteAutoRenovacion).HasColumnName("permiteAutoRenovacion");
+            entity.Property(e => e.PorcentajeDescuento)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("porcentajeDescuento");
+            entity.Property(e => e.Precio)
+                .HasColumnType("decimal(10, 2)")
+                .HasColumnName("precio");
+            entity.Property(e => e.TipoCobro)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("tipoCobro");
+
+            entity.HasOne(d => d.IdPlaneNavigation).WithMany(p => p.PlanTarifa)
+                .HasForeignKey(d => d.IdPlane)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PlanTarif__idPla__0D44F85C");
+        });
+
+        modelBuilder.Entity<Plane>(entity =>
+        {
+            entity.HasKey(e => e.IdPlane).HasName("PK__Plane__39B8603C0E335451");
+
+            entity.HasIndex(e => e.Codigo, "UQ__Plane__40F9A2066AC4B25D").IsUnique();
+
+            entity.Property(e => e.IdPlane).HasColumnName("idPlane");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Codigo)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("codigo");
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(500)
+                .IsUnicode(false)
+                .HasColumnName("descripcion");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombre");
+            entity.Property(e => e.OrdenVisual)
+                .HasDefaultValue(1)
+                .HasColumnName("ordenVisual");
         });
 
         modelBuilder.Entity<Proveedor>(entity =>
         {
-            entity.HasKey(e => e.IdProveedor).HasName("PK__Proveedo__A3FA8E6BDAB104EB");
+            entity.HasKey(e => e.IdProveedor).HasName("PK__Proveedo__A3FA8E6BA6DA4ED7");
 
             entity.HasIndex(e => e.IdEstadoProveedor, "idx_estado");
 
@@ -1027,24 +1226,81 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdEstadoProveedorNavigation).WithMany(p => p.Proveedor)
                 .HasForeignKey(d => d.IdEstadoProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Proveedor__idEst__571DF1D5");
+                .HasConstraintName("FK__Proveedor__idEst__7C4F7684");
 
             entity.HasOne(d => d.IdTipoProveedorNavigation).WithMany(p => p.Proveedor)
                 .HasForeignKey(d => d.IdTipoProveedor)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Proveedor__idTip__5629CD9C");
+                .HasConstraintName("FK__Proveedor__idTip__7B5B524B");
 
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Proveedor)
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Proveedor__idUsu__5535A963");
+                .HasConstraintName("FK__Proveedor__idUsu__7A672E12");
+        });
+
+        modelBuilder.Entity<ProveedorPlan>(entity =>
+        {
+            entity.HasKey(e => e.IdProveedorPlan).HasName("PK__Proveedo__4A29306087D12D74");
+
+            entity.Property(e => e.IdProveedorPlan).HasColumnName("idProveedorPlan");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.AutoRenovacion)
+                .HasDefaultValue(true)
+                .HasColumnName("autoRenovacion");
+            entity.Property(e => e.CreateDate)
+                .HasDefaultValueSql("(sysdatetimeoffset())")
+                .HasColumnName("createDate");
+            entity.Property(e => e.CulqiCustomerId)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .HasColumnName("culqiCustomerId");
+            entity.Property(e => e.CulqiSubscriptionId)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .HasColumnName("culqiSubscriptionId");
+            entity.Property(e => e.EsActual)
+                .HasDefaultValue(true)
+                .HasColumnName("esActual");
+            entity.Property(e => e.Estado)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("estado");
+            entity.Property(e => e.FechaCancelacion).HasColumnName("fechaCancelacion");
+            entity.Property(e => e.FechaFin).HasColumnName("fechaFin");
+            entity.Property(e => e.FechaInicio).HasColumnName("fechaInicio");
+            entity.Property(e => e.FechaProximoCobro).HasColumnName("fechaProximoCobro");
+            entity.Property(e => e.GracePeriodHasta).HasColumnName("gracePeriodHasta");
+            entity.Property(e => e.IdPlanTarifa).HasColumnName("idPlanTarifa");
+            entity.Property(e => e.IdPlane).HasColumnName("idPlane");
+            entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
+            entity.Property(e => e.MotivoCancelacion)
+                .HasMaxLength(300)
+                .IsUnicode(false)
+                .HasColumnName("motivoCancelacion");
+            entity.Property(e => e.UserNameCreate)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("userNameCreate");
+
+            entity.HasOne(d => d.IdPlanTarifaNavigation).WithMany(p => p.ProveedorPlan)
+                .HasForeignKey(d => d.IdPlanTarifa)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Proveedor__idPla__1A9EF37A");
+
+            entity.HasOne(d => d.IdPlaneNavigation).WithMany(p => p.ProveedorPlan)
+                .HasForeignKey(d => d.IdPlane)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Proveedor__idPla__19AACF41");
         });
 
         modelBuilder.Entity<Entity.Reserva>(entity =>
         {
-            entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C8FE569615");
+            entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C8B55A745C");
 
-            entity.HasIndex(e => e.CodigoReserva, "UQ__Reserva__EFEC21CCEC6C8667").IsUnique();
+            entity.HasIndex(e => e.CodigoReserva, "UQ__Reserva__EFEC21CC5BF07731").IsUnique();
 
             entity.HasIndex(e => e.IdCancha, "idx_cancha");
 
@@ -1100,33 +1356,33 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.Reserva)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idCanch__41EDCAC5");
+                .HasConstraintName("FK__Reserva__idCanch__671F4F74");
 
             entity.HasOne(d => d.IdClienteNavigation).WithMany(p => p.Reserva)
                 .HasForeignKey(d => d.IdCliente)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idClien__40F9A68C");
+                .HasConstraintName("FK__Reserva__idClien__662B2B3B");
 
             entity.HasOne(d => d.IdEstadoReservaNavigation).WithMany(p => p.Reserva)
                 .HasForeignKey(d => d.IdEstadoReserva)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idEstad__44CA3770");
+                .HasConstraintName("FK__Reserva__idEstad__69FBBC1F");
 
             entity.HasOne(d => d.IdOperadorConfirmoNavigation).WithMany(p => p.Reserva)
                 .HasForeignKey(d => d.IdOperadorConfirmo)
-                .HasConstraintName("FK__Reserva__idOpera__45BE5BA9");
+                .HasConstraintName("FK__Reserva__idOpera__6AEFE058");
 
             entity.HasOne(d => d.IdTipoDeporteNavigation).WithMany(p => p.Reserva)
                 .HasForeignKey(d => d.IdTipoDeporte)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Reserva__idTipoD__42E1EEFE");
+                .HasConstraintName("FK__Reserva__idTipoD__681373AD");
         });
 
         modelBuilder.Entity<Servicio>(entity =>
         {
-            entity.HasKey(e => e.IdServicio).HasName("PK__Servicio__CEB981190C400EBC");
+            entity.HasKey(e => e.IdServicio).HasName("PK__Servicio__CEB98119FCECA8D7");
 
-            entity.HasIndex(e => e.Codigo, "UQ__Servicio__40F9A206BD9F8F66").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__Servicio__40F9A206CF413180").IsUnique();
 
             entity.HasIndex(e => e.Codigo, "idx_codigo");
 
@@ -1154,7 +1410,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<ServicioCancha>(entity =>
         {
-            entity.HasKey(e => e.IdServicioCancha).HasName("PK__Servicio__56B6658C8D22E04E");
+            entity.HasKey(e => e.IdServicioCancha).HasName("PK__Servicio__56B6658C3015199A");
 
             entity.HasIndex(e => new { e.IdCancha, e.IdServicio }, "UQ_ServicioCancha").IsUnique();
 
@@ -1174,19 +1430,19 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.ServicioCancha)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ServicioC__idCan__114A936A");
+                .HasConstraintName("FK__ServicioC__idCan__367C1819");
 
             entity.HasOne(d => d.IdServicioNavigation).WithMany(p => p.ServicioCancha)
                 .HasForeignKey(d => d.IdServicio)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ServicioC__idSer__123EB7A3");
+                .HasConstraintName("FK__ServicioC__idSer__37703C52");
         });
 
         modelBuilder.Entity<TipoDeporte>(entity =>
         {
-            entity.HasKey(e => e.IdTipoDeporte).HasName("PK__TipoDepo__913C11BF44A28445");
+            entity.HasKey(e => e.IdTipoDeporte).HasName("PK__TipoDepo__913C11BF25309575");
 
-            entity.HasIndex(e => e.Codigo, "UQ__TipoDepo__40F9A2062274FE86").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__TipoDepo__40F9A206E141EBE0").IsUnique();
 
             entity.HasIndex(e => e.Codigo, "idx_codigo");
 
@@ -1214,7 +1470,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<TipoDeporteCancha>(entity =>
         {
-            entity.HasKey(e => e.IdTipoDeporteCancha).HasName("PK__TipoDepo__781F42EA67432745");
+            entity.HasKey(e => e.IdTipoDeporteCancha).HasName("PK__TipoDepo__781F42EA179C92CB");
 
             entity.HasIndex(e => e.IdCancha, "idx_cancha");
 
@@ -1230,19 +1486,19 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasOne(d => d.IdCanchaNavigation).WithMany(p => p.TipoDeporteCancha)
                 .HasForeignKey(d => d.IdCancha)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__TipoDepor__idCan__7B5B524B");
+                .HasConstraintName("FK__TipoDepor__idCan__2180FB33");
 
             entity.HasOne(d => d.IdTipoDeporteNavigation).WithMany(p => p.TipoDeporteCancha)
                 .HasForeignKey(d => d.IdTipoDeporte)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__TipoDepor__idTip__7C4F7684");
+                .HasConstraintName("FK__TipoDepor__idTip__22751F6C");
         });
 
         modelBuilder.Entity<TipoProveedor>(entity =>
         {
-            entity.HasKey(e => e.IdTipoProveedor).HasName("PK__TipoProv__3CDA6006F9ACF8F2");
+            entity.HasKey(e => e.IdTipoProveedor).HasName("PK__TipoProv__3CDA600659430EFD");
 
-            entity.HasIndex(e => e.Codigo, "UQ__TipoProv__40F9A20636093F0A").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__TipoProv__40F9A206AFF8DFDC").IsUnique();
 
             entity.Property(e => e.IdTipoProveedor).HasColumnName("idTipoProveedor");
             entity.Property(e => e.Activo)
@@ -1265,9 +1521,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<TipoSuperficie>(entity =>
         {
-            entity.HasKey(e => e.IdTipoSuperficie).HasName("PK__TipoSupe__712490DA5A32565D");
+            entity.HasKey(e => e.IdTipoSuperficie).HasName("PK__TipoSupe__712490DAE5E2D3C9");
 
-            entity.HasIndex(e => e.Codigo, "UQ__TipoSupe__40F9A20676167BA6").IsUnique();
+            entity.HasIndex(e => e.Codigo, "UQ__TipoSupe__40F9A20609C8E12D").IsUnique();
 
             entity.HasIndex(e => e.Codigo, "idx_codigo");
 
@@ -1291,7 +1547,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Ubigeo>(entity =>
         {
-            entity.HasKey(e => e.CodigoUbigeo).HasName("PK__Ubigeo__B096A3D7AD347CB5");
+            entity.HasKey(e => e.CodigoUbigeo).HasName("PK__Ubigeo__B096A3D75FB5BD50");
 
             entity.Property(e => e.CodigoUbigeo)
                 .HasMaxLength(6)
@@ -1313,6 +1569,22 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("provincia");
+        });
+
+        modelBuilder.Entity<UsoPlan>(entity =>
+        {
+            entity.HasKey(e => e.IdUsoPlan).HasName("PK__UsoPlan__24EBD75A4B4BBF80");
+
+            entity.Property(e => e.IdUsoPlan).HasColumnName("idUsoPlan");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.Codigo)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("codigo");
+            entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
+            entity.Property(e => e.ValorActual).HasColumnName("valorActual");
         });
 
         OnModelCreatingPartial(modelBuilder);

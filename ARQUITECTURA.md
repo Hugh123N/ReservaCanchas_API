@@ -219,15 +219,32 @@ Program.cs               ← Configuracion de la app, DI, middlewares
 appsettings.json         ← Configuracion de conexion, JWT, etc.
 ```
 
-Los controladores **no tienen logica de negocio**. Solo reciben la request, llaman al mediador y devuelven el resultado:
+Los controladores **no tienen logica de negocio**. Implementan la interfaz de aplicacion y delegan al servicio correspondiente:
 
 ```csharp
-[HttpPost]
-public async Task<IActionResult> Create([FromBody] CreateCanchaDto dto)
+[ApiController]
+[Route("api/Cancha")]
+[Security.Authorize]
+public class CanchaController : ICanchaApplication
 {
-    var command = new CreateCanchaCommand { CreateDto = dto };
-    var response = await _mediator.Send(command);
-    return Ok(response);
+    private readonly ICanchaApplication _CanchaApplication;
+
+    public CanchaController(ICanchaApplication CanchaApplication)
+    {
+        _CanchaApplication = CanchaApplication;
+    }
+
+    [HttpPost]
+    public async Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto)
+        => await _CanchaApplication.Create(createDto);
+
+    [HttpGet("{id}")]
+    public async Task<ResponseDto<GetCanchaDto>> Get(int id)
+        => await _CanchaApplication.Get(id);
+
+    [HttpPost("search")]
+    public async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams)
+        => await _CanchaApplication.Search(searchParams);
 }
 ```
 
@@ -423,8 +440,18 @@ METODO_PAGO:
   Yape         = "04"
   Plin         = "05"
 
+ESTADO_PROVEEDOR:
+  Pendiente    = "01"
+  Aprobado     = "02"
+  Rechazado    = "03"
+
+ESTADO_USUARIO:
+  Activo       = "01"
+  Inactivo     = "02"
+  Suspendido   = "03"
+
 Role:
-  Admin, Proveedor, Cliente, Operador
+  ADMIN, PROVEEDOR, CLIENTE, OPERADOR
 ```
 
 ---
@@ -471,30 +498,9 @@ Define la tabla en la base de datos:
 public class Cancha
 {
     public int IdCancha { get; set; }
-    public string Codigo { get; set; }           // Codigo unico auto-generado
-
-    // Llaves foraneas
-    public int IdProveedor { get; set; }
-    public int IdTipoSuperficie { get; set; }
-    public int IdEstadoCancha { get; set; }
-    public string? CodigoUbigeo { get; set; }
-
-    // Informacion basica
-    public string Nombre { get; set; }
-    public string? Descripcion { get; set; }
-    public decimal Precio { get; set; }
-    public string? TelefonoCancha { get; set; }
-    public string? Direccion { get; set; }
-
-    // Ubicacion GPS
-    public decimal? Latitud { get; set; }
-    public decimal? Longitud { get; set; }
-
-    // Instalaciones
-    public int? CapacidadJugadores { get; set; }
-    public bool TieneTecho { get; set; }
-    public bool TieneIluminacion { get; set; }
-
+    .
+    .
+    .
     // Audit trail (gestionado automaticamente)
     public string UserNameCreate { get; set; }
     public DateTimeOffset CreateDate { get; set; }
@@ -505,15 +511,6 @@ public class Cancha
     // Navegacion (relaciones)
     public virtual Proveedor IdProveedorNavigation { get; set; }
     public virtual TipoSuperficie IdTipoSuperficieNavigation { get; set; }
-    public virtual EstadoCancha IdEstadoCanchaNavigation { get; set; }
-    public virtual ICollection<HorarioCancha> HorarioCancha { get; set; }
-    public virtual ICollection<Reserva> Reserva { get; set; }
-    public virtual ICollection<ImagenCancha> ImagenCancha { get; set; }
-    public virtual ICollection<ServicioCancha> ServicioCancha { get; set; }
-    public virtual ICollection<TipoDeporteCancha> TipoDeporteCancha { get; set; }
-    public virtual ICollection<BloqueoHorario> BloqueoHorario { get; set; }
-    public virtual ICollection<OperadorCancha> OperadorCancha { get; set; }
-    public virtual ICollection<CanchaFavorita> CanchaFavorita { get; set; }
 }
 ```
 
@@ -526,20 +523,9 @@ public class Cancha
 public class CreateCanchaDto
 {
     public int IdProveedor { get; set; }
-    public int IdTipoSuperficie { get; set; }
-    public string Nombre { get; set; }
-    public string? Descripcion { get; set; }
-    public decimal Precio { get; set; }
-    public string? Direccion { get; set; }
-    public string? CodigoUbigeo { get; set; }
-    public decimal? Latitud { get; set; }
-    public decimal? Longitud { get; set; }
-    public bool TieneTecho { get; set; }
-    public bool TieneIluminacion { get; set; }
-    public int? CapacidadJugadores { get; set; }
-
-    // Relaciones many-to-many a crear junto con la cancha
-    public List<HorarioCanchaDto> HorarioCanchas { get; set; }   // Horarios de atencion
+    .
+    .
+    .
     public List<int> IdsTipoDeportes { get; set; }               // Deportes disponibles
     public List<int> IdsServicios { get; set; }                  // Servicios (WiFi, estacionamiento, etc.)
 }
@@ -696,49 +682,40 @@ public class GetCanchaQueryHandler : IRequestHandler<GetCanchaQuery, ResponseDto
 
 ### Controller (`Reserva.Api/Controllers/Dbo/CanchaController.cs`)
 
-El controlador es solo un intermediario, sin logica:
+El controlador es solo un intermediario, implementa la interfaz de aplicacion y delega al servicio:
 
 ```csharp
 [ApiController]
-[Route("api/[controller]")]
-public class CanchaController : ControllerBase
+[Route("api/Cancha")]
+[Security.Authorize]
+public class CanchaController : ControllerBase, ICanchaApplication
 {
-    private readonly IMediator _mediator;
+    private readonly ICanchaApplication _CanchaApplication;
+
+    public CanchaController(ICanchaApplication CanchaApplication)
+    {
+        _CanchaApplication = CanchaApplication;
+    }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateCanchaDto dto)
-    {
-        var command = new CreateCanchaCommand { CreateDto = dto };
-        return Ok(await _mediator.Send(command));
-    }
+    public async Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto)
+        => await _CanchaApplication.Create(createDto);
 
     [HttpPut]
-    public async Task<IActionResult> Update([FromBody] UpdateCanchaDto dto)
-    {
-        var command = new UpdateCanchaCommand { UpdateDto = dto };
-        return Ok(await _mediator.Send(command));
-    }
+    public async Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto)
+        => await _CanchaApplication.Update(updateDto);
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var command = new DeleteCanchaCommand { Id = id };
-        return Ok(await _mediator.Send(command));
-    }
+    public async Task<ResponseDto> Delete(int id)
+        => await _CanchaApplication.Delete(id);
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> Get(int id)
-    {
-        var query = new GetCanchaQuery { Id = id };
-        return Ok(await _mediator.Send(query));
-    }
+    public async Task<ResponseDto<GetCanchaDto>> Get(int id)
+        => await _CanchaApplication.Get(id);
 
     [HttpPost("search")]
-    public async Task<IActionResult> Search([FromBody] SearchCanchaQueryDto dto)
-    {
-        var query = new SearchCanchaQuery { SearchDto = dto };
-        return Ok(await _mediator.Send(query));
-    }
+    public async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams)
+        => await _CanchaApplication.Search(searchParams);
 }
 ```
 

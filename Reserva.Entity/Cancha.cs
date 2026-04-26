@@ -39,7 +39,7 @@ public partial class Cancha
 
     public string? Pais { get; set; }
 
-    public string ZonaHoraria { get; set; } = "America/Lima";
+    public string ZonaHoraria { get; set; } = null!;
 
     public string UserNameCreate { get; set; } = null!;
 

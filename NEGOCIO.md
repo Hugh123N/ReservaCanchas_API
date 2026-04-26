@@ -114,26 +114,14 @@ Tablas de referencia que raramente cambian. Todas tienen combo endpoint (`/selec
 |--------|--------|
 | FUT11 | Futbol 11 |
 | FUT7 | Futbol 7 |
-| FUT6 | Futbol 6 |
-| FUT5 | Futbol 5 / Sala |
-| VOLEY | Voley |
-| BASKET | Basquet |
-| TENIS | Tenis |
-| PADEL | Padel |
-| PING | Tenis de mesa |
-| BADMIN | Badminton |
+... mas
 
 ### TipoSuperficie
 
 | Codigo | Nombre |
 |--------|--------|
 | GRASSNAT | Grass Natural |
-| GRASSINT | Grass Sintetico |
-| CEMENT | Cemento |
-| MADERA | Madera |
-| ARCILLA | Arcilla |
-| TARTAN | Tartan |
-| PARQUET | Parquet |
+... mas
 
 ### Servicio (amenidades de la cancha)
 
@@ -141,37 +129,13 @@ Tablas de referencia que raramente cambian. Todas tienen combo endpoint (`/selec
 |--------|--------|
 | ESTACION | Estacionamiento |
 | VESTUA | Vestuarios |
-| DUCHAS | Duchas |
-| WIFI | WiFi |
-| CAFETER | Cafeteria |
-| AREAESPE | Area de espera |
-| ALQBALON | Alquiler de balones |
-| ARBITRAJ | Servicio de arbitraje |
-| SEGURIDA | Seguridad |
-| ILUMINA | Iluminacion nocturna |
-| AIREACON | Aire acondicionado |
-| VENTILAC | Ventilacion |
-| PRIMAUXIL | Primeros auxilios |
-| GRADAS | Graderias |
-| PARLANTE | Sistema de sonido |
+... mas
 
 ### Hora
 
 - Tabla con todos los bloques de 30 minutos del dia: `00:00`, `00:30`, `01:00`, ..., `23:30`
 - Total: 48 registros
 - Usada como FK en `HorarioCancha` y `BloqueoHorario`
-
-### DiaSemana
-
-| ID | Nombre |
-|----|--------|
-| 1 | Lunes |
-| 2 | Martes |
-| 3 | Miercoles |
-| 4 | Jueves |
-| 5 | Viernes |
-| 6 | Sabado |
-| 7 | Domingo |
 
 ### Ubigeo
 
@@ -1296,7 +1260,7 @@ activo          → false = soft delete (registro existe pero no se usa)
 | Notificacion al cliente al cancelar | TODO en `LiberarReservaOperadorCommandHandler` |
 | Usuario en CrearReservaOperador | TODO: hardcodeado (GUID temporal) |
 | Pago con Tarjeta | `PagoStrategyFactory` lo detecta como "No implementado" |
-| Planes de proveedores | Tabla `Comision` creada, logica pendiente |
+| Planes de proveedores |
 | Reportes PDF | Mencionado en frontend, no implementado |
 | Notificaciones Push | Sistema en tiempo real |
 | Sincronizacion WebSocket para calendario | Actualmente usa polling cada 30 segundos |
