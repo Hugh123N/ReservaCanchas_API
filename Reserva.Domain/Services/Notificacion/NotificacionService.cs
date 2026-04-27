@@ -650,6 +650,149 @@ namespace Reserva.Domain.Services.Notificacion
 
         #endregion
 
+        #region Notificaciones de Billing (Planes)
+
+        public async Task NotificarVencimientoPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(emailProveedor)) return;
+
+                var htmlBody = $@"
+                <!DOCTYPE html>
+                <html>
+                <head><style>body {{ font-family: Arial; }}</style></head>
+                <body>
+                    <h2>⚠️ Tu plan está por vencer</h2>
+                    <p>Tu plan <strong>{plan.Nombre}</strong> vence el <strong>{proveedorPlan.FechaFin:dd/MM/yyyy}</strong>.</p>
+                    <p>Renueva tu plan para continuar usando todos los beneficios sin interrupción.</p>
+                    <p><a href='#'>Renovar ahora</a></p>
+                </body>
+                </html>";
+
+                var emailDto = new SendEmailDto
+                {
+                    EmailCode = "PLAN_VENCIMIENTO_1_DIA",
+                    ToEmails = new[] { emailProveedor },
+                    SubjectParams = new Dictionary<string, string> { { "PLAN_VENCIMIENTO_1_DIA", "Tu plan está por vencer" } },
+                    BodyParams = new Dictionary<string, string> { { "{BODY}", htmlBody } },
+                    SuccesMessage = "Notificación enviada"
+                };
+
+                await _mediator.Send(new SendEmailCommand(emailDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al notificar vencimiento de plan");
+            }
+        }
+
+        public async Task NotificarFalloPagoPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(emailProveedor)) return;
+
+                var htmlBody = $@"
+                <!DOCTYPE html>
+                <html>
+                <head><style>body {{ font-family: Arial; }}</style></head>
+                <body>
+                    <h2>❌ Error en el pago de tu plan</h2>
+                    <p>No se pudo procesar el cobro de tu plan <strong>{plan.Nombre}</strong>.</p>
+                    <p>Por favor, actualiza tu método de pago.</p>
+                    <p><a href='#'>Actualizar Método de Pago</a></p>
+                </body>
+                </html>";
+
+                var emailDto = new SendEmailDto
+                {
+                    EmailCode = "PLAN_FALLO_PAGO",
+                    ToEmails = new[] { emailProveedor },
+                    SubjectParams = new Dictionary<string, string> { { "PLAN_FALLO_PAGO", "Error en el pago de tu plan" } },
+                    BodyParams = new Dictionary<string, string> { { "{BODY}", htmlBody } },
+                    SuccesMessage = "Notificación enviada"
+                };
+
+                await _mediator.Send(new SendEmailCommand(emailDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al notificar fallo de pago de plan");
+            }
+        }
+
+        public async Task NotificarVencimiento5DiasPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(emailProveedor)) return;
+
+                var htmlBody = $@"
+                <!DOCTYPE html>
+                <html>
+                <head><style>body {{ font-family: Arial; }}</style></head>
+                <body>
+                    <h2>🚨 Tu plan será suspendido pronto</h2>
+                    <p>Tu plan <strong>{plan.Nombre}</strong> será suspendu en 5 días.</p>
+                    <p>Actualiza tu método de pago para evitar la suspensión.</p>
+                    <p><a href='#'>Actualizar Método de Pago</a></p>
+                </body>
+                </html>";
+
+                var emailDto = new SendEmailDto
+                {
+                    EmailCode = "PLAN_VENCIMIENTO_5_DIAS",
+                    ToEmails = new[] { emailProveedor },
+                    SubjectParams = new Dictionary<string, string> { { "PLAN_VENCIMIENTO_5_DIAS", "Tu plan será suspendido" } },
+                    BodyParams = new Dictionary<string, string> { { "{BODY}", htmlBody } },
+                    SuccesMessage = "Notificación enviada"
+                };
+
+                await _mediator.Send(new SendEmailCommand(emailDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al notificar vencimiento 5 días de plan");
+            }
+        }
+
+        public async Task NotificarRenovacionExitosaPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(emailProveedor)) return;
+
+                var htmlBody = $@"
+                <!DOCTYPE html>
+                <html>
+                <head><style>body {{ font-family: Arial; }}</style></head>
+                <body>
+                    <h2>✅ Tu plan ha sido renovado</h2>
+                    <p>Tu plan <strong>{plan.Nombre}</strong> ha sido renovado exitosamente.</p>
+                    <p>Nuevo periodo: hasta el <strong>{proveedorPlan.FechaFin:dd/MM/yyyy}</strong></p>
+                </body>
+                </html>";
+
+                var emailDto = new SendEmailDto
+                {
+                    EmailCode = "PLAN_RENOVACION",
+                    ToEmails = new[] { emailProveedor },
+                    SubjectParams = new Dictionary<string, string> { { "PLAN_RENOVACION", "Tu plan ha sido renovado" } },
+                    BodyParams = new Dictionary<string, string> { { "{BODY}", htmlBody } },
+                    SuccesMessage = "Notificación enviada"
+                };
+
+                await _mediator.Send(new SendEmailCommand(emailDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al notificar renovación de plan");
+            }
+        }
+
+        #endregion
+
         #region Métodos Helper
 
         /// <summary>

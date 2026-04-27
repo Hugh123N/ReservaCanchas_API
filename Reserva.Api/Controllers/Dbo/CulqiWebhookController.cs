@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Services.Culqi;
+using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
@@ -16,20 +17,32 @@ namespace Reserva.Api.Controllers.Dbo
     [Route("api/culqi")]
     public class CulqiWebhookController : ControllerBase
     {
-        private readonly IRepository<Pago> _pagoRepository;
-        private readonly IRepository<EstadoPago> _estadoPagoRepository;
+        private readonly IRepository<Entity.Pago> _pagoRepository;
+        private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
+        private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
+        private readonly IRepository<Entity.AspNetUsers> _userRepository;
+        private readonly IRepository<Entity.Proveedor> _proveedorRepository;
         private readonly CulqiService _culqiService;
+        private readonly INotificacionService _notificacionService;
         private readonly ILogger<CulqiWebhookController> _logger;
 
         public CulqiWebhookController(
-            IRepository<Pago> pagoRepository,
-            IRepository<EstadoPago> estadoPagoRepository,
+            IRepository<Entity.Pago> pagoRepository,
+            IRepository<Entity.ProveedorPlan> proveedorPlanRepository,
+            IRepository<Entity.EstadoPago> estadoPagoRepository,
+            IRepository<Entity.AspNetUsers> userRepository,
+            IRepository<Entity.Proveedor> proveedorRepository,
             CulqiService culqiService,
+            INotificacionService notificacionService,
             ILogger<CulqiWebhookController> logger)
         {
             _pagoRepository = pagoRepository;
+            _proveedorPlanRepository = proveedorPlanRepository;
             _estadoPagoRepository = estadoPagoRepository;
+            _userRepository = userRepository;
+            _proveedorRepository = proveedorRepository;
             _culqiService = culqiService;
+            _notificacionService = notificacionService;
             _logger = logger;
         }
 
@@ -116,7 +129,23 @@ namespace Reserva.Api.Controllers.Dbo
         {
             _logger.LogInformation("Procesando pago exitoso - ChargeId: {ChargeId}", data.Id);
 
-            // Buscar el pago por CulqiChargeId
+            // Buscar primero en PagoPlan (planes de proveedores)
+            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                pp => pp.CulqiSubscriptionId == data.Id,
+                pp => pp.IdPlaneNavigation
+            );
+
+            if (proveedorPlan != null)
+            {
+                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
+                    p => p.IdProveedor == proveedorPlan.IdProveedor,
+                    p => p.IdUsuarioNavigation
+                );
+                await HandlePlanPaymentSucceeded(proveedorPlan, proveedor, data);
+                return;
+            }
+
+            // Buscar en Pago (reservas legacy)
             var pago = await _pagoRepository.GetByAsync(
                 p => p.CulqiChargeId == data.Id,
                 p => p.IdEstadoPagoNavigation
@@ -144,7 +173,7 @@ namespace Reserva.Api.Controllers.Dbo
             {
                 pago.IdEstadoPago = estadoPagado.IdEstadoPago;
                 pago.CulqiReferenceCode = data.ReferenceCode;
-                pago.CodigoOperacion = data.ReferenceCode; // Usar reference_code como código de operación
+                pago.CodigoOperacion = data.ReferenceCode;
                 pago.MontoPendiente = 0;
 
                 await _pagoRepository.UpdateAsync(pago);
@@ -154,6 +183,54 @@ namespace Reserva.Api.Controllers.Dbo
             }
         }
 
+        private async Task HandlePlanPaymentSucceeded(ProveedorPlan proveedorPlan, Entity.Proveedor? proveedor, CulqiWebhookData data)
+        {
+            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}", proveedorPlan.IdProveedorPlan);
+
+            // Buscar el PagoPlan asociado
+            var pagoPlanRepo = _proveedorPlanRepository;
+            var pagoPlan = _proveedorPlanRepository.FindByAsync(
+                pp => pp.IdProveedorPlan == proveedorPlan.IdProveedorPlan,
+                pp => pp.PagoPlan
+            ).Result.FirstOrDefault()?.PagoPlan?.FirstOrDefault();
+
+            if (pagoPlan != null)
+            {
+                var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(
+                    e => e.Codigo == Constants.ESTADO_PAGO.Pagado
+                );
+
+                if (estadoPagado != null && false)
+                {
+                    pagoPlan.IdEstadoPago = estadoPagado.IdEstadoPago;
+                    pagoPlan.CodigoOperacion = data.ReferenceCode;
+                    pagoPlan.FechaPago = DateTimeOffset.UtcNow;
+                }
+            }
+
+            // Activar el plan del proveedor
+            proveedorPlan.Estado = "ACTIVE";
+            proveedorPlan.FechaProximoCobro = null;
+            proveedorPlan.GracePeriodHasta = null;
+            proveedorPlan.CulqiSubscriptionId = data.Id;
+
+            await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
+            await _proveedorPlanRepository.SaveAsync();
+
+            // Notificar al proveedor
+            var emailExitoso = proveedor?.IdUsuarioNavigation?.Email;
+            if (!string.IsNullOrEmpty(emailExitoso))
+            {
+                await _notificacionService.NotificarRenovacionExitosaPlanAsync(
+                    proveedorPlan,
+                    proveedorPlan.IdPlaneNavigation!,
+                    emailExitoso
+                );
+            }
+
+            _logger.LogInformation("ProveedorPlan {Id} activado exitosamente", proveedorPlan.IdProveedorPlan);
+        }
+
         /// <summary>
         /// Maneja el evento de pago fallido (charge.failed)
         /// </summary>
@@ -161,6 +238,23 @@ namespace Reserva.Api.Controllers.Dbo
         {
             _logger.LogInformation("Procesando pago fallido - ChargeId: {ChargeId}", data.Id);
 
+            // Buscar primero en ProveedorPlan
+            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                pp => pp.CulqiSubscriptionId == data.Id,
+                pp => pp.IdPlaneNavigation
+            );
+
+            if (proveedorPlan != null)
+            {
+                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
+                    p => p.IdProveedor == proveedorPlan.IdProveedor,
+                    p => p.IdUsuarioNavigation
+                );
+                await HandlePlanPaymentFailed(proveedorPlan, proveedor, data);
+                return;
+            }
+
+            // Buscar en Pago
             var pago = await _pagoRepository.GetByAsync(
                 p => p.CulqiChargeId == data.Id,
                 p => p.IdEstadoPagoNavigation
@@ -188,6 +282,31 @@ namespace Reserva.Api.Controllers.Dbo
             }
         }
 
+        private async Task HandlePlanPaymentFailed(ProveedorPlan proveedorPlan, Entity.Proveedor? proveedor, CulqiWebhookData data)
+        {
+            _logger.LogInformation("Procesando pago de plan fallido - ProveedorPlanId: {Id}", proveedorPlan.IdProveedorPlan);
+
+            // Cambiar estado a GRACE (periodo de gracia)
+            proveedorPlan.Estado = "GRACE";
+            proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
+
+            await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
+            await _proveedorPlanRepository.SaveAsync();
+
+            // Notificar al proveedor
+            var emailFallo = proveedor?.IdUsuarioNavigation?.Email;
+            if (!string.IsNullOrEmpty(emailFallo))
+            {
+                await _notificacionService.NotificarFalloPagoPlanAsync(
+                    proveedorPlan,
+                    proveedorPlan.IdPlaneNavigation!,
+                    emailFallo
+                );
+            }
+
+            _logger.LogInformation("ProveedorPlan {Id} cambiado a estado GRACE", proveedorPlan.IdProveedorPlan);
+        }
+
         /// <summary>
         /// Maneja el evento de cambio de estado de orden (order.status.changed)
         /// Este evento se usa para pagos con QR (Yape, Plin, billeteras móviles)
@@ -197,9 +316,30 @@ namespace Reserva.Api.Controllers.Dbo
             _logger.LogInformation("Procesando cambio de estado de orden - OrderId: {OrderId}, Estado: {State}",
                 data.Id, data.State);
 
-            // Buscar el pago asociado a esta orden
-            // Nota: La búsqueda depende de cómo se almacene la referencia de la orden
-            // Si se usa metadata, buscar por metadata en lugar de CulqiChargeId
+            // Buscar primero en ProveedorPlan
+            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                pp => pp.CulqiSubscriptionId == data.Id,
+                pp => pp.IdPlaneNavigation
+            );
+
+            if (proveedorPlan != null)
+            {
+                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
+                    p => p.IdProveedor == proveedorPlan.IdProveedor,
+                    p => p.IdUsuarioNavigation
+                );
+                if (data.State == "paid" || data.State == "paid_out")
+                {
+                    await HandlePlanPaymentSucceeded(proveedorPlan, proveedor, data);
+                }
+                else if (data.State == "expired" || data.State == "deleted")
+                {
+                    await HandlePlanPaymentFailed(proveedorPlan, proveedor, data);
+                }
+                return;
+            }
+
+            // Buscar en Pago
             var pago = await _pagoRepository.GetByAsync(
                 p => p.CulqiChargeId == data.Id || p.NumeroReferencia == data.Id,
                 p => p.IdEstadoPagoNavigation

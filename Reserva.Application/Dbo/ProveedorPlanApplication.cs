@@ -28,5 +28,20 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<SearchResultDto<SearchProveedorPlanDto>>> Search(SearchParamsDto<SearchProveedorPlanFilterDto> searchParams)
             => await _mediator.Send(new SearchProveedorPlanQuery(searchParams));
 
+        public async Task<ResponseDto<GetProveedorPlanCurrentDto>> GetCurrent(int idProveedor)
+            => await _mediator.Send(new GetCurrentProveedorPlanQuery(idProveedor));
+
+        public async Task<ResponseDto<CheckoutResponseDto>> Checkout(CheckoutPlanDto checkoutDto)
+            => await _mediator.Send(new CheckoutPlanCommand(checkoutDto));
+
+        public async Task<ResponseDto<IEnumerable<PagoPlanDto>>> GetPayments(int idProveedor)
+            => await _mediator.Send(new GetPaymentsProveedorPlanQuery(idProveedor));
+
+        public async Task<ResponseDto> CancelAutoRenew(int idProveedorPlan)
+            => await _mediator.Send(new CancelAutoRenewCommand(idProveedorPlan));
+
+        public async Task<ResponseDto> RetryPayment(RetryPaymentDto retryPaymentDto)
+            => await _mediator.Send(new RetryPaymentPlanCommand(retryPaymentDto));
+
     }
 }

@@ -84,5 +84,16 @@ namespace Reserva.Common
             public const int PRE_RESERVA = 24;
         }
 
+        public struct NOTIFICATION
+        {
+            public struct BILLING //Modulo
+            {
+                //Tipos
+                public const string VENCIMIENTO_1_DIAANTE = "VENCIMIENTO_1_DIA";
+                public const string FALLO_PAGO_CULQUI = "FALLO_PAGO_CULQUI";
+                public const string VENCIMIENTO_5_DIAS = "VENCIMIENTO_5_DIAS";
+            }
+        }
+
     }
 }

@@ -36,5 +36,10 @@ namespace Reserva.Domain.Services.Notificacion
         /// Envia recordatorio al cliente 1 hora antes de su reserva confirmada
         /// </summary>
         Task NotificarRecordatorioReservaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, string horariosFormateado);
+
+        Task NotificarVencimientoPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor);
+        Task NotificarFalloPagoPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor);
+        Task NotificarVencimiento5DiasPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor);
+        Task NotificarRenovacionExitosaPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor);
     }
 }

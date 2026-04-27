@@ -39,6 +39,7 @@ namespace Reserva.Domain.Extensions
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();
+            services.AddHostedService<PlanExpirationService>();
 
             return services;
         }
