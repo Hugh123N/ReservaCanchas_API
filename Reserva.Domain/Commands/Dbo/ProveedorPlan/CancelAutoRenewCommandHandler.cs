@@ -8,7 +8,7 @@ using Reserva.Entity;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 {
-    public class CancelAutoRenewCommandHandler : CommandHandlerBase<CancelAutoRenewCommand, ResponseDto>
+    public class CancelAutoRenewCommandHandler : CommandHandlerBase<CancelAutoRenewCommand>
     {
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
 
@@ -48,9 +48,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
     public class CancelAutoRenewCommandValidator : CommandValidatorBase<CancelAutoRenewCommand>
     {
-        public CancelAutoRenewCommandValidator()
-        {
-            ValidateId(x => x.IdProveedorPlan, "Suscripción");
-        }
+        // public CancelAutoRenewCommandValidator()
+        // {
+        //     ValidateId(x => x.IdProveedorPlan, "Suscripción");
+        // }
     }
 }

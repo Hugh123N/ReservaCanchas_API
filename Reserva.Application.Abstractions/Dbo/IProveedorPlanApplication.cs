@@ -14,7 +14,7 @@ namespace Reserva.Application.Abstractions.Dbo
 
         Task<ResponseDto<GetProveedorPlanCurrentDto>> GetCurrent(int idProveedor);
         Task<ResponseDto<CheckoutResponseDto>> Checkout(CheckoutPlanDto checkoutDto);
-        Task<ResponseDto<IEnumerable<PagoPlanDto>>> GetPayments(int idProveedor);
+        Task<ResponseDto<List<PagoPlanDto>>> GetPayments(int idProveedor);
         Task<ResponseDto> CancelAutoRenew(int idProveedorPlan);
         Task<ResponseDto> RetryPayment(RetryPaymentDto retryPaymentDto);
 
