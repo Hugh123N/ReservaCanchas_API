@@ -1,6 +1,8 @@
 using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Culqi;
@@ -13,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 {
-    public class CheckoutPlanCommandHandler : CommandHandlerBase<CheckoutPlanCommand, CheckoutResponseDto>
+    public class CheckoutPlanCommandHandler : CommandHandlerBase<CheckoutPlanCommand>
     {
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
         private readonly IRepository<Entity.Plane> _planeRepository;
@@ -21,7 +23,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
         private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
         private readonly IRepository<Entity.PagoPlan> _pagoPlanRepository;
-        private readonly CulqiService _culqiService;
+        private readonly IRepository<Entity.Proveedor> _proveedorRepository;
+        private readonly ICulqiService _culqiService;
+        private readonly ILogger<CheckoutPlanCommandHandler> _logger;
 
         public CheckoutPlanCommandHandler(
             IUnitOfWork unitOfWork,
@@ -34,7 +38,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             IRepository<Entity.EstadoPago> estadoPagoRepository,
             IRepository<Entity.MetodoPago> metodoPagoRepository,
             IRepository<Entity.PagoPlan> pagoPlanRepository,
-            CulqiService culqiService
+            IRepository<Entity.Proveedor> proveedorRepository,
+            ICulqiService culqiService,
+            ILogger<CheckoutPlanCommandHandler> logger
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _proveedorPlanRepository = proveedorPlanRepository;
@@ -43,18 +49,27 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             _estadoPagoRepository = estadoPagoRepository;
             _metodoPagoRepository = metodoPagoRepository;
             _pagoPlanRepository = pagoPlanRepository;
+            _proveedorRepository = proveedorRepository;
             _culqiService = culqiService;
+            _logger = logger;
         }
 
-        public override async Task<ResponseDto<CheckoutResponseDto>> HandleCommand(CheckoutPlanCommand request, CancellationToken cancellationToken)
+        public override async Task<ResponseDto> HandleCommand(CheckoutPlanCommand request, CancellationToken cancellationToken)
         {
-            var response = new ResponseDto<CheckoutResponseDto>();
+            var response = new ResponseDto();
             var dto = request.CheckoutDto;
 
             var tarifa = await _tarifaRepository.GetByAsync(x => x.IdPlanTarifa == dto.IdPlanTarifa, x => x.IdPlaneNavigation);
             if (tarifa == null)
             {
                 response.AddErrorResult("Tarifa no encontrada");
+                return response;
+            }
+
+            var proveedor = await _proveedorRepository.GetByAsync(x => x.IdProveedor == dto.IdProveedor, x => x.IdUsuarioNavigation);
+            if (proveedor == null)
+            {
+                response.AddErrorResult("Proveedor no encontrado");
                 return response;
             }
 
@@ -67,58 +82,125 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 monto = monto - (monto * tarifa.PorcentajeDescuento.Value / 100);
             }
 
-            var culqiRequest = new CulqiCreateChargeRequest
+            // Paso 1: Crear o obtener Customer en Culqi
+            var customerId = proveedor.CulqiCustomerId;
+            if (string.IsNullOrEmpty(customerId))
             {
-                Amount = CulqiService.ConvertToCents(monto),
-                CurrencyCode = "PEN",
-                Email = dto.Email,
-                SourceId = dto.CulqiToken ?? "",
-                Description = $"Plan {tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
-                Metadata = new Dictionary<string, string>
+                try
                 {
-                    { "plan_id", dto.IdPlane.ToString() },
-                    { "proveedor_id", dto.IdProveedor.ToString() },
-                    { "tarifa_id", dto.IdPlanTarifa.ToString() },
-                    { "tipo", "plan_proveedor" }
-                }
-            };
+                    var customerRequest = new CulqiCreateCustomerRequest
+                    {
+                        Email = dto.Email,
+                        Code = $"prov_{proveedor.IdProveedor}",
+                        FirstName = proveedor.IdUsuarioNavigation?.FirstName,
+                        LastName = proveedor.IdUsuarioNavigation?.LastName,
+                        Metadata = new Dictionary<string, string>
+                        {
+                            { "proveedor_id", proveedor.IdProveedor.ToString() }
+                        }
+                    };
 
-            CulqiChargeResponse? culqiResponse = null;
+                    var customerResponse = await _culqiService.CreateCustomerAsync(customerRequest);
+                    customerId = customerResponse.Id;
+
+                    // Guardar CustomerId en el proveedor
+                    proveedor.CulqiCustomerId = customerId;
+                    await _proveedorRepository.UpdateAsync(proveedor);
+                    await _proveedorRepository.SaveAsync();
+                }
+                catch (CulqiException ex)
+                {
+                    response.AddErrorResult(ex.UserMessage ?? "Error al crear cliente en Culqi");
+                    return response;
+                }
+            }
+
+            // Paso 2: Crear Plan en Culqi (si no existe)
+            var culqiPlanId = $"plan_{tarifa.IdPlanTarifa}";
             try
             {
-                culqiResponse = await _culqiService.CreateChargeAsync(culqiRequest);
+                var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId);
+                if (existingPlan == null)
+                {
+                    var planRequest = new CulqiCreatePlanRequest
+                    {
+                        Id = culqiPlanId,
+                        Name = $"{tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
+                        Amount = CulqiService.ConvertToCents(monto),
+                         CurrencyCode = Constants.CURRENCY.PEN,
+                        Interval = "months",
+                        IntervalCount = tarifa.DuracionDias >= 30 ? tarifa.DuracionDias / 30 : 1,
+                        Description = tarifa.Nombre,
+                        Metadata = new Dictionary<string, string>
+                        {
+                            { "tarifa_id", tarifa.IdPlanTarifa.ToString() },
+                            { "plan_id", tarifa.IdPlane.ToString() }
+                        }
+                    };
+
+                    await _culqiService.CreatePlanAsync(planRequest);
+                }
             }
             catch (CulqiException ex)
             {
-                response.AddErrorResult(ex.UserMessage ?? "Error al procesar el pago con Culqi");
+                _logger.LogWarning("Error al crear plan en Culqi (puede que ya exista): {Message}", ex.Message);
+            }
+
+            // Paso 3: Crear Suscripción en Culqi
+            CulqiSubscriptionResponse? culqiResponse = null;
+            try
+            {
+                var subscriptionRequest = new CulqiCreateSubscriptionRequest
+                {
+                    PlanId = culqiPlanId,
+                    CustomerId = customerId!,
+                    CardId = dto.CulqiToken,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "plan_id", dto.IdPlane.ToString() },
+                        { "proveedor_id", dto.IdProveedor.ToString() },
+                        { "tarifa_id", dto.IdPlanTarifa.ToString() },
+                        { "tipo", "plan_proveedor" }
+                    }
+                };
+
+                culqiResponse = await _culqiService.CreateSubscriptionAsync(subscriptionRequest);
+            }
+            catch (CulqiException ex)
+            {
+                response.AddErrorResult(ex.UserMessage ?? "Error al procesar la suscripción con Culqi");
                 return response;
             }
+
+            // Calcular fechas basadas en la duración de la tarifa
+            var fechaInicio = DateTimeOffset.UtcNow;
+            var fechaFin = fechaInicio.AddDays(tarifa.DuracionDias); //TODO: deberia ser cada mes o cada año dependiendo de la tarifa, no necesariamente en base a dias
+            var fechaProximoCobro = tarifa.PermiteAutoRenovacion == true
+                ? fechaFin : (DateTimeOffset?)null;
 
             var proveedorPlan = new Entity.ProveedorPlan
             {
                 IdProveedor = dto.IdProveedor,
                 IdPlane = dto.IdPlane,
                 IdPlanTarifa = dto.IdPlanTarifa,
-                FechaInicio = DateTimeOffset.UtcNow,
-                FechaFin = DateTimeOffset.UtcNow.AddDays(tarifa.DuracionDias),
-                FechaProximoCobro = null,
-                Estado = "PENDING",
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin,
+                FechaProximoCobro = fechaProximoCobro,
+                Estado = Constants.ESTADO_PROV_PLAN.PENDING,
                 AutoRenovacion = tarifa.PermiteAutoRenovacion ?? false,
                 EsActual = true,
                 CulqiSubscriptionId = culqiResponse?.Id,
-                CulqiCustomerId = null,
-                GracePeriodHasta = null,
-                UserNameCreate = "Sistema",
-                CreateDate = DateTimeOffset.UtcNow,
-                Activo = true
+                CulqiCustomerId = customerId,
+                GracePeriodHasta = null
             };
 
             var pagosAnteriores = await _proveedorPlanRepository.FindByAsync(x => x.IdProveedor == dto.IdProveedor && x.EsActual && x.Activo);
             foreach (var pp in pagosAnteriores)
             {
                 pp.EsActual = false;
-                await _proveedorPlanRepository.UpdateAsync(pp);
             }
+
+            await _proveedorPlanRepository.UpdateAsync(pagosAnteriores.ToArray());
 
             await _proveedorPlanRepository.AddAsync(proveedorPlan);
             await _proveedorPlanRepository.SaveAsync();
@@ -127,29 +209,17 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             {
                 IdProveedorPlan = proveedorPlan.IdProveedorPlan,
                 Monto = monto,
-                Moneda = "PEN",
+                Moneda = Constants.CURRENCY.PEN,
                 IdMetodoPago = metodoPago?.IdMetodoPago ?? 1,
                 IdEstadoPago = estadoPendiente?.IdEstadoPago ?? 1,
                 CulqiChargeId = culqiResponse?.Id,
-                CodigoOperacion = culqiResponse?.ReferenceCode,
-                Activo = true
+                CodigoOperacion = culqiResponse?.ReferenceCode
             };
 
             await _pagoPlanRepository.AddAsync(pagoPlan);
             await _pagoPlanRepository.SaveAsync();
 
-            var checkoutResponse = new CheckoutResponseDto
-            {
-                IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                CulqiChargeId = culqiResponse?.Id,
-                ReferenceCode = culqiResponse?.ReferenceCode,
-                Monto = monto,
-                Estado = "PENDIENTE"
-            };
-
-            response.UpdateData(checkoutResponse);
-            response.AddOkResult("Pago iniciado. Espera la confirmación del webhook de Culqi.");
-
+            response.AddOkResult("Suscripción iniciada. Espera la confirmación del webhook de Culqi.");
             return response;
         }
     }
@@ -172,10 +242,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     .GreaterThan(0)
                     .WithMessage("La tarifa es requerida");
 
-                RuleFor(x => x.CheckoutDto.CulqiToken)
-                    .NotEmpty()
-                    .WithMessage("El token de Culqi es requerido");
-
+                // CulqiToken es opcional (para suscripciones, el cliente ya puede tener una tarjeta guardada)
                 RuleFor(x => x.CheckoutDto.Email)
                     .NotEmpty()
                     .EmailAddress()

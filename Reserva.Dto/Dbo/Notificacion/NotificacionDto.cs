@@ -12,11 +12,8 @@ namespace Reserva.Dto.Dbo.Notificacion
         public DateTimeOffset? FechaProgramada { get; set; }
         public DateTimeOffset? FechaEnvio { get; set; }
         public int Intentos { get; set; }
-        public Guid? IdUsuario { get; set; }
-        public int? IdProveedor { get; set; }
-        public int? IdReserva { get; set; }
-        public int? IdPago { get; set; }
-        public int? IdProveedorPlan { get; set; }
+        public string? EntidadTipo { get; set; }
+        public string? EntidadId { get; set; }
         public string? Metadata { get; set; }
     }
 }

@@ -163,7 +163,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var nuevoPago = new Entity.Pago
             {
                 IdReserva = nuevaReserva.IdReserva,
-                Moneda = "PEN",
+                Moneda = Constants.CURRENCY.PEN,
                 Monto = montoTotal,
                 MontoAdelanto = 0,
                 MontoPendiente = montoTotal,

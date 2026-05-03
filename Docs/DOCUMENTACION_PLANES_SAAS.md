@@ -1,16 +1,16 @@
 # Documentación Técnica - Módulo Planes SaaS (Billing)
 
-> Esta documentación es para el equipo de desarrollo backend y frontend.
-> Contiene la implementación del sistema de planes de proveedores con Culqi.
+> Esta documentación es para el equipo de desarrollo **Frontend**.
+> Contiene los endpoints, DTOs y flujos del sistema de planes de proveedores con Culqi.
 
 ---
 
 ## Índice
 
 1. [Visión General](#1-visión-general)
-2. [Arquitectura del Módulo](#2-arquitectura-del-módulo)
-3. [Entidades y Base de Datos](#3-entidades-y-base-de-datos)
-4. [API Endpoints](#4-api-endpoints)
+2. [Arquitectura de Servicios](#2-arquitectura-de-servicios)
+3. [API Endpoints](#3-api-endpoints)
+4. [DTOs y Respuestas](#4-dtos-y-respuestas)
 5. [Flujo de Checkout (Frontend)](#5-flujo-de-checkout-frontend)
 6. [Guía de Integración Frontend](#6-guía-de-integración-frontend)
 7. [Webhooks y Notificaciones](#7-webhooks-y-notificaciones)
@@ -25,8 +25,8 @@ El módulo de **Planes SaaS** permite a los proveedores de canchas contratar pla
 
 ### Características
 
-- Catálogo de planes configurables
-- Checkout con Yape/Plin/Tarjetas
+- Catálogo de planes configurables con tarifas y características
+- Checkout con Yape/Plin/Tarjetas via Culqi
 - Renovación automática
 - Periodo de gracia (Grace Period) ante fallos
 - Notificaciones automáticas por email
@@ -34,164 +34,530 @@ El módulo de **Planes SaaS** permite a los proveedores de canchas contratar pla
 
 ---
 
-## 2. Arquitectura del Módulo
+## 2. Arquitectura de Servicios
+
+El módulo se compone de **3 servicios** independientes:
+
+| Servicio | Responsable | Endpoints Clave |
+|----------|-------------|----------------|
+| **Plane** | Catálogo de planes, tarifas y características | `GET /api/Plane/list` |
+| **ProveedorPlan** | Suscripciones activas del proveedor | `GET /api/ProveedorPlan/current/{idProveedor}`, `POST /checkout`, `POST /change-plan`, `POST /cancel-auto-renew`, `POST /retry-payment` |
+| **PagoPlan** | Historial de pagos del proveedor | `GET /api/PagoPlan/payments/{idProveedor}` |
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         FRONTEND                                │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
 │  │ Catálogo     │  │ Checkout     │  │ Panel del Proveedor   │ │
-│  │ Planes      │  │ Culqi        │  │ (Mi Plan, Historial)   │ │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘ │
+│  │ PlaneService │  │ Culqi        │  │ ProveedorPlanService │ │
+│  └──────────────┘  └──────────────┘  │ PagoPlanService      │ │
+│                                      └──────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 │ HTTP
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      BACKEND API                                │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │ ProveedorPlanController                                 │ │
-│  │ - GET /current/{idProveedor}                       │ │
-│  │ - POST /checkout                                  │ │
-│  │ - GET /payments/{idProveedor}                    │ │
-│  │ - POST /cancel-auto-renew                        │ │
-│  │ - POST /retry-payment                         │ │
-│  └──────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌───────────────────────────────────────────────────���─────────────┐
-│              APPLICATION LAYER                                │
-│  ProveedorPlanApplication                                    │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              DOMAIN LAYER (CQRS)                                │
-│  Commands: CreateCheckout, CancelAutoRenew, RetryPayment     │
-│  Queries: GetCurrentPlan, GetPaymentsHistory               │
+│  ┌────────────────┐  ┌──────────────────┐  ┌────────────────┐ │
+│  │ PlaneController│  │ProveedorPlanCtrl │  │ PagoPlanCtrl   │ │
+│  │ GET /list      │  │ GET /current/{id}│  │ GET /payments  │ │
+│  │                │  │ POST /checkout   │  │                │ │
+│  │                │  │ POST /cancel-... │  │                │ │
+│  │                │  │ POST /retry-...  │  │                │ │
+│  └────────────────┘  └──────────────────┘  └────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │              INFRASTRUCTURE                                   │
-│  - CulqiService (CreateCharge)                             │
-│  - PlanExpirationService (Background Job)                │
+│  - CulqiService (CreateSubscription, CreateCustomer)        │
+│  - PlanExpirationService (Background Job - cada 24h)        │
 │  - NotificacionService (Email)                          │
-│  - CulqiWebhookController (Webhook)                    │
+│  - CulqiWebhookController (subscription.* events)        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Entidades y Base de Datos
+## 3. API Endpoints
 
-### Plane (Catálogo de Planes)
+### 3.1 Service: Plane (Catálogo)
 
-```csharp
-public partial class Plane
-{
-    public int IdPlane { get; set; }
-    public string Codigo { get; set; }       // "BASIC", "PREMIUM", "ENTERPRISE"
-    public string Nombre { get; set; }
-    public string? Descripcion { get; set; }
-    public int? OrdenVisual { get; set; }
-    public bool Activo { get; set; }
-}
-```
+| Método | Endpoint | Descripción | Respuesta |
+|--------|----------|-------------|-----------|
+| GET | `/api/Plane/list` | Obtener todos los planes activos con tarifas y características | `ResponseDto<IEnumerable<ListPlaneDto>>` |
+| GET | `/api/Plane/{id}` | Obtener plan por ID | `ResponseDto<GetPlaneDto>` |
+| POST | `/api/Plane` | Crear plan (admin) | `ResponseDto<GetPlaneDto>` |
+| PUT | `/api/Plane` | Actualizar plan (admin) | `ResponseDto<GetPlaneDto>` |
+| DELETE | `/api/Plane/{id}` | Eliminar plan (admin) | `ResponseDto` |
 
-### PlanTarifa (Tarifas de un Plan)
+### 3.2 Service: ProveedorPlan (Suscripciones)
 
-```csharp
-public partial class PlanTarifa
-{
-    public int IdPlanTarifa { get; set; }
-    public int IdPlane { get; set; }
-    public string Codigo { get; set; }           // "MENSUAL", "ANUAL"
-    public string? Nombre { get; set; }           // "Mensual", " Anual"
-    public decimal Precio { get; set; }            // 99.00
-    public string Moneda { get; set; }             // "PEN"
-    public int DuracionDias { get; set; }           // 30 o 365
-    public decimal? PorcentajeDescuento { get; set; } // 20 (20% anual)
-    public string TipoCobro { get; set; }          // "MENSUAL" o "ANUAL"
-    public bool? PermiteAutoRenovacion { get; set; }
-    public bool Activo { get; set; }
-}
-```
+| Método | Endpoint | Descripción | Respuesta |
+|--------|----------|-------------|-----------|
+| GET | `/api/ProveedorPlan/current/{idProveedor}` | Plan actual del proveedor | `ResponseDto<GetProveedorPlanCurrentDto>` |
+| POST | `/api/ProveedorPlan/checkout` | Iniciar compra de plan | `ResponseDto<CheckoutResponseDto>` |
+| POST | `/api/ProveedorPlan/change-plan` | Cambiar plan (prorrateo automático via Culqi) | `ResponseDto<ChangePlanResponseDto>` |
+| POST | `/api/ProveedorPlan/cancel-auto-renew/{idProveedorPlan}` | Cancelar renovación automática y suscripción en Culqi | `ResponseDto` |
+| POST | `/api/ProveedorPlan/retry-payment` | Reintentar pago fallido | `ResponseDto` |
+| POST | `/api/ProveedorPlan/list` | Listar suscripciones de un proveedor | `ResponseDto<IEnumerable<ListProveedorPlanDto>>` |
+| POST | `/api/ProveedorPlan/search` | Buscar suscripciones con filtros | `ResponseDto<SearchResultDto<SearchProveedorPlanDto>>` |
 
-### ProveedorPlan (Suscripción Activa)
+### 3.3 Service: PagoPlan (Historial de Pagos)
 
-```csharp
-public partial class ProveedorPlan
-{
-    public int IdProveedorPlan { get; set; }
-    public int IdProveedor { get; set; }
-    public int IdPlane { get; set; }
-    public int IdPlanTarifa { get; set; }
-    public DateTimeOffset FechaInicio { get; set; }
-    public DateTimeOffset FechaFin { get; set; }
-    public DateTimeOffset? FechaProximoCobro { get; set; }
-    public string Estado { get; set; }              // PENDING, ACTIVE, GRACE, SUSPENDED, EXPIRED
-    public bool AutoRenovacion { get; set; }
-    public bool EsActual { get; set; }
-    public string? CulqiSubscriptionId { get; set; }  // ID del cargo en Culqi
-    public string? CulqiCustomerId { get; set; }
-    public DateTimeOffset? GracePeriodHasta { get; set; }
-    public DateTimeOffset? FechaCancelacion { get; set; }
-    public string? MotivoCancelacion { get; set; }
-    public string UserNameCreate { get; set; }
-    public DateTimeOffset CreateDate { get; set; }
-    public bool Activo { get; set; }
-}
-```
+| Método | Endpoint | Descripción | Respuesta |
+|--------|----------|-------------|-----------|
+| GET | `/api/PagoPlan/payments/{idProveedor}` | Historial de pagos del proveedor | `ResponseDto<List<GetPagoPlanDto>>` |
+| POST | `/api/PagoPlan/list` | Listar pagos de un proveedor | `ResponseDto<IEnumerable<ListPagoPlanDto>>` |
+| POST | `/api/PagoPlan/search` | Buscar pagos con filtros | `ResponseDto<SearchResultDto<SearchPagoPlanDto>>` |
 
-### PagoPlan (Historial de Pagos)
+### 3.4 Webhooks
 
-```csharp
-public partial class PagoPlan
-{
-    public int IdPagoPlan { get; set; }
-    public int IdProveedorPlan { get; set; }
-    public decimal Monto { get; set; }
-    public string? Moneda { get; set; }
-    public int IdMetodoPago { get; set; }
-    public int IdEstadoPago { get; set; }
-    public DateTimeOffset? FechaPago { get; set; }
-    public string? CulqiChargeId { get; set; }
-    public string? CodigoOperacion { get; set; }
-    public string? RespuestaGateway { get; set; }
-    public bool Activo { get; set; }
-}
-```
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/culqi/webhook` | Recepción de eventos Culqi |
+| GET | `/api/culqi/webhook/test` | Test de webhook |
 
 ---
 
-## 4. API Endpoints
+## 4. DTOs y Respuestas
 
-### Catálogo de Planes
+### 4.1 Plane - ListPlaneDto
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/Plane` | Obtener todos los planes activos |
-| GET | `/api/Plane/{id}` | Obtenerplan por ID |
-| GET | `/api/Plane/selectcombo` | Planes para dropdown |
-| GET | `/api/Plane/tarifas/{idPlan}` | Tarifas de un plan |
+**Endpoint**: `GET /api/Plane/list`
 
-### Gestión de Suscripciones
+```typescript
+interface ListPlaneDto {
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  ordenVisual: number | null;
+  planCaracteristicas: PlanCaracteristicaDto[];
+  planTarifa: GetPlanTarifaDto[];
+}
 
-| Método | Endpoint | Descripción | Autenticación |
-|--------|----------|-------------|--------------|
-| GET | `/api/ProveedorPlan/current/{idProveedor}` | Plan actual del proveedor | Proveedor |
-| POST | `/api/ProveedorPlan/checkout` | Iniciar compra de plan | Proveedor |
-| GET | `/api/ProveedorPlan/payments/{idProveedor}` | Historial de pagos | Proveedor |
-| POST | `/api/ProveedorPlan/cancel-auto-renew/{idProveedorPlan}` | Cancelar renovación | Proveedor |
-| POST | `/api/ProveedorPlan/retry-payment` | Reintentar pago fallido | Proveedor |
+interface PlanCaracteristicaDto {
+  idPlane: number;
+  descripcion: string | null;
+  orden: number;
+}
 
-### Webhooks
+interface GetPlanTarifaDto {
+  idPlanTarifa: number;
+  idPlane: number;
+  codigo: string;
+  nombre: string | null;
+  precio: number;
+  moneda: string;
+  duracionDias: number;
+  porcentajeDescuento: number | null;
+  tipoCobro: string;
+  permiteAutoRenovacion: boolean | null;
+  activo: boolean;
+}
+```
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/culqi/webhook` | Recepcón de eventos Culqi |
+**Ejemplo de respuesta**:
+
+```json
+{
+  "isValid": true,
+  "messages": [],
+  "data": [
+    {
+      "codigo": "BASIC",
+      "nombre": "Plan Básico",
+      "descripcion": "Ideal para empezar",
+      "ordenVisual": 1,
+      "planCaracteristicas": [
+        { "idPlane": 1, "descripcion": "Hasta 2 canchas", "orden": 1 },
+        { "idPlane": 1, "descripcion": "Soporte por email", "orden": 2 }
+      ],
+      "planTarifa": [
+        {
+          "idPlanTarifa": 1,
+          "idPlane": 1,
+          "codigo": "MENSUAL",
+          "nombre": "Mensual",
+          "precio": 49.90,
+          "moneda": "PEN",
+          "duracionDias": 30,
+          "porcentajeDescuento": null,
+          "tipoCobro": "MENSUAL",
+          "permiteAutoRenovacion": true,
+          "activo": true
+        },
+        {
+          "idPlanTarifa": 2,
+          "idPlane": 1,
+          "codigo": "ANUAL",
+          "nombre": "Anual",
+          "precio": 479.00,
+          "moneda": "PEN",
+          "duracionDias": 365,
+          "porcentajeDescuento": 20,
+          "tipoCobro": "ANUAL",
+          "permiteAutoRenovacion": true,
+          "activo": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 4.2 ProveedorPlan - GetProveedorPlanCurrentDto
+
+**Endpoint**: `GET /api/ProveedorPlan/current/{idProveedor}`
+
+```typescript
+interface GetProveedorPlanCurrentDto {
+  idProveedorPlan: number;
+  idProveedor: number;
+  idPlane: number;
+  idPlanTarifa: number;
+  fechaInicio: string;        // ISO 8601
+  fechaFin: string;           // ISO 8601
+  fechaProximoCobro: string | null;  // ISO 8601
+  estado: string;             // PENDING, ACTIVE, GRACE, SUSPENDED, CANCELLED
+  autoRenovacion: boolean;
+  esActual: boolean;
+  culqiSubscriptionId: string | null;
+  culqiCustomerId: string | null;
+  gracePeriodHasta: string | null;   // ISO 8601
+  fechaCancelacion: string | null;   // ISO 8601
+  motivoCancelacion: string | null;
+  activo: boolean;
+
+  // Datos del plan
+  plan: {
+    idPlane: number;
+    codigo: string;
+    nombre: string;
+    descripcion: string | null;
+    ordenVisual: number | null;
+    activo: boolean;
+  };
+
+  // Datos de la tarifa
+  planTarifas: {
+    idPlanTarifa: number;
+    idPlane: number;
+    codigo: string;
+    nombre: string | null;
+    precio: number;
+    moneda: string;
+    duracionDias: number;
+    porcentajeDescuento: number | null;
+    tipoCobro: string;
+    permiteAutoRenovacion: boolean | null;
+    activo: boolean;
+  };
+
+  // Características del plan
+  planCaracteristicas: PlanCaracteristicaDto[] | null;
+
+  // Límites del plan
+  limites: PlanLimiteDto[] | null;
+}
+
+interface PlanLimiteDto {
+  idPlane: number;
+  codigo: string;
+  valor: number;
+}
+```
+
+**Ejemplo de respuesta**:
+
+```json
+{
+  "isValid": true,
+  "messages": [],
+  "data": {
+    "idProveedorPlan": 10,
+    "idProveedor": 42,
+    "idPlane": 2,
+    "idPlanTarifa": 3,
+    "fechaInicio": "2026-01-01T00:00:00Z",
+    "fechaFin": "2026-01-31T00:00:00Z",
+    "fechaProximoCobro": "2026-01-31T00:00:00Z",
+    "estado": "ACTIVE",
+    "autoRenovacion": true,
+    "esActual": true,
+    "culqiSubscriptionId": "sub_test_abc123",
+    "culqiCustomerId": "cus_test_xyz789",
+    "gracePeriodHasta": null,
+    "fechaCancelacion": null,
+    "motivoCancelacion": null,
+    "activo": true,
+    "plan": {
+      "idPlane": 2,
+      "codigo": "PREMIUM",
+      "nombre": "Plan Premium",
+      "descripcion": "Todo lo que necesitas para crecer",
+      "ordenVisual": 2,
+      "activo": true
+    },
+    "planTarifas": {
+      "idPlanTarifa": 3,
+      "idPlane": 2,
+      "codigo": "MENSUAL",
+      "nombre": "Mensual",
+      "precio": 99.00,
+      "moneda": "PEN",
+      "duracionDias": 30,
+      "porcentajeDescuento": null,
+      "tipoCobro": "MENSUAL",
+      "permiteAutoRenovacion": true,
+      "activo": true
+    },
+    "planCaracteristicas": [
+      { "idPlane": 2, "descripcion": "Hasta 10 canchas", "orden": 1 },
+      { "idPlane": 2, "descripcion": "Soporte prioritario", "orden": 2 },
+      { "idPlane": 2, "descripcion": "Reportes avanzados", "orden": 3 }
+    ],
+    "limites": [
+      { "idPlane": 2, "codigo": "MAX_CANCHAS", "valor": 10 },
+      { "idPlane": 2, "codigo": "MAX_RESERVAS_DIA", "valor": 50 }
+    ]
+  }
+}
+```
+
+### 4.3 ProveedorPlan - CheckoutResponseDto
+
+**Endpoint**: `POST /api/ProveedorPlan/checkout`
+
+```typescript
+interface CheckoutResponseDto {
+  idProveedorPlan: number;
+  culqiSubscriptionId: string | null;
+  referenceCode: string | null;
+  monto: number;
+  moneda: string;         // "PEN"
+  estado: string;         // "PENDIENTE"
+  fechaExpiracion: string | null;  // ISO 8601
+  fechaProximoCobro: string | null; // ISO 8601
+}
+```
+
+**Request**:
+
+```typescript
+interface CheckoutPlanDto {
+  idProveedor: number;
+  idPlane: number;
+  idPlanTarifa: number;
+  culqiToken: string | null;  // Token de Culqi (opcional si ya tiene tarjeta guardada)
+  email: string;
+}
+```
+
+**Ejemplo de respuesta**:
+
+```json
+{
+  "isValid": true,
+  "messages": [
+    { "messageType": "Success", "text": "Suscripción iniciada. Espera la confirmación del webhook de Culqi." }
+  ],
+  "data": {
+    "idProveedorPlan": 10,
+    "culqiSubscriptionId": "sub_test_abc123",
+    "referenceCode": "REF-12345",
+    "monto": 99.00,
+    "moneda": "PEN",
+    "estado": "PENDIENTE",
+    "fechaExpiracion": "2026-02-01T00:00:00Z",
+    "fechaProximoCobro": "2026-02-01T00:00:00Z"
+  }
+}
+```
+
+### 4.3.1 ProveedorPlan - ChangePlanDto / ChangePlanResponseDto
+
+**Endpoint**: `POST /api/ProveedorPlan/change-plan`
+
+```typescript
+interface ChangePlanDto {
+  idProveedorPlan: number;
+  idNuevoPlane: number;
+  idNuevaPlanTarifa: number;
+}
+
+interface ChangePlanResponseDto {
+  idProveedorPlan: number;
+  idNuevoPlane: number;
+  idNuevaPlanTarifa: number;
+  culqiSubscriptionId: string | null;
+  montoProrrateado: number;
+  moneda: string;          // "PEN"
+  estado: string;          // "ACTIVE"
+  nuevaFechaFin: string | null;     // ISO 8601
+  nuevaFechaProximoCobro: string | null; // ISO 8601
+}
+```
+
+**Request**:
+
+```json
+{
+  "idProveedorPlan": 10,
+  "idNuevoPlane": 3,
+  "idNuevaPlanTarifa": 5
+}
+```
+
+**Ejemplo de respuesta**:
+
+```json
+{
+  "isValid": true,
+  "messages": [
+    { "messageType": "Success", "text": "Plan cambiado exitosamente. Culqi aplicó el prorrateo correspondiente." }
+  ],
+  "data": {
+    "idProveedorPlan": 10,
+    "idNuevoPlane": 3,
+    "idNuevaPlanTarifa": 5,
+    "culqiSubscriptionId": "sub_test_abc123",
+    "montoProrrateado": 149.00,
+    "moneda": "PEN",
+    "estado": "ACTIVE",
+    "nuevaFechaFin": "2026-03-01T00:00:00Z",
+    "nuevaFechaProximoCobro": "2026-03-01T00:00:00Z"
+  }
+}
+```
+
+### 4.4 PagoPlan - GetPagoPlanDto
+
+**Endpoint**: `GET /api/PagoPlan/payments/{idProveedor}`
+
+```typescript
+interface GetPagoPlanDto {
+  idPagoPlan: number;
+  idProveedorPlan: number;
+  monto: number;
+  moneda: string | null;
+  idMetodoPago: number;
+  idEstadoPago: number;
+  fechaPago: string | null;  // ISO 8601
+  culqiSubscriptionId: string | null;
+  codigoOperacion: string | null;
+  respuestaGateway: string | null;
+  estadoPago: string;        // Nombre del estado (Pagado, Pendiente, Rechazado)
+}
+```
+
+**Ejemplo de respuesta**:
+
+```json
+{
+  "isValid": true,
+  "messages": [],
+  "data": [
+    {
+      "idPagoPlan": 1,
+      "idProveedorPlan": 10,
+      "monto": 99.00,
+      "moneda": "PEN",
+      "idMetodoPago": 1,
+      "idEstadoPago": 1,
+      "fechaPago": "2026-01-01T10:30:00Z",
+      "culqiSubscriptionId": "sub_test_abc123",
+      "codigoOperacion": "REF-12345",
+      "respuestaGateway": null,
+      "estadoPago": "Pagado"
+    },
+    {
+      "idPagoPlan": 2,
+      "idProveedorPlan": 10,
+      "monto": 99.00,
+      "moneda": "PEN",
+      "idMetodoPago": 1,
+      "idEstadoPago": 2,
+      "fechaPago": null,
+      "culqiSubscriptionId": "sub_test_abc123",
+      "codigoOperacion": null,
+      "respuestaGateway": null,
+      "estadoPago": "Pendiente"
+    }
+  ]
+}
+```
+
+### 4.5 ProveedorPlan - ListProveedorPlanDto
+
+**Endpoint**: `POST /api/ProveedorPlan/list` (body: `int idProveedor`)
+
+```typescript
+interface ListProveedorPlanDto {
+  idProveedor: number;
+  idPlane: number;
+  idPlanTarifa: number;
+  fechaInicio: string;        // ISO 8601
+  fechaFin: string;           // ISO 8601
+  fechaProximoCobro: string | null;
+  estado: string;
+  autoRenovacion: boolean;
+  esActual: boolean;
+  culqiSubscriptionId: string | null;
+  culqiCustomerId: string | null;
+  gracePeriodHasta: string | null;
+  fechaCancelacion: string | null;
+  motivoCancelacion: string | null;
+}
+```
+
+### 4.6 ProveedorPlan - SearchProveedorPlanDto
+
+**Endpoint**: `POST /api/ProveedorPlan/search`
+
+```typescript
+interface SearchProveedorPlanDto {
+  idProveedorPlan: number | null;
+  idProveedor: number;
+  idPlane: number;
+  idPlanTarifa: number;
+  fechaInicio: string;
+  fechaFin: string;
+  fechaProximoCobro: string | null;
+  estado: string;
+  autoRenovacion: boolean;
+  esActual: boolean;
+  culqiSubscriptionId: string | null;
+  culqiCustomerId: string | null;
+  gracePeriodHasta: string | null;
+  fechaCancelacion: string | null;
+  motivoCancelacion: string | null;
+}
+
+interface SearchProveedorPlanFilterDto {
+  fechaDesde: string | null;   // ISO 8601
+  fechaHasta: string | null;   // ISO 8601
+  idProveedorPlan: number | null;
+  activo: boolean | null;
+}
+```
+
+### 4.7 ResponseDto (Wrapper Genérico)
+
+Todas las respuestas envuelven los datos en un `ResponseDto<T>`:
+
+```typescript
+interface ResponseDto<T> {
+  isValid: boolean;
+  messages: ApplicationMessageDto[];
+  data: T | null;
+}
+
+interface ApplicationMessageDto {
+  messageType: string;  // "Success", "Error", "Warning", "Info"
+  text: string;
+}
+```
 
 ---
 
@@ -204,30 +570,17 @@ public partial class PagoPlan
 
 1. CATÁLOGO
    ┌─────────────────────────────────────────────────────────────┐
-   │ GET /api/Plane/selectcombo                                  │
+   │ GET /api/Plane/list                                         │
    │                                                           │
-   │ Response:                                                 │
-   │ {                                                       │
-   │   "data": [                                              │
-   │     { "idPlane": 1, "nombre": "Basic", "descripcion": "..."},│
-   │     { "idPlane": 2, "nombre": "Premium", "descripcion": "..."}│
-   │   ]                                                     │
-   │ }                                                       │
+   │ Response: ResponseDto<IEnumerable<ListPlaneDto>>           │
+   │ - Cada plan incluye planCaracteristicas[] y planTarifa[] │
    └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
-2. SELECCIONAR TARIFA
+2. SELECCIONAR PLAN Y TARIFA
    ┌─────────────────────────────────────────────────────────────┐
-   │ GET /api/Plane/tarifas/{idPlan}                             │
-   │                                                           │
-   │ Response:                                                 │
-   │ {                                                       │
-   │   "data": [                                              │
-   │     { "idPlanTarifa": 1, "nombre": "Mensual", "precio": 99},│
-   │     { "idPlanTarifa": 2, "nombre": "Anual", "precio": 990,  │
-   │       "porcentajeDescuento": 20 }                          │
-   │   ]                                                     │
-   │ }                                                       │
+   │ El frontend muestra los planes con sus tarifas              │
+   │ El usuario selecciona un plan y una tarifa                  │
    └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -238,7 +591,7 @@ public partial class PagoPlan
    │                                                           │
    │ 2. Configurar y abrir checkout                            │
    │    Culqi.publicKey = 'pk_test_XXX';                       │
-   │    Culqi.settings({ amount: 9900, currency: 'PEN' ...}); │
+   │    Culqi.settings({ amount: monto * 100, currency: 'PEN'});│
    │    Culqi.open();                                          │
    │                                                           │
    │ 3. Capturar token (.callback de Culqi)                   │
@@ -254,26 +607,28 @@ public partial class PagoPlan
 4. PROCESAR PAGO EN BACKEND
    ┌─────────────────────────────────────────────────────────────┐
    │ POST /api/ProveedorPlan/checkout                           │
-   │ Body:                                                     │
+   │ Body: CheckoutPlanDto                                     │
    │ {                                                         │
-   │   "idProveedor": 1,                                       │
-   │   "idPlane": 1,                                           │
-   │   "idPlanTarifa": 1,                                      │
+   │   "idProveedor": 42,                                      │
+   │   "idPlane": 2,                                           │
+   │   "idPlanTarifa": 3,                                      │
    │   "culqiToken": "tok_xxx",                                 │
    │   "email": "proveedor@email.com"                           │
    │ }                                                         │
    │                                                           │
-   │ Response (202 Accepted - espera webhook):                   │
+   │ Response: ResponseDto<CheckoutResponseDto>                │
    │ {                                                         │
+   │   "isValid": true,                                        │
    │   "data": {                                               │
    │     "idProveedorPlan": 10,                                │
-   │     "culqiChargeId": "chr_xxx",                           │
+   │     "culqiSubscriptionId": "sub_xxx",                     │
    │     "referenceCode": "REF-12345",                        │
    │     "monto": 99.00,                                      │
-   │     "estado": "PENDIENTE"                                 │
-   │   },                                                     │
-   │   "isValid": true,                                        │
-   │   "messages": ["Pago iniciado..."]                       │
+   │     "moneda": "PEN",                                      │
+   │     "estado": "PENDIENTE",                                │
+   │     "fechaExpiracion": "2026-02-01T00:00:00Z",           │
+   │     "fechaProximoCobro": "2026-02-01T00:00:00Z"          │
+   │   }                                                       │
    │ }                                                         │
    └─────────────────────────────────────────────────────────────┘
                               │
@@ -283,7 +638,7 @@ public partial class PagoPlan
    │ Culqi envía webhook: POST /api/culqi/webhook                 │
    │                                                           │
    │ Backend procesa:                                          │
-   │ - Busca proveedorPlan por culqiChargeId                   │
+   │ - Busca ProveedorPlan por culqiSubscriptionId             │
    │ - Actualiza estado a ACTIVE                                │
    │ - Registra pago exitoso                                   │
    │ - Envía correo de confirmación                           │
@@ -294,19 +649,69 @@ public partial class PagoPlan
    ┌─────────────────────────────────────────────────────────────┐
    │ GET /api/ProveedorPlan/current/{idProveedor}              │
    │                                                           │
-   │ Response:                                                 │
+   │ Response: ResponseDto<GetProveedorPlanCurrentDto>         │
+   │ - Incluye plan, planTarifas, planCaracteristicas, limites │
+   └─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 5.1 Flujo de Cambio de Plan (Frontend)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE CAMBIO DE PLAN                       │
+└─────────────────────────────────────────────────────────────────┘
+
+1. OBTENER PLAN ACTUAL
+   ┌─────────────────────────────────────────────────────────────┐
+   │ GET /api/ProveedorPlan/current/{idProveedor}              │
+   │                                                           │
+   │ Verificar: estado == "ACTIVE"                             │
+   └─────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+2. SELECCIONAR NUEVO PLAN Y TARIFA
+   ┌─────────────────────────────────────────────────────────────┐
+   │ GET /api/Plane/list (si aún no se tiene)                   │
+   │                                                           │
+   │ El usuario selecciona nuevo plan y tarifa                  │
+   └─────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+3. CONFIRMAR CAMBIO DE PLAN
+   ┌─────────────────────────────────────────────────────────────┐
+   │ POST /api/ProveedorPlan/change-plan                       │
+   │ Body: ChangePlanDto                                       │
    │ {                                                         │
-   │   "data": {                                              │
-   │     "idProveedorPlan": 10,                               │
-   │     "idPlane": 1,                                       │
-   │     "nombrePlan": "Premium",                             │
-   │     "nombreTarifa": "Mensual",                           │
-   │     "fechaInicio": "2026-01-01",                       │
-   │     "fechaFin": "2026-01-31",                         │
-   │     "estado": "ACTIVE",                                │
-   │     "autoRenovacion": true                              │
-   │   }                                                      │
+   │   "idProveedorPlan": 10,                                  │
+   │   "idNuevoPlane": 3,                                      │
+   │   "idNuevaPlanTarifa": 5                                   │
    │ }                                                         │
+   │                                                           │
+   │ Response: ResponseDto<ChangePlanResponseDto>              │
+   │ {                                                         │
+   │   "isValid": true,                                        │
+   │   "data": {                                               │
+   │     "idProveedorPlan": 10,                                │
+   │     "idNuevoPlane": 3,                                    │
+   │     "idNuevaPlanTarifa": 5,                               │
+   │     "montoProrrateado": 149.00,                          │
+   │     "estado": "ACTIVE",                                   │
+   │     "nuevaFechaFin": "2026-03-01T00:00:00Z",            │
+   │     "nuevaFechaProximoCobro": "2026-03-01T00:00:00Z"   │
+   │   }                                                       │
+   │ }                                                         │
+   └─────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+4. CULQi APLICA PRORRATEO (Automático)
+   ┌─────────────────────────────────────────────────────────────┐
+   │ Culqi calcula la diferencia de días restantes del ciclo    │
+   │ actual y cobra el prorrateo automáticamente                │
+   │                                                           │
+   │ - Upgrade: cobra diferencia proporcional                  │
+   │ - Downgrade: genera crédito para próximo cobro            │
    └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -314,38 +719,109 @@ public partial class PagoPlan
 
 ## 6. Guía de Integración Frontend
 
-### 6.1 Catálogo de Planes
+### 6.1 Servicio: Plane (Catálogo)
 
 ```javascript
-// Obtener lista de planes para mostrar en el catálogo
+// Obtener lista de planes con tarifas y características
 async function getPlanes() {
-  const response = await fetch('/api/Plane/selectcombo', {
+  const response = await fetch('/api/Plane/list', {
     headers: { 'Authorization': `Bearer ${token}` }
   });
-  const data = await response.json();
-  return data.data;
-}
-
-// Obtener tarifas de un plan (para mostrar precios)
-async function getTarifas(idPlan) {
-  const response = await fetch(`/api/Plane/tarifas/${idPlan}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const data = await response.json();
-  return data.data;
+  const result = await response.json();
+  return result.data; // Array de ListPlaneDto
 }
 ```
 
-### 6.2 Checkout de Plan
+### 6.2 Servicio: ProveedorPlan (Suscripciones)
+
+```javascript
+// Obtener plan actual del proveedor
+async function getMiPlan(idProveedor) {
+  const response = await fetch(`/api/ProveedorPlan/current/${idProveedor}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const result = await response.json();
+  return result.data; // GetProveedorPlanCurrentDto
+}
+
+// Checkout - Iniciar compra de plan
+async function checkoutPlan(checkoutData) {
+  const response = await fetch('/api/ProveedorPlan/checkout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(checkoutData)
+  });
+  const result = await response.json();
+  return result; // ResponseDto<CheckoutResponseDto>
+}
+
+// Cancelar renovación automática
+async function cancelarAutoRenew(idProveedorPlan) {
+  const response = await fetch(`/api/ProveedorPlan/cancel-auto-renew/${idProveedorPlan}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const result = await response.json();
+  return result;
+}
+
+// Reintentar pago (si está en GRACE)
+async function reintentarPago(idProveedorPlan) {
+  const response = await fetch('/api/ProveedorPlan/retry-payment', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      idProveedorPlan: idProveedorPlan
+    })
+  });
+  const result = await response.json();
+  return result;
+}
+
+// Cambiar plan (Culqi aplica prorrateo automático)
+async function cambiarPlan(changePlanData) {
+  const response = await fetch('/api/ProveedorPlan/change-plan', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(changePlanData)
+  });
+  const result = await response.json();
+  return result; // ResponseDto<ChangePlanResponseDto>
+}
+```
+
+### 6.3 Servicio: PagoPlan (Historial de Pagos)
+
+```javascript
+// Obtener historial de pagos del proveedor
+async function getHistorialPagos(idProveedor) {
+  const response = await fetch(`/api/PagoPlan/payments/${idProveedor}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const result = await response.json();
+  return result.data; // Array de GetPagoPlanDto
+}
+```
+
+### 6.4 Checkout con Culqi
 
 ```javascript
 // Paso 1: Integrar CulqiJS en el HTML
 // <script src="https://checkout.culqi.com/js/v4"></script>
 
-// Paso 2: Configurar Culqi (en tu JavaScript)
+// Paso 2: Configurar Culqi
 Culqi.publicKey = 'pk_test_TU_CLAVE_PUBLICA';
 
-function abrirCheckout(monto, email, idPlan, idProveedor) {
+function abrirCheckout(monto, email, idPlan, idProveedor, idPlanTarifa) {
   Culqi.settings({
     title: 'ReservaCanchas - Plan Premium',
     currency: 'PEN',
@@ -365,7 +841,7 @@ function abrirCheckout(monto, email, idPlan, idProveedor) {
         email: email,
         idProveedor: idProveedor,
         idPlane: idPlan,
-        idPlanTarifa: tarifaSeleccionada.idPlanTarifa
+        idPlanTarifa: idPlanTarifa
       });
     } else if (Culqi.error) {
       console.error('Error Culqi:', Culqi.error);
@@ -387,7 +863,7 @@ async function procesarPago(checkoutData) {
   const result = await response.json();
 
   if (result.isValid) {
-    // Mostrar mensaje: "Pago iniciado. Recibirás un correo de confirmación."
+    // Mostrar mensaje: "Suscripción iniciada. Recibirás un correo de confirmación."
     console.log('Pago iniciado:', result.data);
   } else {
     // Mostrar error
@@ -396,62 +872,12 @@ async function procesarPago(checkoutData) {
 }
 ```
 
-### 6.3 Panel del Proveedor
-
-```javascript
-// Obtener plan actual del proveedor
-async function getMiPlan(idProveedor) {
-  const response = await fetch(`/api/ProveedorPlan/current/${idProveedor}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const result = await response.json();
-  return result.data;
-}
-
-// Obtener historial de pagos
-async function getHistorialPagos(idProveedor) {
-  const response = await fetch(`/api/ProveedorPlan/payments/${idProveedor}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const result = await response.json();
-  return result.data;
-}
-
-// Cancelar renovación automática
-async function cancelarAutoRenew(idProveedorPlan) {
-  const response = await fetch(`/api/ProveedorPlan/cancel-auto-renew/${idProveedorPlan}`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const result = await response.json();
-  return result;
-}
-
-// Reintentar pago (si está en GRACE)
-async function reintentarPago(idProveedorPlan, culqiToken) {
-  const response = await fetch('/api/ProveedorPlan/retry-payment', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      idProveedorPlan: idProveedorPlan,
-      culqiToken: culqiToken
-    })
-  });
-  const result = await response.json();
-  return result;
-}
-```
-
-### 6.4 Componentes UI Recomendados
+### 6.5 Componentes UI Recomendados
 
 ```jsx
 // Pantalla: Catálogo de Planes
 const PlanCatalogo = () => {
   const [planes, setPlanes] = useState([]);
-  const [tarifas, setTarifas] = useState({});
 
   useEffect(() => {
     loadPlanes();
@@ -460,21 +886,24 @@ const PlanCatalogo = () => {
   const loadPlanes = async () => {
     const data = await getPlanes();
     setPlanes(data);
-    // Cargar tarifas de cada plan
-    for (const plan of data) {
-      const t = await getTarifas(plan.idPlane);
-      setTarifas(prev => ({ ...prev, [plan.idPlane]: t }));
-    }
+    // Cada plan ya incluye planCaracteristicas[] y planTarifa[]
   };
 
   return (
     <div className="planes-grid">
       {planes.map(plan => (
         <PlanCard
-          key={plan.idPlane}
+          key={plan.codigo}
           plan={plan}
-          tarifas={tarifas[plan.idPlane]}
-          onSelect={(tarifa) => abrirCheckout(tarifa)}
+          tarifas={plan.planTarifa}
+          caracteristicas={plan.planCaracteristicas}
+          onSelect={(tarifa) => abrirCheckout(
+            tarifa.precio,
+            email,
+            plan.idPlane,
+            idProveedor,
+            tarifa.idPlanTarifa
+          )}
         />
       ))}
     </div>
@@ -500,11 +929,20 @@ const MiPlan = () => {
 
   return (
     <div>
-      <PlanActualCard plan={plan} />
+      <PlanActualCard
+        plan={plan.plan}
+        tarifa={plan.planTarifas}
+        fechaInicio={plan.fechaInicio}
+        fechaFin={plan.fechaFin}
+        estado={plan.estado}
+        autoRenovacion={plan.autoRenovacion}
+        caracteristicas={plan.planCaracteristicas}
+        limites={plan.limites}
+      />
       <HistorialPagosList pagos={historial} />
       {plan.estado === 'GRACE' && (
         <ReintentarPagoButton
-          onClick={() => abrirCheckoutReintento(plan.idProveedorPlan)}
+          onClick={() => reintentarPago(plan.idProveedorPlan)}
         />
       )}
       {plan.autoRenovacion && (
@@ -512,6 +950,46 @@ const MiPlan = () => {
           onClick={() => cancelarAutoRenew(plan.idProveedorPlan)}
         />
       )}
+      {plan.estado === 'ACTIVE' && (
+        <CambiarPlanButton
+          onClick={() => seleccionarNuevoPlan(plan.idProveedorPlan)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Pantalla: Cambio de Plan
+const CambiarPlan = () => {
+  const [idProveedorPlan, setIdProveedorPlan] = useState(null);
+  const [nuevoPlan, setNuevoPlan] = useState(null);
+  const [nuevaTarifa, setNuevaTarifa] = useState(null);
+
+  const handleConfirmarCambio = async () => {
+    const result = await cambiarPlan({
+      idProveedorPlan: idProveedorPlan,
+      idNuevoPlane: nuevoPlan.idPlane,
+      idNuevaPlanTarifa: nuevaTarifa.idPlanTarifa
+    });
+
+    if (result.isValid) {
+      // Mostrar: "Plan cambiado exitosamente. Culqi aplicó el prorrateo."
+      console.log('Nuevo monto:', result.data.montoProrrateado);
+    } else {
+      // Mostrar error
+      console.error('Error:', result.messages);
+    }
+  };
+
+  return (
+    <div>
+      <SelectorPlanes onSelect={(plan, tarifa) => {
+        setNuevoPlan(plan);
+        setNuevaTarifa(tarifa);
+      }} />
+      <button onClick={handleConfirmarCambio}>
+        Confirmar Cambio de Plan
+      </button>
     </div>
   );
 };
@@ -526,9 +1004,12 @@ const MiPlan = () => {
 | Evento | Acción en Backend |
 |-------|------------------|
 | `charge.succeeded` | Activar plan (ACTIVE) + Notificar |
-| `charge.failed` | Pasara GRACE + Notificar |
+| `charge.failed` | Pasar a GRACE + Notificar |
 | `order.status.changed` (paid) | Activar plan |
 | `order.status.changed` (expired) | Pasar a GRACE |
+| `subscription.created` | Log de nueva suscripción |
+| `subscription.updated` | Actualizar `FechaProximoCobro` |
+| `subscription.deleted` | Cancelar `AutoRenovacion` |
 
 ### 7.2 Notificaciones Automáticas
 
@@ -543,7 +1024,7 @@ const MiPlan = () => {
 
 | Job | Frecuencia | Acción |
 |-----|-----------|--------|
-| PlanExpirationService | Cada 24h | Verificar vencimientos |
+| PlanExpirationService | Cada 24h | Verificar vencimientos, notificar, suspender |
 
 ---
 
@@ -590,13 +1071,18 @@ GRACE (Periodo de gracia - 5 días)
      └── [5 días en GRACE] ──→ Notificación
                            (VENCIMIENTO_5_DIAS)
 
-EXPIRED (Venció sin renovación automática)
+CANCELLED (Cancelado por el proveedor)
      │
      └── [Nuevo checkout] ──→ PENDING → ACTIVE
 
 SUSPENDED (Suspendido por mora)
      │
      └── [Nuevo checkout] ──→ PENDING → ACTIVE
+
+ACTIVE ──→ [Cambio de plan] ──→ ACTIVE (prorrateo via Culqi)
+                │
+                ├── [Upgrade a plan superior] ──→ Cobra diferencia prorrateada
+                └── [Downgrade a plan inferior] ──→ Crédito para próximo cobro
 ```
 
 ### Significado de Estados
@@ -607,7 +1093,6 @@ SUSPENDED (Suspendido por mora)
 | ACTIVE | Plan activo y vigente | Completo |
 | GRACE | Pago fallido, 5 días para regularizar | Completo |
 | SUSPENDED | Suspendido por mora | Bloqueado |
-| EXPIRED | Plan vencido | Bloqueado |
 | CANCELLED | Cancelado por el proveedor | Bloqueado |
 
 ---
@@ -627,7 +1112,7 @@ SUSPENDED (Suspendido por mora)
 
 | Código | Causa | Acción |
 |--------|------|--------|
-| `pago no encontrado` | ChargeId no existe | Verificar enpanel Culqi |
+| `pago no encontrado` | SubscriptionId no existe | Verificar en panel Culqi |
 | `firma inválida` | Webhook no es de Culqi | Ignorado |
 | `webhook duplicado` | Reintento de Culqi | Ya procesado (ignorar) |
 
@@ -639,19 +1124,30 @@ SUSPENDED (Suspendido por mora)
 | `no en estado GRACE` | Plan no está en mora | No permitir reintento |
 | `error Culqi` | Error en el cobro | Mostrar mensaje |
 
+### 9.4 Errores en Change Plan
+
+| Código | Causa | Acción |
+|--------|------|--------|
+| `suscripción no encontrada` | ID inválido | Verificar ID |
+| `suscripción no está activa` | Plan cancelado o suspendido | Solo se puede cambiar en estado ACTIVE |
+| `no tiene ID de Culqi` | Sin suscripción en Culqi | Hacer checkout primero |
+| `nueva tarifa no encontrada` | ID de tarifa inválido | Verificar tarifa seleccionada |
+| `error Culqi` | Error en la API de Culqi | Mostrar mensaje, reintentar |
+
 ---
 
 ## Checklist de Implementación Frontend
 
 - [ ] Integrar CulqiJS v4 en el proyecto
-- [ ] Implementar pantalla de catálogo de planes
-- [ ] Implementar pantalla de tarifas (mensual/anual)
-- [ ] Implementar checkout con Culqi
+- [ ] Implementar pantalla de catálogo de planes (`GET /api/Plane/list`)
+- [ ] Implementar pantalla de tarifas (incluidas en ListPlaneDto.planTarifa[])
+- [ ] Implementar checkout con Culqi (`POST /api/ProveedorPlan/checkout`)
 - [ ] Implementar manejo del token de Culqi
-- [ ] Implementar panel "Mi Plan" del proveedor
-- [ ] Implementar historial de pagos
-- [ ] Implementar botón de cancelar renovación
-- [ ] Implementar flujo de reintento de pago (estado GRACE)
+- [ ] Implementar panel "Mi Plan" del proveedor (`GET /api/ProveedorPlan/current/{idProveedor}`)
+- [ ] Implementar historial de pagos (`GET /api/PagoPlan/payments/{idProveedor}`)
+- [ ] Implementar botón de cancelar renovación (`POST /api/ProveedorPlan/cancel-auto-renew/{idProveedorPlan}`)
+- [ ] Implementar flujo de reintento de pago (estado GRACE) (`POST /api/ProveedorPlan/retry-payment`)
+- [ ] Implementar pantalla de cambio de plan (`POST /api/ProveedorPlan/change-plan`)
 - [ ] Configurar credenciales de prueba Culqi
 - [ ] Probar flujo completo en ambiente de test
 
@@ -666,5 +1162,5 @@ SUSPENDED (Suspendido por mora)
 
 ---
 
-*Documento generado: 2026-04-26*
-*Versión: 1.0*
+*Documento generado: 2026-05-01*
+*Versión: 2.0 (Con 3 servicios: Plane, ProveedorPlan, PagoPlan)*

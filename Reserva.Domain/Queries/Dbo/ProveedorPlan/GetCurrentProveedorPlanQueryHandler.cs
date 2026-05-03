@@ -26,6 +26,8 @@ namespace Reserva.Domain.Queries.Dbo.ProveedorPlan
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
                 x => x.IdProveedor == request.IdProveedor && x.EsActual && x.Activo,
                 x => x.IdPlaneNavigation,
+                x => x.IdPlaneNavigation.PlanCaracteristica,
+                x => x.IdPlaneNavigation.PlanLimite,
                 x => x.IdPlanTarifaNavigation
             );
 
@@ -35,31 +37,7 @@ namespace Reserva.Domain.Queries.Dbo.ProveedorPlan
                 return response;
             }
 
-            var dto = new GetProveedorPlanCurrentDto
-            {
-                IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                IdProveedor = proveedorPlan.IdProveedor,
-                IdPlane = proveedorPlan.IdPlane,
-                IdPlanTarifa = proveedorPlan.IdPlanTarifa,
-                FechaInicio = proveedorPlan.FechaInicio,
-                FechaFin = proveedorPlan.FechaFin,
-                FechaProximoCobro = proveedorPlan.FechaProximoCobro,
-                Estado = proveedorPlan.Estado,
-                AutoRenovacion = proveedorPlan.AutoRenovacion,
-                EsActual = proveedorPlan.EsActual,
-                CulqiSubscriptionId = proveedorPlan.CulqiSubscriptionId,
-                CulqiCustomerId = proveedorPlan.CulqiCustomerId,
-                GracePeriodHasta = proveedorPlan.GracePeriodHasta,
-                FechaCancelacion = proveedorPlan.FechaCancelacion,
-                MotivoCancelacion = proveedorPlan.MotivoCancelacion,
-                Activo = proveedorPlan.Activo,
-                NombrePlan = proveedorPlan.IdPlaneNavigation?.Nombre,
-                DescripcionPlan = proveedorPlan.IdPlaneNavigation?.Descripcion,
-                NombreTarifa = proveedorPlan.IdPlanTarifaNavigation?.Nombre,
-                DuracionDias = proveedorPlan.IdPlanTarifaNavigation?.DuracionDias,
-                TipoCobro = proveedorPlan.IdPlanTarifaNavigation?.TipoCobro,
-                PrecioPlan = proveedorPlan.IdPlanTarifaNavigation?.Precio
-            };
+            var dto = _mapper!.Map<GetProveedorPlanCurrentDto>(proveedorPlan);
 
             response.UpdateData(dto);
             return response;

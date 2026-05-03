@@ -28,5 +28,7 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<SearchResultDto<SearchPagoPlanDto>>> Search(SearchParamsDto<SearchPagoPlanFilterDto> searchParams)
             => await _mediator.Send(new SearchPagoPlanQuery(searchParams));
 
+        public async Task<ResponseDto<List<GetPagoPlanDto>>> GetPayments(int idProveedor)
+            => await _mediator.Send(new GetPaymentsProveedorPlanQuery(idProveedor));
     }
 }

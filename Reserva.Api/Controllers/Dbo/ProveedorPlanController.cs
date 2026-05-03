@@ -38,21 +38,19 @@ namespace Reserva.Api.Controllers.Dbo
             => await _ProveedorPlanApplication.GetCurrent(idProveedor);
 
         [HttpPost("checkout")]
-        public async Task<ResponseDto<CheckoutResponseDto>> Checkout([FromBody] CheckoutPlanDto checkoutDto)
+        public async Task<ResponseDto> Checkout([FromBody] CheckoutPlanDto checkoutDto)
             => await _ProveedorPlanApplication.Checkout(checkoutDto);
-
-        [HttpGet("payments/{idProveedor}")]
-        public async Task<ResponseDto<List<PagoPlanDto>>> GetPayments(int idProveedor)
-            => await _ProveedorPlanApplication.GetPayments(idProveedor);
 
         [HttpPost("cancel-auto-renew/{idProveedorPlan}")]
         public async Task<ResponseDto> CancelAutoRenew(int idProveedorPlan)
             => await _ProveedorPlanApplication.CancelAutoRenew(idProveedorPlan);
 
         [HttpPost("retry-payment")]
-        //public async Task<ResponseDto<CheckoutResponseDto>> RetryPayment([FromBody] RetryPaymentDto retryPaymentDto)
         public async Task<ResponseDto> RetryPayment([FromBody] RetryPaymentDto retryPaymentDto)
             => await _ProveedorPlanApplication.RetryPayment(retryPaymentDto);
 
+        [HttpPost("change-plan")]
+        public async Task<ResponseDto<ChangePlanResponseDto>> ChangePlan([FromBody] ChangePlanDto changePlanDto)
+            => await _ProveedorPlanApplication.ChangePlan(changePlanDto);
     }
 }

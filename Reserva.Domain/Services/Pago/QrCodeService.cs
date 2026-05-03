@@ -1,4 +1,5 @@
 using QRCoder;
+using Reserva.Common;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -24,42 +25,42 @@ namespace Reserva.Domain.Services.Pago
                 tipo = "YAPE",
                 telefono = numeroTelefono,
                 monto = monto.ToString("F2"),
-                moneda = "PEN",
-                concepto = concepto,
-                timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            };
+                 moneda = Constants.CURRENCY.PEN,
+                 concepto = concepto,
+                 timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+             };
 
-            // Convertir a JSON
-            string qrText = JsonSerializer.Serialize(datosPago, new JsonSerializerOptions
-            {
-                WriteIndented = false
-            });
+             // Convertir a JSON
+             string qrText = JsonSerializer.Serialize(datosPago, new JsonSerializerOptions
+             {
+                 WriteIndented = false
+             });
 
-            // Generar QR
-            string qrBase64 = await GenerarQrGenerico(qrText);
+             // Generar QR
+             string qrBase64 = await GenerarQrGenerico(qrText);
 
-            return (qrBase64, qrText);
-        }
+             return (qrBase64, qrText);
+         }
 
-        /// <summary>
-        /// Genera un QR code para Plin
-        /// Formato: JSON con datos del pago
-        /// </summary>
-        public async Task<(string QrBase64, string QrText)> GenerarQrPlin(string numeroTelefono, decimal monto, string concepto)
-        {
-            // Validar formato de teléfono peruano (9 dígitos que empieza con 9)
-            if (!Regex.IsMatch(numeroTelefono, @"^9\d{8}$"))
-            {
-                throw new ArgumentException("El número de teléfono debe tener 9 dígitos y comenzar con 9", nameof(numeroTelefono));
-            }
+         /// <summary>
+         /// Genera un QR code para Plin
+         /// Formato: JSON con datos del pago
+         /// </summary>
+         public async Task<(string QrBase64, string QrText)> GenerarQrPlin(string numeroTelefono, decimal monto, string concepto)
+         {
+             // Validar formato de teléfono peruano (9 dígitos que empieza con 9)
+             if (!Regex.IsMatch(numeroTelefono, @"^9\d{8}$"))
+             {
+                 throw new ArgumentException("El número de teléfono debe tener 9 dígitos y comenzar con 9", nameof(numeroTelefono));
+             }
 
-            // Crear objeto con datos del pago
-            var datosPago = new
-            {
-                tipo = "PLIN",
-                telefono = numeroTelefono,
-                monto = monto.ToString("F2"),
-                moneda = "PEN",
+             // Crear objeto con datos del pago
+             var datosPago = new
+             {
+                 tipo = "PLIN",
+                 telefono = numeroTelefono,
+                 monto = monto.ToString("F2"),
+                 moneda = Constants.CURRENCY.PEN,
                 concepto = concepto,
                 timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };

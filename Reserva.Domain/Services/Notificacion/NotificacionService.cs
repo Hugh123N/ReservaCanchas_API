@@ -768,7 +768,7 @@ namespace Reserva.Domain.Services.Notificacion
                 <html>
                 <head><style>body {{ font-family: Arial; }}</style></head>
                 <body>
-                    <h2>✅ Tu plan ha sido renovado</h2>
+                    <h2>Tu plan ha sido renovado</h2>
                     <p>Tu plan <strong>{plan.Nombre}</strong> ha sido renovado exitosamente.</p>
                     <p>Nuevo periodo: hasta el <strong>{proveedorPlan.FechaFin:dd/MM/yyyy}</strong></p>
                 </body>

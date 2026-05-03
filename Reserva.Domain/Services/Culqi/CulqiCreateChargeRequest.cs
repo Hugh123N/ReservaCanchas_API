@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Reserva.Common;
 
 namespace Reserva.Domain.Services.Culqi
 {
@@ -17,7 +18,7 @@ namespace Reserva.Domain.Services.Culqi
         /// Código de moneda (PEN para soles)
         /// </summary>
         [JsonPropertyName("currency_code")]
-        public string CurrencyCode { get; set; } = "PEN";
+        public string CurrencyCode { get; set; } = Constants.CURRENCY.PEN;
 
         /// <summary>
         /// Descripción del cargo

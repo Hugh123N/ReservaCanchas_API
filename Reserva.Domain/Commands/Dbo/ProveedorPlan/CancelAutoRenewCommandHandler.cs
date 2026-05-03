@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Services.Culqi;
 using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
@@ -11,16 +12,19 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
     public class CancelAutoRenewCommandHandler : CommandHandlerBase<CancelAutoRenewCommand>
     {
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
+        private readonly ICulqiService _culqiService;
 
         public CancelAutoRenewCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             CancelAutoRenewCommandValidator validator,
-            IRepository<Entity.ProveedorPlan> proveedorPlanRepository
+            IRepository<Entity.ProveedorPlan> proveedorPlanRepository,
+            ICulqiService culqiService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _proveedorPlanRepository = proveedorPlanRepository;
+            _culqiService = culqiService;
         }
 
         public override async Task<ResponseDto> HandleCommand(CancelAutoRenewCommand request, CancellationToken cancellationToken)
@@ -32,6 +36,12 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             {
                 response.AddErrorResult("Suscripción no encontrada");
                 return response;
+            }
+
+            // Cancelar suscripción en Culqi si existe
+            if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
+            {
+                await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionId);
             }
 
             proveedorPlan.AutoRenovacion = false;

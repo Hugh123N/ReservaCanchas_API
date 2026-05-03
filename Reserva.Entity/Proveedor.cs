@@ -23,6 +23,8 @@ public partial class Proveedor
 
     public string? Instagram { get; set; }
 
+    public string? CulqiCustomerId { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }

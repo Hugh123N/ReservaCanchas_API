@@ -18,7 +18,7 @@ public class PagoPlanDto
 
     public DateTimeOffset? FechaPago { get; set; }
 
-    public string? CulqiChargeId { get; set; }
+    public string? CulqiSubscriptionId { get; set; }
 
     public string? CodigoOperacion { get; set; }
 

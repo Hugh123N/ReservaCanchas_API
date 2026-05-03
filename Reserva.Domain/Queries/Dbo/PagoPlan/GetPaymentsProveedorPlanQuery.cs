@@ -1,9 +1,9 @@
 using Reserva.Domain.Queries.Base;
-using Reserva.Dto.Dbo.ProveedorPlan;
+using Reserva.Dto.Dbo.PagoPlan;
 
-namespace Reserva.Domain.Queries.Dbo.ProveedorPlan
+namespace Reserva.Domain.Queries.Dbo.PagoPlan
 {
-    public class GetPaymentsProveedorPlanQuery : QueryBase<List<PagoPlanDto>>
+    public class GetPaymentsProveedorPlanQuery : QueryBase<List<GetPagoPlanDto>>
     {
         public GetPaymentsProveedorPlanQuery(int idProveedor) => IdProveedor = idProveedor;
         public int IdProveedor { get; set; }

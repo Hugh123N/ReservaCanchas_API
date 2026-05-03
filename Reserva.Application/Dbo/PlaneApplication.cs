@@ -23,8 +23,8 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new DeletePlaneCommand(id));
         public async Task<ResponseDto<GetPlaneDto>> Get(int id)
             => await _mediator.Send(new GetPlaneQuery(id));
-        public async Task<ResponseDto<IEnumerable<ListPlaneDto>>> List(int id)
-            => await _mediator.Send(new ListPlaneQuery(id));
+        public async Task<ResponseDto<IEnumerable<ListPlaneDto>>> List()
+            => await _mediator.Send(new ListPlaneQuery());
 
     }
 }

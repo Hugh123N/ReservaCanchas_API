@@ -31,17 +31,17 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<GetProveedorPlanCurrentDto>> GetCurrent(int idProveedor)
             => await _mediator.Send(new GetCurrentProveedorPlanQuery(idProveedor));
 
-        public async Task<ResponseDto<CheckoutResponseDto>> Checkout(CheckoutPlanDto checkoutDto)
+        public async Task<ResponseDto> Checkout(CheckoutPlanDto checkoutDto)
             => await _mediator.Send(new CheckoutPlanCommand(checkoutDto));
-
-        public async Task<ResponseDto<List<PagoPlanDto>>> GetPayments(int idProveedor)
-            => await _mediator.Send(new GetPaymentsProveedorPlanQuery(idProveedor));
 
         public async Task<ResponseDto> CancelAutoRenew(int idProveedorPlan)
             => await _mediator.Send(new CancelAutoRenewCommand(idProveedorPlan));
 
         public async Task<ResponseDto> RetryPayment(RetryPaymentDto retryPaymentDto)
             => await _mediator.Send(new RetryPaymentPlanCommand(retryPaymentDto));
+
+        public async Task<ResponseDto<ChangePlanResponseDto>> ChangePlan(ChangePlanDto changePlanDto)
+            => await _mediator.Send(new ChangePlanCommand(changePlanDto));
 
     }
 }

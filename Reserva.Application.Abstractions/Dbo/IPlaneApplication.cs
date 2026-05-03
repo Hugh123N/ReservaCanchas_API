@@ -9,7 +9,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<GetPlaneDto>> Update(UpdatePlaneDto updateDto);
         Task<ResponseDto> Delete(int id);
         Task<ResponseDto<GetPlaneDto>> Get(int id);
-        Task<ResponseDto<IEnumerable<ListPlaneDto>>> List(int id);
+        Task<ResponseDto<IEnumerable<ListPlaneDto>>> List();
 
     }
 }

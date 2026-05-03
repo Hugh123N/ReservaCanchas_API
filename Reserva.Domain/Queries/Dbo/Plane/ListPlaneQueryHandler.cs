@@ -21,7 +21,11 @@ namespace Reserva.Domain.Queries.Dbo.Plane
         protected override async Task<ResponseDto<IEnumerable<ListPlaneDto>>> HandleQuery(ListPlaneQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<IEnumerable<ListPlaneDto>>();
-            var list = await _repository.FindByAsNoTrackingAsync(x => x.IdPlane == request.Id);
+            var list = await _repository.FindByAsNoTrackingAsync(x => x.Activo, 
+                x => x.PlanCaracteristica, 
+                x => x.PlanTarifa
+            );
+            
             var listDtos = _mapper?.Map<IEnumerable<ListPlaneDto>>(list);
 
             response.UpdateData(listDtos ?? new List<ListPlaneDto>());

@@ -5,11 +5,11 @@
 - [Contexto de Uso](#contexto-de-uso)
 - [Arquitectura General](#arquitectura-general)
 - [Métodos de Pago Soportados](#métodos-de-pago-soportados)
-- [Flujo Técnico Detallado](#flujo-técnico-detallado)
+- [Flujo de Pagos Únicos (Charges)](#flujo-de-pagos-únicos-charges)
+- [Flujo de Suscripciones (Planes SaaS)](#flujo-de-suscripciones-planes-saas)
 - [Componentes Implementados](#componentes-implementados)
 - [Configuración](#configuración)
-- [Uso del Servicio](#uso-del-servicio)
-- [Webhooks](#webhooks)
+- [Webhooks y Eventos](#webhooks-y-eventos)
 - [Limitaciones y Consideraciones](#limitaciones-y-consideraciones)
 - [Troubleshooting](#troubleshooting)
 
@@ -17,15 +17,16 @@
 
 ## 🎯 Introducción
 
-Este documento describe la implementación completa de la integración con **Culqi**, la pasarela de pagos líder en Perú, para procesar pagos de **planes de proveedores**.
+Este documento describe la implementación completa de la integración con **Culqi**, la pasarela de pagos líder en Perú, para procesar pagos de **planes de proveedores** y **suscripciones recurrentes**.
 
 ### ¿Por qué Culqi?
 
 ✅ **Acepta persona natural** - No requiere ser empresa con RUC
-✅ **Comisiones competitivas** - 3.59% + S/ 0.30 por transacción
+✅ **Comisiones competitivas** - 3.44% + S/ 0.20 por transacción
 ✅ **Métodos populares** - Yape, Plin, tarjetas, billeteras móviles
 ✅ **API bien documentada** - Integración sencilla y segura
 ✅ **Webhooks confiables** - Notificaciones automáticas de pagos
+✅ **Suscripciones nativas** - Soporte para cobros recurrentes
 
 ---
 
@@ -48,7 +49,7 @@ Los proveedores de canchas pueden contratar planes/paquetes para:
 - Aumentar su visibilidad
 - Obtener reportes avanzados
 
-Estos planes se pagan mediante Culqi con confirmación automática.
+Estos planes se pagan mediante Culqi con confirmación automática y **renovación recurrente**.
 
 ---
 
@@ -70,20 +71,23 @@ Estos planes se pagan mediante Culqi con confirmación automática.
 │                      BACKEND (.NET API)                         │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │  4. API recibe token del frontend                        │   │
-│  │  5. CulqiService crea CARGO usando secret key            │   │
-│  │  6. Guarda registro de pago con estado PENDIENTE         │   │
-│  │  7. Retorna respuesta al frontend                        │   │
+│  │  5. CulqiService crea CUSTOMER (si es nuevo)             │   │
+│  │  6. CulqiService crea PLAN en Culqi                      │   │
+│  │  7. CulqiService crea SUBSCRIPTION (pago recurrente)    │   │
+│  │  8. Guarda ProveedorPlan con estado PENDIENTE            │   │
+│  │  9. Retorna respuesta al frontend                        │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                                 │
-                                │ Crear Cargo
+                                │ Crear Suscripción
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                        CULQI API                                │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  8. Culqi procesa el pago                                │   │
-│  │  9. Usuario completa pago (Yape/Plin/Tarjeta)            │   │
-│  │  10. Culqi confirma transacción                          │   │
+│  │  10. Culqi procesa el pago inicial                      │   │
+│  │  11. Usuario completa pago (Yape/Plin/Tarjeta)           │   │
+│  │  12. Culqi confirma transacción                          │   │
+│  │  13. Culqi programa próximos cobros automáticos          │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                                 │
@@ -92,10 +96,10 @@ Estos planes se pagan mediante Culqi con confirmación automática.
 ┌─────────────────────────────────────────────────────────────────┐
 │              WEBHOOK ENDPOINT (CulqiWebhookController)          │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  11. Culqi envía notificación de pago exitoso            │   │
-│  │  12. Backend valida webhook                              │   │
-│  │  13. Actualiza pago a PAGADO                             │   │
-│  │  14. Activa el plan del proveedor                        │   │
+│  │  14. Culqi envía notificación (charge/subscription)     │   │
+│  │  15. Backend valida webhook                              │   │
+│  │  16. Actualiza ProveedorPlan a ACTIVO                    │   │
+│  │  17. Notifica al proveedor por email                     │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -122,6 +126,7 @@ Estos planes se pagan mediante Culqi con confirmación automática.
 - **Marcas**: Visa, Mastercard, American Express, Diners
 - **Moneda**: PEN (soles)
 - **Seguridad**: Formulario PCI-compliant de Culqi
+- **Suscripciones**: Se guarda la tarjeta para cobros recurrentes
 
 ### 4. **Billeteras Móviles** 📱
 
@@ -130,11 +135,12 @@ Estos planes se pagan mediante Culqi con confirmación automática.
 
 ---
 
-## 🔄 Flujo Técnico Detallado
+## 🔄 Flujo de Pagos Únicos (Charges)
+
+### ¿Cuándo usar?
+Para pagos únicos que NO son parte de una suscripción. Ejemplo: pagos especiales, servicios adicionales, etc.
 
 ### FASE 1: Frontend - Generación de Token
-
-**Responsabilidad**: Capturar datos de pago de forma segura
 
 ```javascript
 // 1. Cargar CulqiJS en tu HTML
@@ -143,120 +149,199 @@ Estos planes se pagan mediante Culqi con confirmación automática.
 // 2. Configurar Culqi con tu clave pública
 Culqi.publicKey = 'pk_test_XXXXXXXXXXXXXXXX';
 
-// 3. Configurar opciones según método de pago
+// 3. Configurar opciones
 Culqi.settings({
-  title: 'Pago de Plan Premium',
+  title: 'Pago Único',
   currency: 'PEN',
   amount: 10000  // En centavos (S/ 100.00)
 });
 
-// 4. Abrir formulario de Culqi
+// 4. Abrir formulario
 Culqi.open();
 
-// 5. Capturar el token generado
+// 5. Capturar el token
 function culqi() {
   if (Culqi.token) {
     const token = Culqi.token.id;
-
-    // 6. Enviar token al backend
-    fetch('/api/planes/procesar-pago', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        culqi_token: token,
-        plan_id: 1,
-        email: 'proveedor@example.com'
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert('Pago procesado exitosamente');
-      }
-    });
-  } else if (Culqi.error) {
-    console.error('Error en Culqi:', Culqi.error);
+    // Enviar al backend...
   }
 }
 ```
 
----
-
 ### FASE 2: Backend - Creación del Cargo
 
-**Responsabilidad**: Crear el cargo en Culqi usando el token
-
 ```csharp
-// En tu controlador de Planes
-[HttpPost("procesar-pago")]
-public async Task<IActionResult> ProcesarPagoPlan([FromBody] PagarPlanDto dto)
+// Crear request para Culqi
+var culqiRequest = new CulqiCreateChargeRequest
 {
-    try
+    Amount = CulqiService.ConvertToCents(monto),
+    CurrencyCode = "PEN",
+    Email = dto.Email,
+    SourceId = dto.CulqiToken,
+    Description = "Descripción del pago",
+    Metadata = new Dictionary<string, string>
     {
-        // 1. Obtener el plan seleccionado
-        var plan = await _planRepository.GetByAsync(p => p.IdPlan == dto.IdPlan);
-
-        // 2. Crear request para Culqi
-        var culqiRequest = new CulqiCreateChargeRequest
-        {
-            Amount = CulqiService.ConvertToCents(plan.Precio), // S/ 100.00 → 10000
-            CurrencyCode = "PEN",
-            Email = dto.Email,
-            SourceId = dto.CulqiToken, // Token del frontend
-            Description = $"Pago de {plan.Nombre}",
-            Metadata = new Dictionary<string, string>
-            {
-                { "plan_id", plan.IdPlan.ToString() },
-                { "proveedor_id", dto.IdProveedor.ToString() }
-            }
-        };
-
-        // 3. Llamar a Culqi para crear el cargo
-        var culqiResponse = await _culqiService.CreateChargeAsync(culqiRequest);
-
-        // 4. Guardar registro de pago en BD
-        var pago = new Pago
-        {
-            IdPlan = plan.IdPlan,
-            Monto = plan.Precio,
-            Moneda = "PEN",
-            IdEstadoPago = estadoPendiente.IdEstadoPago,
-            CulqiChargeId = culqiResponse.Id,
-            CulqiTokenId = dto.CulqiToken,
-            CulqiReferenceCode = culqiResponse.ReferenceCode,
-            UserNameCreate = User.Identity.Name
-        };
-
-        await _pagoRepository.AddAsync(pago);
-        await _pagoRepository.SaveAsync();
-
-        // 5. Retornar respuesta
-        return Ok(new
-        {
-            success = true,
-            pago_id = pago.IdPago,
-            charge_id = culqiResponse.Id,
-            reference_code = culqiResponse.ReferenceCode,
-            message = "Pago procesado. Espera la confirmación."
-        });
+        { "tipo", "pago_unico" }
     }
-    catch (CulqiException ex)
-    {
-        return BadRequest(new
-        {
-            success = false,
-            message = ex.Message,
-            user_message = ex.UserMessage
-        });
-    }
-}
+};
+
+var culqiResponse = await _culqiService.CreateChargeAsync(culqiRequest);
 ```
 
 ---
 
-### FASE 3: Webhook - Confirmación Automática
+## 🔄 Flujo de Suscripciones (Planes SaaS)
 
-**Responsabilidad**: Recibir notificación de Culqi y actualizar estado
+### ¿Cuándo usar?
+Para **planes de proveedores** con cobros recurrentes automáticos (mensual, anual, etc.).
+
+### FASE 1: Frontend - Generación de Token
+
+```javascript
+// 1. Cargar CulqiJS
+<script src="https://checkout.culqi.com/js/v4"></script>
+
+// 2. Configurar
+Culqi.publicKey = 'pk_test_XXXXXXXXXXXXXXXX';
+
+Culqi.settings({
+  title: 'Suscripción Plan Premium',
+  currency: 'PEN',
+  description: 'Plan Premium - Renovación automática',
+  amount: 9900  // S/ 99.00 en centavos
+});
+
+// 3. Abrir checkout
+Culqi.open();
+
+// 4. Enviar token al backend
+function culqi() {
+  if (Culqi.token) {
+    fetch('/api/proveedor-plan/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idProveedor: 1,
+        idPlane: 2,
+        idPlanTarifa: 3,
+        culqiToken: Culqi.token.id,
+        email: 'proveedor@example.com'
+      })
+    });
+  }
+}
+```
+
+### FASE 2: Backend - Creación de Suscripción
+
+El flujo en `CheckoutPlanCommandHandler` sigue estos pasos:
+
+#### Paso 1: Crear o recuperar Customer en Culqi
+
+```csharp
+// Si el proveedor no tiene CulqiCustomerId, crearlo
+var customerId = proveedor.CulqiCustomerId;
+if (string.IsNullOrEmpty(customerId))
+{
+    var customerRequest = new CulqiCreateCustomerRequest
+    {
+        Email = dto.Email,
+        Code = $"prov_{proveedor.IdProveedor}",
+        FirstName = proveedor.IdUsuarioNavigation?.Nombres,
+        LastName = proveedor.IdUsuarioNavigation?.Apellidos,
+        Metadata = new Dictionary<string, string>
+        {
+            { "proveedor_id", proveedor.IdProveedor.ToString() }
+        }
+    };
+
+    var customerResponse = await _culqiService.CreateCustomerAsync(customerRequest);
+    customerId = customerResponse.Id;
+
+    // Guardar en la base de datos
+    proveedor.CulqiCustomerId = customerId;
+    await _proveedorRepository.UpdateAsync(proveedor);
+    await _proveedorRepository.SaveAsync();
+}
+```
+
+#### Paso 2: Crear Plan en Culqi (si no existe)
+
+```csharp
+var culqiPlanId = $"plan_{tarifa.IdPlanTarifa}";
+
+var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId);
+if (existingPlan == null)
+{
+    var planRequest = new CulqiCreatePlanRequest
+    {
+        Id = culqiPlanId,
+        Name = $"{tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
+        Amount = CulqiService.ConvertToCents(monto),
+        CurrencyCode = "PEN",
+        Interval = "months",
+        IntervalCount = tarifa.DuracionDias >= 30 ? tarifa.DuracionDias / 30 : 1,
+        Description = tarifa.Descripcion,
+        Metadata = new Dictionary<string, string>
+        {
+            { "tarifa_id", tarifa.IdPlanTarifa.ToString() },
+            { "plan_id", tarifa.IdPlane.ToString() }
+        }
+    };
+
+    await _culqiService.CreatePlanAsync(planRequest);
+}
+```
+
+#### Paso 3: Crear Suscripción
+
+```csharp
+var subscriptionRequest = new CulqiCreateSubscriptionRequest
+{
+    PlanId = culqiPlanId,
+    CustomerId = customerId,
+    CardId = dto.CulqiToken, // Token del frontend
+    Metadata = new Dictionary<string, string>
+    {
+        { "plan_id", dto.IdPlane.ToString() },
+        { "proveedor_id", dto.IdProveedor.ToString() },
+        { "tarifa_id", dto.IdPlanTarifa.ToString() },
+        { "tipo", "plan_proveedor" }
+    }
+};
+
+var culqiResponse = await _culqiService.CreateSubscriptionAsync(subscriptionRequest);
+```
+
+#### Paso 4: Crear ProveedorPlan en la base de datos
+
+```csharp
+var proveedorPlan = new Entity.ProveedorPlan
+{
+    IdProveedor = dto.IdProveedor,
+    IdPlane = dto.IdPlane,
+    IdPlanTarifa = dto.IdPlanTarifa,
+    FechaInicio = DateTimeOffset.UtcNow,
+    FechaFin = DateTimeOffset.UtcNow.AddDays(tarifa.DuracionDias),
+    FechaProximoCobro = tarifa.PermiteAutoRenovacion == true
+        ? fechaFin
+        : null,
+    Estado = "PENDING",
+    AutoRenovacion = tarifa.PermiteAutoRenovacion ?? false,
+    EsActual = true,
+    CulqiSubscriptionId = culqiResponse?.Id,
+    CulqiCustomerId = customerId,
+    GracePeriodHasta = null,
+    UserNameCreate = "Sistema",
+    CreateDate = DateTimeOffset.UtcNow,
+    Activo = true
+};
+
+await _proveedorPlanRepository.AddAsync(proveedorPlan);
+await _proveedorPlanRepository.SaveAsync();
+```
+
+### FASE 3: Webhook - Confirmación Automática
 
 #### Configuración del Webhook en Culqi
 
@@ -267,46 +352,69 @@ public async Task<IActionResult> ProcesarPagoPlan([FromBody] PagarPlanDto dto)
    - ✅ `charge.succeeded` - Pago con tarjeta exitoso
    - ✅ `charge.failed` - Pago rechazado
    - ✅ `order.status.changed` - Para Yape/Plin (QR)
+   - ✅ `subscription.created` - Nueva suscripción
+   - ✅ `subscription.updated` - Suscripción actualizada
+   - ✅ `subscription.deleted` - Suscripción cancelada
 
-#### Eventos Recibidos
+#### Eventos de Suscripción
 
-**Evento: `charge.succeeded`** (Tarjetas)
+**Evento: `subscription.created`**
 
 ```json
 {
   "id": "evt_test_123456",
   "object": "event",
-  "type": "charge.succeeded",
+  "type": "subscription.created",
   "creation_date": 1698765432000,
   "data": {
-    "id": "chr_test_abc123",
-    "object": "charge",
-    "amount": 10000,
-    "currency_code": "PEN",
-    "email": "proveedor@example.com",
-    "reference_code": "REF-12345",
+    "id": "sub_test_abc123",
+    "object": "subscription",
+    "plan_id": "plan_1",
+    "customer_id": "cus_test_xyz789",
+    "status": "active",
+    "start_date": 1698765432,
+    "next_billing_date": 1701357432,
     "metadata": {
-      "plan_id": "1",
-      "proveedor_id": "42"
+      "plan_id": "2",
+      "proveedor_id": "42",
+      "tarifa_id": "3"
     }
   }
 }
 ```
 
-**Evento: `order.status.changed`** (Yape/Plin)
+**Evento: `subscription.updated`**
 
 ```json
 {
   "id": "evt_test_789012",
   "object": "event",
-  "type": "order.status.changed",
-  "creation_date": 1698765555000,
+  "type": "subscription.updated",
+  "creation_date": 1701357432000,
   "data": {
-    "id": "ord_test_xyz789",
-    "object": "order",
-    "state": "paid",
-    "amount": 5000,
-    "currency_code": "PEN"
+    "id": "sub_test_abc123",
+    "object": "subscription",
+    "status": "active",
+    "next_billing_date": 1704035832,
+    "metadata": {
+      "next_billing_date": "1704035832"
+    }
+  }
+}
+```
+
+**Evento: `subscription.deleted`**
+
+```json
+{
+  "id": "evt_test_345678",
+  "object": "event",
+  "type": "subscription.deleted",
+  "creation_date": 1704035832000,
+  "data": {
+    "id": "sub_test_abc123",
+    "object": "subscription",
+    "status": "cancelled"
   }
 }
 ```
@@ -318,35 +426,86 @@ El `CulqiWebhookController` se encarga de:
 1. **Validar** la firma del webhook (si Culqi la proporciona)
 2. **Deserializar** el evento JSON
 3. **Identificar** el tipo de evento
-4. **Buscar** el pago en la BD por `CulqiChargeId`
-5. **Actualizar** el estado del pago a PAGADO
-6. **Activar** el plan del proveedor
-7. **Enviar notificación** (email/SMS) al proveedor
+4. **Buscar** el `ProveedorPlan` por `CulqiSubscriptionId`
+5. **Actualizar** el estado del plan:
+   - `charge.succeeded` → ACTIVO, actualizar `FechaProximoCobro`
+   - `charge.failed` → GRACE (5 días para pagar)
+   - `subscription.deleted` → Cancelar auto-renovación
+6. **Actualizar** `PagoPlan` con el estado correspondiente
+7. **Enviar notificación** (email) al proveedor
 
 ---
 
 ## 📦 Componentes Implementados
 
-### 1. DTOs (Data Transfer Objects)
+### 1. Interfaz Principal
+
+**`ICulqiService.cs`**
+
+Define el contrato para todas las operaciones de Culqi:
+
+```csharp
+public interface ICulqiService
+{
+    // Pagos Únicos
+    Task<CulqiChargeResponse> CreateChargeAsync(CulqiCreateChargeRequest request);
+
+    // Suscripciones
+    Task<CulqiSubscriptionResponse> CreateSubscriptionAsync(CulqiCreateSubscriptionRequest request);
+    Task<bool> CancelSubscriptionAsync(string subscriptionId);
+    Task<CulqiSubscriptionResponse?> GetSubscriptionAsync(string subscriptionId);
+
+    // Planes (para suscripciones)
+    Task<CulqiPlanResponse> CreatePlanAsync(CulqiCreatePlanRequest request);
+    Task<CulqiPlanResponse?> GetPlanAsync(string planId);
+
+    // Clientes (para suscripciones)
+    Task<CulqiCustomerResponse> CreateCustomerAsync(CulqiCreateCustomerRequest request);
+    Task<CulqiCustomerResponse?> GetCustomerAsync(string customerId);
+
+    // Helpers
+    static int ConvertToCents(decimal amount);
+    static decimal ConvertToSoles(int cents);
+    bool ValidateWebhookSignature(string payload, string signature);
+}
+```
+
+### 2. DTOs (Data Transfer Objects)
 
 | Archivo | Propósito |
 |---------|-----------|
-| `CulqiCreateChargeRequest.cs` | Request para crear cargo en Culqi |
-| `CulqiChargeResponse.cs` | Respuesta de Culqi al crear cargo |
+| `CulqiCreateChargeRequest.cs` | Request para crear cargo único |
+| `CulqiChargeResponse.cs` | Respuesta de cargo único |
+| `CulqiCreateSubscriptionRequest.cs` | Request para crear suscripción |
+| `CulqiSubscriptionResponse.cs` | Respuesta de suscripción |
+| `CulqiCreatePlanRequest.cs` | Request para crear plan en Culqi |
+| `CulqiPlanResponse.cs` | Respuesta de plan creado |
+| `CulqiCreateCustomerRequest.cs` | Request para crear cliente |
+| `CulqiCustomerResponse.cs` | Respuesta de cliente creado |
 | `CulqiWebhookEvent.cs` | Estructura del evento de webhook |
 | `CulqiErrorResponse.cs` | Manejo de errores de Culqi |
 
-### 2. Servicios
+### 3. Servicios
 
-**`CulqiService.cs`**
+**`CulqiService.cs`** (implementa `ICulqiService`)
 
 Métodos principales:
-- `CreateChargeAsync()` - Crea un cargo en Culqi
-- `ConvertToCents()` - Convierte soles a centavos
-- `ConvertToSoles()` - Convierte centavos a soles
-- `ValidateWebhookSignature()` - Valida firma del webhook
 
-### 3. Controladores
+| Método | Endpoint Culqi | Descripción |
+|--------|----------------|-------------|
+| `CreateChargeAsync()` | `POST /v2/charges` | Crea un cargo único |
+| `CreateSubscriptionAsync()` | `POST /v2/subscriptions` | Crea una suscripción recurrente |
+| `CancelSubscriptionAsync()` | `DELETE /v2/subscriptions/{id}` | Cancela una suscripción |
+| `GetSubscriptionAsync()` | `GET /v2/subscriptions/{id}` | Obtiene detalles de suscripción |
+| `CreatePlanAsync()` | `POST /v2/plans` | Crea un plan para suscripciones |
+| `GetPlanAsync()` | `GET /v2/plans/{id}` | Obtiene un plan |
+| `CreateCustomerAsync()` | `POST /v2/customers` | Crea un cliente |
+| `GetCustomerAsync()` | `GET /v2/customers/{id}` | Obtiene un cliente |
+| `ConvertToCents()` | - | Convierte soles a centavos |
+| `ConvertToSoles()` | - | Convierte centavos a soles |
+| `ValidateWebhookSignature()` | - | Valida firma del webhook |
+
+### 4. Controladores
 
 **`CulqiWebhookController.cs`**
 
@@ -354,14 +513,74 @@ Endpoints:
 - `POST /api/culqi/webhook` - Recibe notificaciones de Culqi
 - `GET /api/culqi/webhook/test` - Endpoint de prueba
 
-### 4. Base de Datos
+Eventos manejados:
+- `charge.succeeded` → Actualiza `Pago` o `ProveedorPlan` a PAGADO
+- `charge.failed` → Actualiza a RECHAZADO o GRACE
+- `order.status.changed` → Para Yape/Plin
+- `subscription.created` → Log de nueva suscripción
+- `subscription.updated` → Actualiza `FechaProximoCobro`
+- `subscription.deleted` → Cancela auto-renovación
 
-**Campos agregados a `Pago`:**
+**`ProveedorPlanController.cs`**
+
+Endpoints:
+- `GET /current/{idProveedor}` - Plan actual del proveedor
+- `POST /checkout` - Crear nueva suscripción
+- `GET /payments/{idProveedor}` - Historial de pagos
+- `POST /cancel-auto-renew` - Cancelar renovación automática
+- `POST /retry-payment` - Reintentar pago fallido
+
+### 5. Commands (CQRS)
+
+| Command | Handler | Descripción |
+|---------|---------|-------------|
+| `CheckoutPlanCommand` | `CheckoutPlanCommandHandler` | Crea Customer → Plan → Subscription |
+| `CancelAutoRenewCommand` | `CancelAutoRenewCommandHandler` | Cancela suscripción en Culqi y BD |
+| `RetryPaymentPlanCommand` | `RetryPaymentPlanCommandHandler` | Registra reintento de pago |
+
+### 6. Queries (CQRS)
+
+| Query | Handler | Descripción |
+|-------|---------|-------------|
+| `GetCurrentProveedorPlanQuery` | `GetCurrentProveedorPlanQueryHandler` | Obtiene plan actual |
+| `GetPaymentsProveedorPlanQuery` | `GetPaymentsProveedorPlanQueryHandler` | Historial de pagos |
+
+### 7. Background Services
+
+**`PlanExpirationService.cs`**
+
+Ejecuta cada 24 horas:
+- Notifica vencimiento 1 día antes (`VENCIMIENTO_1_DIA`)
+- Notifica período de gracia 5 días (`VENCIMIENTO_5_DIAS`)
+- Suspende planes GRACE expirados
+- Procesa renovaciones automáticas
+
+### 8. Base de Datos
+
+**Campos en `ProveedorPlan`:**
 
 ```sql
-CulqiChargeId        NVARCHAR(100)  -- ID del cargo en Culqi
-CulqiTokenId         NVARCHAR(100)  -- Token del frontend
-CulqiReferenceCode   NVARCHAR(50)   -- Código de referencia
+CulqiSubscriptionId    VARCHAR(100)  -- ID de la suscripción en Culqi
+CulqiCustomerId        VARCHAR(100)  -- ID del cliente en Culqi
+FechaProximoCobro      DATETIMEOFFSET -- Próxima fecha de cobro
+AutoRenovacion         BIT           -- Si tiene renovación automática
+GracePeriodHasta       DATETIMEOFFSET -- Límite del período de gracia
+FechaCancelacion       DATETIMEOFFSET -- Fecha de cancelación
+MotivoCancelacion      VARCHAR(500)  -- Motivo de cancelación
+```
+
+**Campos en `Proveedor`:**
+
+```sql
+CulqiCustomerId        VARCHAR(100)  -- ID del cliente en Culqi (cache)
+```
+
+**Campos en `PagoPlan`:**
+
+```sql
+CulqiChargeId          VARCHAR(100)  -- ID del cargo/suscripción en Culqi
+CodigoOperacion        VARCHAR(50)   -- Código de referencia
+FechaPago              DATETIMEOFFSET -- Fecha de pago
 ```
 
 ---
@@ -399,159 +618,57 @@ CulqiReferenceCode   NVARCHAR(50)   -- Código de referencia
 
 ⚠️ **NUNCA** commitear las claves reales a Git. Usar variables de entorno en producción.
 
-### 3. Ejecutar Migración SQL
+### 3. Registro de Servicios
 
-```bash
-# Ejecutar el script de migración
-sqlcmd -S tu_servidor -d ReservaCanchas -i MIGRACION_CULQI.sql
-```
-
-O ejecutarlo manualmente en SQL Server Management Studio.
-
-### 4. Verificar Registro de Servicio
-
-El servicio ya está registrado en `Program.cs`:
+El servicio está registrado en `Program.cs`:
 
 ```csharp
 // Culqi Service para integración de pagos
 builder.Services.AddHttpClient<Reserva.Domain.Services.Culqi.CulqiService>();
+builder.Services.AddScoped<Reserva.Domain.Services.Culqi.ICulqiService>(provider =>
+    provider.GetRequiredService<Reserva.Domain.Services.Culqi.CulqiService>());
 ```
 
-### 5. Configurar Webhook en Culqi Panel
+### 4. Configurar Webhook en Culqi Panel
 
 1. Ir a **Eventos** → **Webhooks** → **+ Agregar**
 2. URL: `https://tudominio.com/api/culqi/webhook`
 3. Eventos a escuchar:
-   - ✅ charge.succeeded
-   - ✅ charge.failed
-   - ✅ order.status.changed
+   - ✅ `charge.succeeded`
+   - ✅ `charge.failed`
+   - ✅ `order.status.changed`
+   - ✅ `subscription.created`
+   - ✅ `subscription.updated`
+   - ✅ `subscription.deleted`
 4. Guardar
 
 ---
 
-## 🚀 Uso del Servicio
-
-### Ejemplo Completo: Procesar Pago de Plan
-
-```csharp
-public class PlanController : ControllerBase
-{
-    private readonly CulqiService _culqiService;
-    private readonly IRepository<Pago> _pagoRepository;
-    private readonly IRepository<EstadoPago> _estadoPagoRepository;
-    private readonly IRepository<Plan> _planRepository;
-
-    [HttpPost("procesar-pago-plan")]
-    public async Task<IActionResult> ProcesarPagoPlan(
-        [FromBody] PagarPlanDto dto)
-    {
-        try
-        {
-            // 1. Validar que el plan existe
-            var plan = await _planRepository.GetByAsync(p => p.IdPlan == dto.IdPlan);
-            if (plan == null)
-                return NotFound("Plan no encontrado");
-
-            // 2. Crear request para Culqi
-            var culqiRequest = new CulqiCreateChargeRequest
-            {
-                Amount = CulqiService.ConvertToCents(plan.Precio),
-                CurrencyCode = "PEN",
-                Email = dto.Email,
-                SourceId = dto.CulqiToken,
-                Description = $"Plan {plan.Nombre} - {plan.Descripcion}",
-                Metadata = new Dictionary<string, string>
-                {
-                    { "plan_id", plan.IdPlan.ToString() },
-                    { "proveedor_id", dto.IdProveedor.ToString() },
-                    { "tipo", "plan_proveedor" }
-                }
-            };
-
-            // 3. Crear cargo en Culqi
-            var culqiResponse = await _culqiService.CreateChargeAsync(culqiRequest);
-
-            // 4. Obtener estado pendiente
-            var estadoPendiente = await _estadoPagoRepository
-                .GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pendiente);
-
-            // 5. Crear registro de pago
-            var pago = new Pago
-            {
-                IdPlan = plan.IdPlan,
-                Monto = plan.Precio,
-                Moneda = "PEN",
-                IdEstadoPago = estadoPendiente.IdEstadoPago,
-                CulqiChargeId = culqiResponse.Id,
-                CulqiTokenId = dto.CulqiToken,
-                CulqiReferenceCode = culqiResponse.ReferenceCode,
-                UserNameCreate = User.Identity?.Name ?? "Sistema"
-            };
-
-            await _pagoRepository.AddAsync(pago);
-            await _pagoRepository.SaveAsync();
-
-            // 6. Retornar respuesta exitosa
-            return Ok(new ResponseDto<object>
-            {
-                Data = new
-                {
-                    pago_id = pago.IdPago,
-                    charge_id = culqiResponse.Id,
-                    reference_code = culqiResponse.ReferenceCode,
-                    amount = CulqiService.ConvertToSoles(culqiResponse.Amount),
-                    currency = culqiResponse.CurrencyCode,
-                    status = "pending"
-                },
-                IsSuccess = true,
-                Messages = new List<string>
-                {
-                    "Pago procesado exitosamente. Espera la confirmación."
-                }
-            });
-        }
-        catch (CulqiException ex)
-        {
-            return BadRequest(new ResponseDto<object>
-            {
-                IsSuccess = false,
-                Messages = new List<string>
-                {
-                    ex.Message,
-                    ex.UserMessage ?? "Error al procesar el pago"
-                }
-            });
-        }
-    }
-}
-```
-
----
-
-## 🔔 Webhooks
-
-### Cómo Funcionan los Webhooks
-
-Los webhooks son notificaciones HTTP POST que Culqi envía a tu servidor cuando ocurre un evento (pago exitoso, fallido, etc.).
+## 🔔 Webhooks y Eventos
 
 ### Eventos Soportados
 
 | Evento | Cuándo se dispara | Acción en el sistema |
 |--------|-------------------|---------------------|
-| `charge.succeeded` | Pago con tarjeta exitoso | Actualizar a PAGADO, activar plan |
-| `charge.failed` | Pago rechazado | Actualizar a RECHAZADO |
-| `order.status.changed` | Estado de orden QR cambió | Si state=paid → PAGADO |
+| `charge.succeeded` | Pago con tarjeta exitoso | ACTIVO plan, actualizar `PagoPlan` |
+| `charge.failed` | Pago rechazado | GRACE (5 días), notificar fallo |
+| `order.status.changed` | Estado de orden QR cambió | paid → ACTIVO, expired → GRACE |
+| `subscription.created` | Nueva suscripción creada | Log, preparar renovación |
+| `subscription.updated` | Suscripción actualizada | Actualizar `FechaProximoCobro` |
+| `subscription.deleted` | Suscripción cancelada | Cancelar `AutoRenovacion` |
 
-### Flujo de Webhook
+### Flujo de Webhook para Suscripciones
 
 ```
 CULQI → POST /api/culqi/webhook
   ↓
   ├─ Validar firma (si existe)
   ├─ Deserializar JSON
-  ├─ Identificar evento
-  ├─ Buscar pago en BD
-  ├─ Actualizar estado
+  ├─ Identificar tipo de evento
+  ├─ Buscar ProveedorPlan por CulqiSubscriptionId
+  ├─ Si es charge.succeeded → ACTIVO, FechaProximoCobro
+  ├─ Si es charge.failed → GRACE, notificar
+  ├─ Si es subscription.deleted → Cancelar renovación
   └─ Retornar 200 OK
 ```
 
@@ -566,13 +683,23 @@ Culqi reintenta enviar el webhook si no recibe una respuesta 200 OK:
 
 ⚠️ **Importante**: Siempre retornar 200 OK incluso si hay un error interno, para evitar reintentos innecesarios.
 
-### Seguridad del Webhook
+### Estados del Plan (Ciclo de Vida)
 
-Aunque Culqi no documenta públicamente el método de validación de firma, se recomienda:
+```
+PENDING → (pago exitoso) → ACTIVE → (vencimiento) → GRACE → (5 días sin pago) → SUSPENDED
+                                    ↓
+                              (auto-renovación) → ACTIVE (nuevo ciclo)
+                                    ↓
+                              (cancelación) → CANCELLED
+```
 
-1. **Validar IP de origen**: Solo aceptar requests desde IPs de Culqi
-2. **Verificar payload**: Comprobar que el `charge_id` existe en tu BD
-3. **Idempotencia**: Manejar webhooks duplicados correctamente
+| Estado | Descripción |
+|--------|-------------|
+| `PENDING` | Pago inicial en proceso |
+| `ACTIVE` | Plan activo, servicio disponible |
+| `GRACE` | Pago fallido, 5 días de gracia |
+| `SUSPENDED` | Período de gracia expirado |
+| `CANCELLED` | Proveedor canceló la suscripción |
 
 ---
 
@@ -587,32 +714,35 @@ Aunque Culqi no documenta públicamente el método de validación de firma, se r
 | Moneda | Solo PEN (soles) |
 | Reembolsos | No soportados directamente |
 
-### Consideraciones Importantes
+### Consideraciones para Suscripciones
 
-1. **Manejo de Errores**
-   - Siempre capturar `CulqiException`
-   - Mostrar `UserMessage` al usuario final
-   - Logear `MerchantMessage` para debugging
+1. **Primer pago**: Se requiere `CulqiToken` del frontend para crear la suscripción
+2. **Pagos recurrentes**: Culqi los procesa automáticamente, no requiere intervención
+3. **Tarjeta guardada**: El cliente se crea en Culqi y la tarjeta queda asociada
+4. **Cancelación**: El proveedor puede cancelar la renovación en cualquier momento
+5. **Cambio de plan**: Se debe cancelar la suscripción actual y crear una nueva
+6. **Grace Period**: 5 días para que el proveedor regularice el pago antes de suspensión
 
-2. **Idempotencia**
-   - Los webhooks pueden llegar duplicados
-   - Verificar estado actual antes de actualizar
-   - Usar `CulqiChargeId` como clave única
+### Manejo de Errores
 
-3. **Timeout**
-   - Los pagos tienen un timeout de 15 minutos
-   - Después de ese tiempo, el pago expira
-   - Manejar estado "expirado"
+```csharp
+try
+{
+    var response = await _culqiService.CreateSubscriptionAsync(request);
+}
+catch (CulqiException ex)
+{
+    // ex.Message → Mensaje técnico para logs
+    // ex.UserMessage → Mensaje amigable para el usuario
+    // ex.ErrorCode → Código de error de Culqi
+}
+```
 
-4. **Reembolsos**
-   - Los reembolsos deben hacerse desde el Panel Culqi
-   - No hay API pública para reembolsos automáticos
-   - Implementar flujo manual de reembolsos
+### Testing
 
-5. **Testing**
-   - Usar ambiente de integración para pruebas
-   - Tarjetas de prueba: https://docs.culqi.com/es/documentacion/pagos-online/testing/
-   - No mezclar claves de test y producción
+- Usar ambiente de integración para pruebas
+- Tarjetas de prueba: https://docs.culqi.com/es/documentacion/pagos-online/testing/
+- No mezclar claves de test y producción
 
 ---
 
@@ -624,7 +754,6 @@ Aunque Culqi no documenta públicamente el método de validación de firma, se r
 
 **Solución**:
 ```json
-// Verificar que la clave coincida con el ambiente
 {
   "Culqi": {
     "SecretKey": "sk_test_XXX",  // Para testing
@@ -635,8 +764,6 @@ Aunque Culqi no documenta públicamente el método de validación de firma, se r
 ```
 
 ### Problema 2: Webhook no se recibe
-
-**Causa**: URL no accesible desde Internet o no configurada en Culqi
 
 **Checklist**:
 - [ ] URL es pública (no localhost)
@@ -661,22 +788,22 @@ ngrok http 5000
 - Generar nuevo token en cada intento de pago
 - Tokens expiran después de 10 minutos
 
-### Problema 4: Pago queda en PENDIENTE
+### Problema 4: Suscripción queda en PENDIENTE
 
 **Causa**: Webhook no llegó o falló el procesamiento
 
 **Diagnóstico**:
 1. Revisar logs del webhook controller
 2. Verificar en Panel Culqi si el webhook se envió
-3. Buscar el `CulqiChargeId` en la BD
+3. Buscar el `CulqiSubscriptionId` en la BD
 
 **Solución Manual**:
 ```sql
 -- Actualizar estado manualmente después de verificar en Panel Culqi
-UPDATE Pago
-SET IdEstadoPago = (SELECT IdEstadoPago FROM EstadoPago WHERE Codigo = '01'), -- Pagado
-    CulqiReferenceCode = 'REF-12345'
-WHERE CulqiChargeId = 'chr_test_abc123';
+UPDATE ProveedorPlan
+SET Estado = 'ACTIVE',
+    FechaProximoCobro = DATEADD(MONTH, 1, FechaInicio)
+WHERE CulqiSubscriptionId = 'sub_test_abc123';
 ```
 
 ### Problema 5: "Amount must be at least 300 cents"
@@ -685,12 +812,23 @@ WHERE CulqiChargeId = 'chr_test_abc123';
 
 **Solución**:
 ```csharp
-// Validar monto antes de enviar a Culqi
-if (plan.Precio < 3)
+if (tarifa.Precio < 3)
 {
     return BadRequest("El monto mínimo es S/ 3.00");
 }
 ```
+
+### Problema 6: Suscripción no se renueva automáticamente
+
+**Causas posibles**:
+1. La tarjeta del cliente fue rechazada
+2. La suscripción fue cancelada en Culqi
+3. El `AutoRenovacion` está desactivado
+
+**Solución**:
+1. Verificar estado en Culqi Panel
+2. Revisar logs de `PlanExpirationService`
+3. Notificar al proveedor para actualizar su tarjeta
 
 ---
 
@@ -702,6 +840,7 @@ if (plan.Precio < 3)
 - **API Reference**: https://apidocs.culqi.com/
 - **CulqiJS v4**: https://docs.culqi.com/es/documentacion/culqi-js/v4/
 - **Webhooks**: https://docs.culqi.com/es/documentacion/pagos-online/webhooks/
+- **Suscripciones**: https://docs.culqi.com/es/documentacion/suscripciones/
 
 ### Tarjetas de Prueba (Testing)
 
@@ -719,24 +858,7 @@ if (plan.Precio < 3)
 
 ---
 
-## ✅ Checklist de Implementación
-
-Antes de ir a producción, verificar:
-
-- [ ] Credenciales de producción configuradas
-- [ ] Webhook configurado en Panel Culqi producción
-- [ ] Migración SQL ejecutada en BD producción
-- [ ] Variables de entorno configuradas correctamente
-- [ ] HTTPS habilitado en el dominio
-- [ ] Logs de errores configurados
-- [ ] Testing completo con tarjetas de prueba
-- [ ] Manejo de errores implementado
-- [ ] Notificaciones por email configuradas
-- [ ] Documentación de endpoints actualizada
-
----
-
 **Autor**: Claude Code
 **Fecha**: 2025-11-01
-**Versión**: 1.0
+**Versión**: 2.0 (Con Suscripciones)
 **Status**: ✅ Implementado y listo para usar

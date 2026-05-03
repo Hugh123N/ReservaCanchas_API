@@ -11,7 +11,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<GetPagoPlanDto>> Get(int id);
         Task<ResponseDto<IEnumerable<ListPagoPlanDto>>> List(int id);
         Task<ResponseDto<SearchResultDto<SearchPagoPlanDto>>> Search(SearchParamsDto<SearchPagoPlanFilterDto> searchParams);
-
+        Task<ResponseDto<List<GetPagoPlanDto>>> GetPayments(int idProveedor);
     }
 }
 

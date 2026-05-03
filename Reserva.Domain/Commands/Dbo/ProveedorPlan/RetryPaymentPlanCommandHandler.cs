@@ -12,14 +12,14 @@ using Reserva.Entity;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 {
-    public class RetryPaymentPlanCommandHandler : CommandHandlerBase<RetryPaymentPlanCommand, CheckoutResponseDto>
+    public class RetryPaymentPlanCommandHandler : CommandHandlerBase<RetryPaymentPlanCommand>
     {
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
         private readonly IRepository<Entity.PlanTarifa> _tarifaRepository;
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
         private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
         private readonly IRepository<Entity.PagoPlan> _pagoPlanRepository;
-        private readonly CulqiService _culqiService;
+        private readonly ICulqiService _culqiService;
 
         public RetryPaymentPlanCommandHandler(
             IUnitOfWork unitOfWork,
@@ -31,7 +31,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             IRepository<Entity.EstadoPago> estadoPagoRepository,
             IRepository<Entity.MetodoPago> metodoPagoRepository,
             IRepository<Entity.PagoPlan> pagoPlanRepository,
-            CulqiService culqiService
+            ICulqiService culqiService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _proveedorPlanRepository = proveedorPlanRepository;
@@ -42,9 +42,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             _culqiService = culqiService;
         }
 
-        public override async Task<ResponseDto<CheckoutResponseDto>> HandleCommand(RetryPaymentPlanCommand request, CancellationToken cancellationToken)
+        public override async Task<ResponseDto> HandleCommand(RetryPaymentPlanCommand request, CancellationToken cancellationToken)
         {
-            var response = new ResponseDto<CheckoutResponseDto>();
+            var response = new ResponseDto();
             var dto = request.RetryPaymentDto;
 
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
@@ -59,7 +59,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 return response;
             }
 
-            if (proveedorPlan.Estado != "GRACE" && proveedorPlan.Estado != "PAST_DUE")
+            if (proveedorPlan.Estado != Constants.ESTADO_PROV_PLAN.GRACE && proveedorPlan.Estado != Constants.ESTADO_PROV_PLAN.PAST_DUE)
             {
                 response.AddErrorResult("La suscripción no está en estado de mora. No se puede reintentar el pago.");
                 return response;
@@ -76,58 +76,24 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             var estadoPendiente = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pendiente);
             var metodoPago = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.METODO_PAGO.Yape);
 
-            var culqiRequest = new CulqiCreateChargeRequest
-            {
-                Amount = CulqiService.ConvertToCents(monto),
-                CurrencyCode = "PEN",
-                Email = "",
-                SourceId = dto.CulqiToken,
-                Description = $"Reintento de pago - Plan {proveedorPlan.IdPlaneNavigation?.Nombre}",
-                Metadata = new Dictionary<string, string>
-                {
-                    { "proveedor_plan_id", dto.IdProveedorPlan.ToString() },
-                    { "retry", "true" }
-                }
-            };
-
-            CulqiChargeResponse? culqiResponse = null;
-            try
-            {
-                culqiResponse = await _culqiService.CreateChargeAsync(culqiRequest);
-            }
-            catch (CulqiException ex)
-            {
-                response.AddErrorResult(ex.UserMessage ?? "Error al procesar el pago con Culqi");
-                return response;
-            }
-
+            // Para suscripciones, Culqi maneja los reintentos automáticamente
+            // Solo registramos el intento manual de pago
             var pagoPlan = new Entity.PagoPlan
             {
                 IdProveedorPlan = proveedorPlan.IdProveedorPlan,
                 Monto = monto,
-                Moneda = "PEN",
+                Moneda = Constants.CURRENCY.PEN,
                 IdMetodoPago = metodoPago?.IdMetodoPago ?? 1,
                 IdEstadoPago = estadoPendiente?.IdEstadoPago ?? 1,
-                CulqiChargeId = culqiResponse?.Id,
-                CodigoOperacion = culqiResponse?.ReferenceCode,
+                CulqiChargeId = proveedorPlan.CulqiSubscriptionId,
+                CodigoOperacion = null,
                 Activo = true
             };
 
             await _pagoPlanRepository.AddAsync(pagoPlan);
             await _pagoPlanRepository.SaveAsync();
 
-            var checkoutResponse = new CheckoutResponseDto
-            {
-                IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                CulqiChargeId = culqiResponse?.Id,
-                ReferenceCode = culqiResponse?.ReferenceCode,
-                Monto = monto,
-                Estado = "PENDIENTE"
-            };
-
-            response.UpdateData(checkoutResponse);
-            response.AddOkResult("Pago iniciado. Espera la confirmación.");
-
+            response.AddOkResult("Reintento de pago registrado. Culqi procesará el cobro automáticamente.");
             return response;
         }
     }
@@ -141,10 +107,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 RuleFor(x => x.RetryPaymentDto.IdProveedorPlan)
                     .GreaterThan(0)
                     .WithMessage("La suscripción es requerida");
-
-                RuleFor(x => x.RetryPaymentDto.CulqiToken)
-                    .NotEmpty()
-                    .WithMessage("El token de Culqi es requerido");
             });
         }
     }

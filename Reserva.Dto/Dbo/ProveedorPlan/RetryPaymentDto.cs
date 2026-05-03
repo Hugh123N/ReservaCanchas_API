@@ -3,6 +3,6 @@ namespace Reserva.Dto.Dbo.ProveedorPlan
     public class RetryPaymentDto
     {
         public int IdProveedorPlan { get; set; }
-        public string CulqiToken { get; set; } = null!;
+        // CulqiToken no es necesario para suscripciones - Culqi usa la tarjeta guardada
     }
 }

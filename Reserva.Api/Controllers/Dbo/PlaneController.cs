@@ -26,9 +26,9 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpGet("{id}")]
         public async Task<ResponseDto<GetPlaneDto>> Get(int id)
             => await _PlaneApplication.Get(id);
-        [HttpPost("list")]
-        public async Task<ResponseDto<IEnumerable<ListPlaneDto>>> List(int id)
-            => await _PlaneApplication.List(id);
+        [HttpGet("list")]
+        public async Task<ResponseDto<IEnumerable<ListPlaneDto>>> List()
+            => await _PlaneApplication.List();
 
     }
 }

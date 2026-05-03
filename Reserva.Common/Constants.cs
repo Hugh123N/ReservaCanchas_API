@@ -79,6 +79,27 @@ namespace Reserva.Common
             public const string Yape = "04";
             public const string Plin = "05";
         }
+
+        public struct ESTADO_PROV_PLAN
+        {
+            public const string PENDING = "PENDING";
+            public const string ACTIVE = "ACTIVE";
+            public const string GRACE = "GRACE";
+            public const string SUSPENDED = "SUSPENDED";
+            public const string CANCELLED = "CANCELLED";
+            public const string PAST_DUE = "PAST_DUE";
+        }
+
+        public struct CURRENCY
+        {
+            public const string PEN = "PEN";
+        }
+
+        public struct CULQI_SUBSCRIPTION_STATUS
+        {
+            public const string ACTIVE = "active";
+        }
+
         public struct DEFECT
         {
             public const int PRE_RESERVA = 24;
@@ -86,10 +107,11 @@ namespace Reserva.Common
 
         public struct NOTIFICATION
         {
-            public struct BILLING //Modulo
+            public struct BILLINGS //Modulo
             {
+                public const string BILLING = "BILLING";
                 //Tipos
-                public const string VENCIMIENTO_1_DIAANTE = "VENCIMIENTO_1_DIA";
+                public const string VENCIMIENTO_1_DIAANTES = "VENCIMIENTO_1_DIA";
                 public const string FALLO_PAGO_CULQUI = "FALLO_PAGO_CULQUI";
                 public const string VENCIMIENTO_5_DIAS = "VENCIMIENTO_5_DIAS";
             }

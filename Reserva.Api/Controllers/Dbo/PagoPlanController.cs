@@ -32,6 +32,8 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("search")]
         public async Task<ResponseDto<SearchResultDto<SearchPagoPlanDto>>> Search(SearchParamsDto<SearchPagoPlanFilterDto> searchParams)
             => await _PagoPlanApplication.Search(searchParams);
-
+        [HttpGet("payments/{idProveedor}")]
+        public async Task<ResponseDto<List<GetPagoPlanDto>>> GetPayments(int idProveedor)
+            => await _PagoPlanApplication.GetPayments(idProveedor);
     }
 }

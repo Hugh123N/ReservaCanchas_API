@@ -842,12 +842,15 @@ public partial class ReservaCanchasContext : DbContext
                 .HasColumnName("destinatario");
             entity.Property(e => e.FechaEnvio).HasColumnName("fechaEnvio");
             entity.Property(e => e.FechaProgramada).HasColumnName("fechaProgramada");
-            entity.Property(e => e.IdPago).HasColumnName("idPago");
-            entity.Property(e => e.IdProveedor).HasColumnName("idProveedor");
-            entity.Property(e => e.IdProveedorPlan).HasColumnName("idProveedorPlan");
-            entity.Property(e => e.IdReserva).HasColumnName("idReserva");
-            entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
             entity.Property(e => e.Intentos).HasColumnName("intentos");
+            entity.Property(e => e.EntidadTipo)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("entidadTipo");
+            entity.Property(e => e.EntidadId)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("entidadId");
             entity.Property(e => e.Metadata)
                 .IsUnicode(false)
                 .HasColumnName("metadata");
@@ -1201,6 +1204,10 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(200)
                 .IsUnicode(false)
                 .HasColumnName("instagram");
+            entity.Property(e => e.CulqiCustomerId)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .HasColumnName("culqiCustomerId");
             entity.Property(e => e.RazonSocial)
                 .HasMaxLength(255)
                 .IsUnicode(false)

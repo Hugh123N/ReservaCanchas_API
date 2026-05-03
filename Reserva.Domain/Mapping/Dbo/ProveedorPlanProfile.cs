@@ -24,6 +24,13 @@ namespace Reserva.Domain.Mapping.ProveedorPlan
 
             CreateMap<Entity.ProveedorPlan, SearchProveedorPlanDto>()
                 .ReverseMap();
+
+            CreateMap<Entity.ProveedorPlan, GetProveedorPlanCurrentDto>()
+                .ForMember(dest => dest.Plan, opt => opt.MapFrom(src => src.IdPlaneNavigation))
+                .ForMember(dest => dest.PlanTarifas, opt => opt.MapFrom(src => src.IdPlanTarifaNavigation))
+                .ForMember(dest => dest.PlanCaracteristicas, opt => opt.MapFrom(src => src.IdPlaneNavigation != null ? src.IdPlaneNavigation.PlanCaracteristica : null))
+                .ForMember(dest => dest.Limites, opt => opt.MapFrom(src => src.IdPlaneNavigation != null ? src.IdPlaneNavigation.PlanLimite : null))
+                .ReverseMap();
         }
     }
 }

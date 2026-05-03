@@ -245,7 +245,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
                 var clienteCreado = new Entity.AspNetUsers
                 {
-                    Id = resultUser.Data.Id,
+                    Id = resultUser.Data!.Id,
                     FirstName = resultUser.Data.FirstName,
                     LastName = resultUser.Data.LastName,
                     PhoneNumber = resultUser.Data.PhoneNumber,
@@ -390,7 +390,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 CodigoOperacion = pagoDto.CodigoOperacion,
                 NumeroReferencia = pagoDto.NumeroReferencia,
                 IdOperador = idOperador,
-                Moneda = "PEN", // Default to PEN (Soles)
+                Moneda = Constants.CURRENCY.PEN, // Default to PEN (Soles)
                 IdEstadoPagoNavigation = estadoPago!
             };
 
