@@ -1,5 +1,6 @@
 using AutoMapper;
 using Reserva.Dto.Dbo.ProveedorPlan;
+using Reserva.Entity;
 
 namespace Reserva.Domain.Mapping.ProveedorPlan
 {
@@ -30,6 +31,10 @@ namespace Reserva.Domain.Mapping.ProveedorPlan
                 .ForMember(dest => dest.PlanTarifas, opt => opt.MapFrom(src => src.IdPlanTarifaNavigation))
                 .ForMember(dest => dest.PlanCaracteristicas, opt => opt.MapFrom(src => src.IdPlaneNavigation != null ? src.IdPlaneNavigation.PlanCaracteristica : null))
                 .ForMember(dest => dest.Limites, opt => opt.MapFrom(src => src.IdPlaneNavigation != null ? src.IdPlaneNavigation.PlanLimite : null))
+                .ReverseMap();
+
+            // Additional mappings for nested DTOs
+            CreateMap<Entity.PlanLimite, PlanLimiteDto>()
                 .ReverseMap();
         }
     }
