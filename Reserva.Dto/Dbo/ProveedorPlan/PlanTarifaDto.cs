@@ -6,6 +6,7 @@ namespace Reserva.Dto.Dbo.ProveedorPlan
     {
         public int IdPlane { get; set; }
         public string Codigo { get; set; } = null!;
+        public string? Nombre { get; set; }
         public decimal Precio { get; set; }
         public string Moneda { get; set; } = null!;
         public int DuracionDias { get; set; }

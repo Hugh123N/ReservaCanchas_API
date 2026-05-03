@@ -26,7 +26,7 @@ namespace Reserva.Domain.Queries.Dbo.Plane
                 x => x.PlanTarifa
             );
             
-            var listDtos = _mapper?.Map<IEnumerable<ListPlaneDto>>(list);
+            var listDtos = _mapper?.Map<List<ListPlaneDto>>(list);
 
             response.UpdateData(listDtos ?? new List<ListPlaneDto>());
 
