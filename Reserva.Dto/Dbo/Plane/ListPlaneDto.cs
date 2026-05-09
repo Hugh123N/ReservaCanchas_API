@@ -7,5 +7,6 @@ namespace Reserva.Dto.Dbo.Plane
     {
         public List<PlanCaracteristicaDto>? PlanCaracteristicas { get; set; }
         public List<GetPlanTarifaDto>? PlanTarifa { get; set; }
+        public List<PlanLimiteDto>? PlanLimite { get; set; }
     }
 }

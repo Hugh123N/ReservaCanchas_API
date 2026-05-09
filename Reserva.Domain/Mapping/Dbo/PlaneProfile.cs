@@ -22,6 +22,7 @@ namespace Reserva.Domain.Mapping.Plane
             CreateMap<Entity.Plane, ListPlaneDto>()
                 .ForMember(dest => dest.PlanCaracteristicas, opt => opt.MapFrom(src => src.PlanCaracteristica != null ? src.PlanCaracteristica : null))
                 .ForMember(dest => dest.PlanTarifa, opt => opt.MapFrom(src => src.PlanTarifa != null ? src.PlanTarifa : null))
+                .ForMember(dest => dest.PlanLimite, opt => opt.MapFrom(src => src.PlanLimite != null ? src.PlanLimite : null))
                 .ReverseMap();
         }
     }

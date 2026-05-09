@@ -23,7 +23,8 @@ namespace Reserva.Domain.Queries.Dbo.Plane
             var response = new ResponseDto<IEnumerable<ListPlaneDto>>();
             var list = await _repository.FindByAsNoTrackingAsync(x => x.Activo, 
                 x => x.PlanCaracteristica, 
-                x => x.PlanTarifa
+                x => x.PlanTarifa,
+                x => x.PlanLimite
             );
             
             var listDtos = _mapper?.Map<List<ListPlaneDto>>(list);
