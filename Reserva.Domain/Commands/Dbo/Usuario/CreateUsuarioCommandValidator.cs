@@ -30,15 +30,15 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 
                 RuleFor(x => x.CreateDto.Email)
                     //.NotEmpty().WithMessage("El correo electronico es obligatorio.")
-                    .EmailAddress().WithMessage("El correo electronico no tiene un formato válido.")
+                    .EmailAddress().WithMessage("El correo electronico no tiene un formato valido.")
                     .MaximumLength(100)
                     .MustAsync(CorreoNoExiste)
                     .WithMessage("El correo electronico ya esta registrado.");
                     
                 /*RuleFor(x => x.CreateDto.PhoneNumber)
-                    .Matches(@"^\d{9}$").WithMessage("El número de teléfono debe tener 9 dígitos.")
+                    .Matches(@"^\d{9}$").WithMessage("El nï¿½mero de telï¿½fono debe tener 9 dï¿½gitos.")
                     .MustAsync(TelefonoNoExiste)
-                    .WithMessage("El número de teléfono ya está registrado.");*/
+                    .WithMessage("El nï¿½mero de telï¿½fono ya estï¿½ registrado.");*/
 
             });
         }

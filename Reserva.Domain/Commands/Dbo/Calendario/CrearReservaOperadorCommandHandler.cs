@@ -226,11 +226,9 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
             if (clienteDto.EsNuevoCliente)
             {
-                //var userName = !string.IsNullOrEmpty(clienteDto.Email)
-                //    ? clienteDto.Email : clienteDto.Telefono;
-
                 var createUserDto = new CreateUsuarioDto
                 {
+                    UserName = clienteDto.Email ?? clienteDto.Telefono ?? $"cliente{Guid.NewGuid()}",
                     FirstName = clienteDto.Nombre,
                     LastName = clienteDto.Apellidos,
                     PhoneNumber = clienteDto.Telefono,
