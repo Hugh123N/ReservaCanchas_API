@@ -122,20 +122,19 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 
             var CanchaDtos = _mapper?.Map<IEnumerable<SearchCanchaDto>>(Canchas.Items);
 
+            var tipoDeportes = await _TipoDeporteRepository.FindByAsNoTrackingAsync(x => x.Activo);
+
             foreach (var it in CanchaDtos) {
                 var tipoDeportesDto = new List<GetTipoDeporteDto>();
                 var canchaEntity = Canchas.Items.FirstOrDefault(x => x.IdCancha == it.IdCancha);
 
                 var idsTipoDeportes = canchaEntity.TipoDeporteCancha.Where(x => x.Activo).Select(x => x.IdTipoDeporte).ToList();
 
-                var horariosDisponibles = await _mediator?.Send(new GetCanchaByFechaQuery(DateTime.Now, it.IdCancha ?? 0), cancellationToken)!;
-
                 if (idsTipoDeportes.Count() > 0) {
-                    var tiposDeportes = await _TipoDeporteRepository.FindByAsNoTrackingAsync(x => idsTipoDeportes.Contains(x.IdTipoDeporte) && x.Activo);
-                    tipoDeportesDto = _mapper?.Map<List<GetTipoDeporteDto>>(tiposDeportes);
+                    var tipoDeportesFilter = tipoDeportes.Where(x => idsTipoDeportes.Contains(x.IdTipoDeporte));
+                    tipoDeportesDto = _mapper?.Map<List<GetTipoDeporteDto>>(tipoDeportesFilter);
                 }
 
-                it.HorariosDisponibles = horariosDisponibles.Data;
                 it.TipoDeportes = tipoDeportesDto;
             }
             
