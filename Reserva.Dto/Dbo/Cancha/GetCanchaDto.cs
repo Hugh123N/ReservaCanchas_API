@@ -17,6 +17,7 @@ namespace Reserva.Dto.Dbo.Cancha
 
         public int? DuracionPreReserva { get; set; }
         public decimal? PorcentajeAdelantoMinimo { get; set; }
+        public int? TiempoLimiteCancelacion { get; set; }
 
         public List<GetImagenCanchaDto>? ImagenesCancha { get; set; }
         public List<GetHorarioCanchaDto>? HorariosCancha { get; set; }

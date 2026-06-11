@@ -86,6 +86,8 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 
             CanchaDto.DuracionPreReserva = proveedor.ConfiguracionProveedor?.DuracionPreReserva;
             CanchaDto.PorcentajeAdelantoMinimo = proveedor.ConfiguracionProveedor?.PorcentajeAdelantoMinimo;
+            CanchaDto.TiempoLimiteCancelacion = proveedor.ConfiguracionProveedor?.TiempoLimiteCancelacion;
+
 
             response.UpdateData(CanchaDto);
 
