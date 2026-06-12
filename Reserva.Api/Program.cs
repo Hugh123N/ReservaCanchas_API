@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Reserva.Api.Security;
+using Reserva.Api.Middleware;
 using Reserva.Application.Extensions;
 using Reserva.Domain.Extensions;
 using Reserva.Entity;
@@ -70,6 +71,15 @@ builder.Services.AddSingleton<Reserva.Domain.Services.Storage.IStorageService, R
 // Security
 builder.Services.AddHttpContextAccessor();
 builder.Services.UseSecurity(configuration, isProduction);
+
+// Api Protection Options (Rate Limit + Injection Detection)
+builder.Services.Configure<ApiProtectionOptions>(configuration.GetSection("ApiProtection"));
+builder.Services.AddSingleton(provider =>
+{
+    var options = new ApiProtectionOptions();
+    configuration.GetSection("ApiProtection").Bind(options);
+    return options;
+});
 // Application Services
 builder.Services.UseApplicationServices();
 // Add services to the container.
@@ -99,6 +109,10 @@ app.UseRouting();
 
 // Cors
 app.UseCors("CorsPolicy");
+
+// Security Middlewares (after CORS, before Authentication)
+app.UseMiddleware<RateLimitMiddleware>();
+app.UseMiddleware<InjectionDetectionMiddleware>();
 
 // Authentication
 app.UseAuthentication();
