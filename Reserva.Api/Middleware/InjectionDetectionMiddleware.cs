@@ -61,15 +61,6 @@ namespace Reserva.Api.Middleware
                 }
             }
 
-            foreach (var header in request.Headers)
-            {
-                if (header.Key.Equals("Cookie", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                if (InjectionDetector.HasThreats(header.Value.ToString()))
-                    return true;
-            }
-
             if (request.ContentLength > 0 && request.ContentLength <= _options.MaxPayloadLength)
             {
                 request.EnableBuffering();

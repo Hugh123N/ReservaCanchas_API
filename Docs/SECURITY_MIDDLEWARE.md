@@ -272,22 +272,7 @@ URL: /api/Cancha/search?nombre=test&orden=nombre
   → Retornar 400 Bad Request
 ```
 
-**Paso 4 — Analizar Headers:**
-```
-Headers:
-  Content-Type: application/json
-  Authorization: Bearer xxx
-  X-Custom: <script>alert(1)</script>
-
-¿Alguno contiene patrones XSS?
-  → InjectionDetector.HasThreats("<script>alert(1)</script>")
-  → Retorna "Access denied"
-  → Retornar 400 Bad Request
-
-Nota: El header Cookie se excluye del análisis
-```
-
-**Paso 5 — Analizar Body:**
+**Paso 4 — Analizar Body:**
 ```
 Body: { "nombre": "Cancha Norte" }
 
@@ -302,11 +287,13 @@ Body: { "nombre": "Cancha Norte" }
   → Retornar 400 Bad Request
 ```
 
-**Paso 6 — Respuesta exitosa:**
+**Paso 5 — Respuesta exitosa:**
 ```
 Si no se detectó ninguna amenaza:
   → Continúa al siguiente middleware (Authentication)
 ```
+
+> **Nota:** Los headers HTTP (Content-Type, User-Agent, Authorization, etc.) **no se revisan** porque no son input controlado por el usuario. Contienen caracteres como `;` que son normales en HTTP y causarían falsos positivos. El riesgo real de inyección está en el **body** y **query parameters**.
 
 ### 4.4. Ejemplo con curl
 
@@ -514,7 +501,7 @@ O configurar límites más permisivos:
 
 - Los middlewares se ejecutan **antes** de la autenticación, por lo que protegen incluso endpoints públicos
 - El rate limit funciona por IP, no por usuario (un usuario autenticado tiene el mismo límite que uno anónimo desde la misma IP)
-- La detección de inyección cubre body, query params y headers (excepto Cookie)
+- La detección de inyección cubre body y query params (los headers no se revisan porque no son input del usuario)
 
 ### Rendimiento
 
