@@ -1,4 +1,5 @@
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.Token;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Dto.User;
 
@@ -15,6 +16,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<IEnumerable<SelectComboUsuarioDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectUsuarioDto>>> Select(SearchParamsDto<SelectUsuarioFilterDto> searchParams);
         Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto);
+        Task<ResponseDto<AccessTokenDto>> RenewSession();
         Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto);
         Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto);
         Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, UpgradeToProveedorDto upgradeDto);

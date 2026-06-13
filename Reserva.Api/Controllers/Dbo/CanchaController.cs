@@ -6,6 +6,7 @@ using Reserva.Dto.Dbo.Cancha;
 using Reserva.Domain.Commands.Dbo.ImagenCancha;
 using Reserva.Dto.Dbo.ImagenCancha;
 using Reserva.Api.Security;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Reserva.Api.Controllers.Dbo
 {
@@ -34,12 +35,14 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpDelete("{id}")]
         public async Task<ResponseDto> Delete(int id)
             => await _CanchaApplication.Delete(id);
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ResponseDto<GetCanchaDto>> Get(int id)
             => await _CanchaApplication.Get(id);
         [HttpPost("list")]
         public async Task<ResponseDto<IEnumerable<ListCanchaDto>>> List(int id)
             => await _CanchaApplication.List(id);
+        [AllowAnonymous]
         [HttpPost("search")]
         public async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams)
             => await _CanchaApplication.Search(searchParams);

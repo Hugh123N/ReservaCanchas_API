@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.Token;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Dto.User;
 
@@ -9,6 +10,7 @@ namespace Reserva.Api.Controllers.Dbo
 {
     [ApiController]
     [Route("api/Usuario")]
+    [Security.Authorize]
     public class UsuarioController
     {
         private readonly IUsuarioApplication _UsuarioApplication;
@@ -16,14 +18,16 @@ namespace Reserva.Api.Controllers.Dbo
         public UsuarioController(IUsuarioApplication UsuarioApplication)
             => _UsuarioApplication = UsuarioApplication;
 
+        [AllowAnonymous]
         [HttpPost("register/cliente")]
         public async Task<ResponseDto<GetUsuarioDto>> Create(CreateUsuarioDto createDto)
             => await _UsuarioApplication.Create(createDto);
+        [AllowAnonymous]
         [HttpPost("register/proveedor")]
         public async Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto)
             => await _UsuarioApplication.CreateProveedor(createDto);
         [HttpPut("{userId}/upgrade-to-proveedor")]
-        //[Authorize]
+        [Security.Authorize]
         public async Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, [FromBody] UpgradeToProveedorDto upgradeDto)
             => await _UsuarioApplication.UpgradeToProveedor(userId, upgradeDto);
         [HttpPut]
@@ -51,6 +55,10 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("login")]
         public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
             => await _UsuarioApplication.Login(loginDto);
+        [HttpGet("renew-session")]
+        public async Task<ResponseDto<AccessTokenDto>> RenewSession()
+            => await _UsuarioApplication.RenewSession();
+        [AllowAnonymous]
         [HttpPost("client/loginAndCreate")]
         public async Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto)
             => await _UsuarioApplication.CreateAndLogin(createDto);

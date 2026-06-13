@@ -5,6 +5,7 @@ using Reserva.Domain.Commands.Dbo.Usuario;
 using Reserva.Domain.Commands.User;
 using Reserva.Domain.Queries.Dbo.Usuario;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.Token;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Dto.User;
 
@@ -39,7 +40,8 @@ namespace Reserva.Application.Dbo
              => await _mediator.Send(new SelectUsuarioQuery(searchParams));
         public async Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto)
             => await _mediator.Send(new LoginCommand(loginDto));
-
+        public async Task<ResponseDto<AccessTokenDto>> RenewSession()
+            => await _mediator.Send(new RenewSessionCommand());
         public async Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto)
             => await _mediator.Send(new CreateAndLoginCommand(createDto));
         public async Task<ResponseDto> ForgotPassword(string email, string host)
