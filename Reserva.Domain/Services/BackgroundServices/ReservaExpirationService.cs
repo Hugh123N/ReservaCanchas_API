@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Reserva.Common;
+using Reserva.Domain.Helpers;
 using Reserva.Domain.Services.Notificacion;
 using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
@@ -283,7 +284,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                             .OrderBy(h => h.inicio)
                             .ToList();
 
-                        var horariosFormateado = NotificacionService.FormatearHorariosConsecutivos(horariosLista);
+                        var horariosFormateado = HorarioHelper.FormatearHorariosConsecutivos(horariosLista);
 
                         await notificacionService.NotificarRecordatorioReservaAsync(
                             reserva,

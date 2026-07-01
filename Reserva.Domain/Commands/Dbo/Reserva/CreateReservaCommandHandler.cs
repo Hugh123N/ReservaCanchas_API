@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Helpers;
 using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Pago;
@@ -244,7 +245,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     .OrderBy(h => h.inicio)
                     .ToList();
 
-                var horariosFormateado = NotificacionService.FormatearHorariosConsecutivos(horariosLista);
+                var horariosFormateado = HorarioHelper.FormatearHorariosConsecutivos(horariosLista);
 
                 if (cliente != null)
                 {

@@ -82,9 +82,7 @@ namespace Reserva.Domain.Queries.Dbo.HorarioCancha
                 {
                     IdHorarioCancha = horario.IdHorarioCancha,
                     HoraInicio = horario.IdHoraInicioNavigation.Hora1,
-                    HoraInicioTexto = horario.IdHoraInicioNavigation.HoraTexto,
                     HoraFin = horario.IdHoraFinNavigation?.Hora1 ?? default,
-                    HoraFinTexto = horario.IdHoraFinNavigation?.HoraTexto ?? "",
                     Precio = horario.PrecioHora
                 };
 

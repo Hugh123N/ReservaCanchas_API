@@ -1,7 +1,9 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Reserva.Domain.Helpers;
 using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.HorarioCancha;
 using Reserva.Dto.Dbo.Reserva;
 using Reserva.Entity.Base;
 using Reserva.Repository.Abstractions.Base;
@@ -126,22 +128,11 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
             foreach (var r in reservasPaginadas.Items)
             {
-                var horarios = new List<HorarioReservadoDto>();
+                var horarios = new List<HorarioDisponibleDto>();
 
                 if (detallesPorReserva.TryGetValue(r.IdReserva, out var detallesReserva))
                 {
-                    var horariosBase = detallesReserva
-                        .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
-                                    && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
-                        .Select(d => new HorarioReservadoDto
-                        {
-                            HoraInicio = d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1,
-                            HoraFin = d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1
-                        })
-                        .OrderBy(h => h.HoraInicio)
-                        .ToList();
-
-                    horarios = UnirHorariosConsecutivos(horariosBase);
+                    horarios = HorarioHelper.AgruparHorariosDesdeDetalles(detallesReserva);
                 }
 
                 Entity.Pago? pagoActivo = null;
@@ -191,44 +182,6 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             response.AddOkResult($"Se encontraron {reservasPaginadas.Total} reservas.");
             
             return response;
-        }
-
-        private static List<HorarioReservadoDto> UnirHorariosConsecutivos(
-    List<HorarioReservadoDto> horarios)
-        {
-            if (!horarios.Any())
-                return horarios;
-
-            var resultado = new List<HorarioReservadoDto>();
-
-            var actual = new HorarioReservadoDto
-            {
-                HoraInicio = horarios[0].HoraInicio,
-                HoraFin = horarios[0].HoraFin
-            };
-
-            for (int i = 1; i < horarios.Count; i++)
-            {
-                var siguiente = horarios[i];
-
-                // ¿Es consecutivo?
-                if (siguiente.HoraInicio == actual.HoraFin)
-                {
-                    actual.HoraFin = siguiente.HoraFin;
-                }
-                else
-                {
-                    resultado.Add(actual);
-                    actual = new HorarioReservadoDto
-                    {
-                        HoraInicio = siguiente.HoraInicio,
-                        HoraFin = siguiente.HoraFin
-                    };
-                }
-            }
-
-            resultado.Add(actual);
-            return resultado;
         }
     }
 }

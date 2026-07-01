@@ -1,7 +1,9 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Reserva.Domain.Helpers;
 using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.HorarioCancha;
 using Reserva.Dto.Dbo.Reserva;
 using Reserva.Entity.Base;
 using Reserva.Repository.Abstractions.Base;
@@ -121,21 +123,12 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
             foreach (var r in reservasPaginadas.Items)
             {
-                var horarios = new List<HorarioReservadoDto>();
+                var horarios = new List<HorarioDisponibleDto>();
 
                 // Obtener detalles de esta reserva desde el diccionario
                 if (detallesPorReserva.TryGetValue(r.IdReserva, out var detallesReserva))
                 {
-                    horarios = detallesReserva
-                        .Where(d => d.IdHorarioCanchaNavigation?.IdHoraInicioNavigation != null
-                                    && d.IdHorarioCanchaNavigation?.IdHoraFinNavigation != null)
-                        .Select(d => new HorarioReservadoDto
-                        {
-                            HoraInicio = d.IdHorarioCanchaNavigation!.IdHoraInicioNavigation!.Hora1,
-                            HoraFin = d.IdHorarioCanchaNavigation!.IdHoraFinNavigation!.Hora1
-                        })
-                        .OrderBy(h => h.HoraInicio)
-                        .ToList();
+                    horarios = HorarioHelper.AgruparHorariosDesdeDetalles(detallesReserva);
                 }
 
                 reservasDtos.Add(new ReservaClienteDto

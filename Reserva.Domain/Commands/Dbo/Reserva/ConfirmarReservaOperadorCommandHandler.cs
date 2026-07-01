@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Helpers;
 using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Reserva;
@@ -198,7 +199,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         .OrderBy(h => h.inicio)
                         .ToList();
 
-                    var horariosFormateado = NotificacionService.FormatearHorariosConsecutivos(horariosLista);
+                    var horariosFormateado = HorarioHelper.FormatearHorariosConsecutivos(horariosLista);
 
                     await _notificacionService.NotificarReservaConfirmadaAsync(
                         reserva,

@@ -1,8 +1,7 @@
+using Reserva.Dto.Dbo.HorarioCancha;
+
 namespace Reserva.Dto.Dbo.Reserva
 {
-    /// <summary>
-    /// DTO con información de reserva para visualización del cliente
-    /// </summary>
     public class ReservaClienteDto
     {
         public int IdReserva { get; set; }
@@ -25,7 +24,7 @@ namespace Reserva.Dto.Dbo.Reserva
         public string? TelefonoCliente { get; set; }
 
         // Horarios reservados
-        public List<HorarioReservadoDto> Horarios { get; set; } = new();
+        public List<HorarioDisponibleDto> Horarios { get; set; } = new();
 
         // Información del pago
         public string? CodigoEstadoPago { get; set; }
@@ -44,12 +43,5 @@ namespace Reserva.Dto.Dbo.Reserva
         public bool EstaCancelada => CodigoEstadoReserva == "03";
         public bool EstaExpirada => CodigoEstadoReserva == "04";
         public bool TienePagoPendiente => MontoPendiente > 0;
-    }
-
-    public class HorarioReservadoDto
-    {
-        public TimeOnly HoraInicio { get; set; }
-        public TimeOnly HoraFin { get; set; }
-        public string? HorarioFormateado { get; set; }
     }
 }
