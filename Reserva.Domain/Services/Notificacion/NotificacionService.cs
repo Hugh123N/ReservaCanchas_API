@@ -698,7 +698,7 @@ namespace Reserva.Domain.Services.Notificacion
                 <html>
                 <head><style>body {{ font-family: Arial; }}</style></head>
                 <body>
-                    <h2>❌ Error en el pago de tu plan</h2>
+                    <h2>Error en el pago de tu plan</h2>
                     <p>No se pudo procesar el cobro de tu plan <strong>{plan.Nombre}</strong>.</p>
                     <p>Por favor, actualiza tu método de pago.</p>
                     <p><a href='#'>Actualizar Método de Pago</a></p>

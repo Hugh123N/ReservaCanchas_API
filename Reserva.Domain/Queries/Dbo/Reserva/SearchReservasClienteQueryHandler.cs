@@ -19,15 +19,18 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
     {
         private readonly IRepository<Entity.Reserva> _reservaRepository;
         private readonly IRepository<Entity.DetalleReserva> _detalleReservaRepository;
+        private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
 
         public SearchReservasClienteQueryHandler(
             IMapper mapper,
             IRepository<Entity.Reserva> reservaRepository,
-            IRepository<Entity.DetalleReserva> detalleReservaRepository
+            IRepository<Entity.DetalleReserva> detalleReservaRepository,
+            IRepository<Entity.EstadoPago> estadoPagoRepository
         ) : base(mapper)
         {
             _reservaRepository = reservaRepository;
             _detalleReservaRepository = detalleReservaRepository;
+            _estadoPagoRepository = estadoPagoRepository;
         }
 
         protected override async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> HandleQuery(
@@ -35,6 +38,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             CancellationToken cancellationToken)
         {
             var response = new ResponseDto<SearchResultDto<ReservaClienteDto>>();
+
+            var estadosPago = await _estadoPagoRepository.FindByAsNoTrackingAsync(x => x.Activo);
 
             Expression<Func<Entity.Reserva, bool>> filter = x => x.IdCliente == request.IdUsuario && x.Activo;
 
@@ -131,6 +136,12 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     horarios = HorarioHelper.AgruparHorariosDesdeDetalles(detallesReserva);
                 }
 
+                var estadoPago = "Desconocido";
+
+                var estado = estadosPago!.FirstOrDefault(x => x.IdEstadoPago == r.Pago.FirstOrDefault(p => p.Activo)?.IdEstadoPago);
+                if (estado != null)
+                    estadoPago = estado.Descripcion;
+
                 reservasDtos.Add(new ReservaClienteDto
                 {
                     IdReserva = r.IdReserva,
@@ -152,7 +163,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     Horarios = horarios,
 
                     // Pago
-                    EstadoPago = r.Pago.FirstOrDefault(p => p.Activo)?.IdEstadoPagoNavigation?.Nombre ?? "Desconocido",
+                    EstadoPago = estadoPago,
                     MontoAdelanto = r.Pago.FirstOrDefault(p => p.Activo)?.MontoAdelanto ?? 0,
                     MontoPendiente = r.Pago.FirstOrDefault(p => p.Activo)?.MontoPendiente ?? 0,
                     NumeroRecibo = r.Pago.FirstOrDefault(p => p.Activo)?.NumeroReferencia,
