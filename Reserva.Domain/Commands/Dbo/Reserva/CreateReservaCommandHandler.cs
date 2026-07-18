@@ -274,7 +274,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private async Task<string> GenerarCodigoReserva(int idProveedor)
         {
             var param = _parameterFactory.CreateParameter("@idProveedor", idProveedor);
-            var codigo = await _ReservaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoReserva");
+            var codigo = await _ReservaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoReserva", param);
             if (!string.IsNullOrWhiteSpace(codigo))
                 return codigo;
 
