@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Helpers;
+using Reserva.Domain.Resources.Dbo;
 using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Pago;
@@ -30,6 +31,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.HorarioCancha> _HorarioCanchaRepository;
         private readonly IConfiguration _configuration;
         private readonly INotificacionService _notificacionService;
+        private readonly IDbParameterFactory _parameterFactory;
 
         public CreateReservaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -46,6 +48,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.DetalleReserva> DetalleReservaRepository,
             IRepository<Entity.HorarioCancha> HorarioCanchaRepository,
             IConfiguration configuration,
+            IDbParameterFactory parameterFactory,
             INotificacionService notificacionService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
@@ -59,6 +62,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _DetalleReservaRepository = DetalleReservaRepository;
             _HorarioCanchaRepository = HorarioCanchaRepository;
             _configuration = configuration;
+            _parameterFactory = parameterFactory;
             _notificacionService = notificacionService;
         }
 
@@ -141,7 +145,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             int duracionPreReservaHoras = cancha!.IdProveedorNavigation.ConfiguracionProveedor?.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
             nuevaReserva.FechaExpiracionPreReserva = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria).AddHours(duracionPreReservaHoras);
-            nuevaReserva.CodigoReserva = await GenerarCodigoReserva();
+            nuevaReserva.CodigoReserva = await GenerarCodigoReserva(cancha.IdProveedor);
             nuevaReserva.IdEstadoReserva = estadoPendienteReserva!.IdEstadoReserva;
             //nuevaReserva.IdCanchaNavigation = null;
             nuevaReserva.RecordatorioEnviado = false;
@@ -267,8 +271,9 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             return response;
         }
 
-        private async Task<string> GenerarCodigoReserva()
+        private async Task<string> GenerarCodigoReserva(int idProveedor)
         {
+            var param = _parameterFactory.CreateParameter("@idProveedor", idProveedor);
             var codigo = await _ReservaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoReserva");
             if (!string.IsNullOrWhiteSpace(codigo))
                 return codigo;

@@ -31,9 +31,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
         private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
         private readonly IRepository<Entity.Operador> _operadorRepository;
+        private readonly IDbParameterFactory _parameterFactory;
         private readonly IUserIdentity _userIdentity;
-        private readonly UserManager<Entity.ApplicationUser> _UserManager;
-        private readonly IRepository<Entity.ApplicationUser> _applicationUserRepository;
 
         public CrearReservaOperadorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -50,10 +49,10 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             IRepository<Entity.EstadoReserva> estadoReservaRepository,
             IRepository<Entity.EstadoPago> estadoPagoRepository,
             IRepository<Entity.MetodoPago> metodoPagoRepository,
-            UserManager<Entity.ApplicationUser> UserManager,
-            IRepository<Entity.ApplicationUser> applicationUserRepository,
-        IUserIdentity userIdentity,
-        IRepository<Entity.Operador> operadorRepository) : base(unitOfWork, mapper, mediator, validator)
+            IUserIdentity userIdentity,
+            IDbParameterFactory parameterFactory,
+            IRepository<Entity.Operador> operadorRepository
+        ) : base(unitOfWork, mapper, mediator, validator)
         {
             _userRepository = userRepository;
             _reservaRepository = reservaRepository;
@@ -66,9 +65,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             _estadoPagoRepository = estadoPagoRepository;
             _metodoPagoRepository = metodoPagoRepository;
             _operadorRepository = operadorRepository;
+            _parameterFactory = parameterFactory;
             _userIdentity = userIdentity;
-            _UserManager = UserManager;
-            _applicationUserRepository = applicationUserRepository;
         }
 
         public override async Task<ResponseDto<ReservaOperadorResponseDto>> HandleCommand(CrearReservaOperadorCommand request,CancellationToken cancellationToken)
@@ -133,7 +131,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 var cancha = await _canchaRepository.GetByAsync(x => x.IdCancha == dto.IdCancha && x.Activo,
                     x => x.IdProveedorNavigation.ConfiguracionProveedor!);
                 
-                var codigoReserva = await GenerarCodigoReserva();
+                var codigoReserva = await GenerarCodigoReserva(cancha.IdProveedor);
 
                 string codigoEstadoReserva = dto.TipoReserva == TipoReservaOperador.Inmediata
                     ? Constants.ESTADO_RESERVA.Confirmado
@@ -395,9 +393,10 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             return pago;
         }
 
-        private async Task<string> GenerarCodigoReserva()
+        private async Task<string> GenerarCodigoReserva(int idProveedor)
         {
-            var codigo = await _reservaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoReserva");
+            var param = _parameterFactory.CreateParameter("@idProveedor", idProveedor);
+            var codigo = await _reservaRepository.ExecuteScalarSPAsync<string>("sp_GenerarCodigoReserva", param);
 
             if (!string.IsNullOrWhiteSpace(codigo))
                 return codigo;
