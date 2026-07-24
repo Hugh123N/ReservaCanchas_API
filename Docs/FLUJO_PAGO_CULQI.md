@@ -452,6 +452,7 @@ public interface ICulqiService
 
     // Suscripciones
     Task<CulqiSubscriptionResponse> CreateSubscriptionAsync(CulqiCreateSubscriptionRequest request);
+    Task<CulqiSubscriptionResponse?> UpdateSubscriptionAsync(string subscriptionId, CulqiUpdateSubscriptionRequest request);
     Task<bool> CancelSubscriptionAsync(string subscriptionId);
     Task<CulqiSubscriptionResponse?> GetSubscriptionAsync(string subscriptionId);
 
@@ -495,6 +496,7 @@ Métodos principales:
 |--------|----------------|-------------|
 | `CreateChargeAsync()` | `POST /v2/charges` | Crea un cargo único |
 | `CreateSubscriptionAsync()` | `POST /v2/subscriptions` | Crea una suscripción recurrente |
+| `UpdateSubscriptionAsync()` | `PATCH /v2/subscriptions/{id}` | Actualiza suscripción (cambio de plan con prorrateo) |
 | `CancelSubscriptionAsync()` | `DELETE /v2/subscriptions/{id}` | Cancela una suscripción |
 | `GetSubscriptionAsync()` | `GET /v2/subscriptions/{id}` | Obtiene detalles de suscripción |
 | `CreatePlanAsync()` | `POST /v2/plans` | Crea un plan para suscripciones |
@@ -503,7 +505,7 @@ Métodos principales:
 | `GetCustomerAsync()` | `GET /v2/customers/{id}` | Obtiene un cliente |
 | `ConvertToCents()` | - | Convierte soles a centavos |
 | `ConvertToSoles()` | - | Convierte centavos a soles |
-| `ValidateWebhookSignature()` | - | Valida firma del webhook |
+| `ValidateWebhookSignature()` | - | ⚠️ PENDIENTE - Requiere documentación de Culqi |
 
 ### 4. Controladores
 
@@ -683,6 +685,25 @@ Culqi reintenta enviar el webhook si no recibe una respuesta 200 OK:
 
 ⚠️ **Importante**: Siempre retornar 200 OK incluso si hay un error interno, para evitar reintentos innecesarios.
 
+### ⚠️ Validación de Firma Webhook - PENDIENTE
+
+El método `ValidateWebhookSignature()` está pendiente de implementación:
+
+```csharp
+// Estado actual - Solo retorna true
+public bool ValidateWebhookSignature(string payload, string signature)
+{
+    // TODO: Implementar validación de firma cuando Culqi proporcione la documentación
+    _logger.LogWarning("Validación de firma de webhook no implementada");
+    return !string.IsNullOrEmpty(payload);
+}
+```
+
+**Pendiente para implementar:**
+- Obtener documentation oficial de Culqi sobre validación de firmas
+- Obtener el secret key o token específico para webhooks
+- Implementar validación HMAC/hash según especificación de Culqi
+
 ### Estados del Plan (Ciclo de Vida)
 
 ```
@@ -833,6 +854,43 @@ if (tarifa.Precio < 3)
 ---
 
 ## 📚 Recursos Adicionales
+
+### Tabla UsoPlan - Pendiente de Implementación
+
+La tabla `UsoPlan` está definida pero sin uso actual:
+
+```sql
+UsoPlan
+├── IdUsoPlan      INT PK
+├── IdProveedor    INT FK
+├── Codigo         VARCHAR     -- Tipo de límite (ej: "MAX_CANCHAS")
+├── ValorActual    INT         -- Cuánto ha usado
+└── Activo         BIT
+```
+
+**Funcionalidad pendiente:**
+- Controlar límites según el plan contratado
+- Validar al crear canchas, operadores, etc.
+- Mostrar uso en el panel del proveedor
+
+> 📄 Se requiere documento separado para definir reglas de uso y limitaciones por plan.
+
+### Estado de Implementación
+
+| Componente | Estado |
+|------------|--------|
+| ICulqiService | ✅ Implementado |
+| CulqiService | ✅ Implementado |
+| UpdateSubscriptionAsync | ✅ Implementado |
+| CheckoutPlanCommandHandler | ✅ Implementado |
+| ChangePlanCommandHandler | ✅ Implementado |
+| CancelAutoRenewCommandHandler | ✅ Implementado |
+| RetryPaymentPlanCommandHandler | ✅ Implementado |
+| WebhookController | ✅ Implementado |
+| PlanExpirationService | ✅ Implementado |
+| ValidateWebhookSignature | ⚠️ PENDIENTE - Requiere documentación Culqi |
+| UsoPlan (límites) | ⚠️ PENDIENTE - Requiere diseño de reglas |
+| ComprobantePagoPlan en checkout | ⚠️ PENDIENTE - No se crea automáticamente |
 
 ### Documentación Oficial
 

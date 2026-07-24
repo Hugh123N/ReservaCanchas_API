@@ -239,7 +239,6 @@ instagram         VARCHAR(200)
 | 01 | Pendiente | Registro pendiente de aprobacion admin |
 | 02 | Aprobado | Proveedor activo y operativo |
 | 03 | Rechazado | Solicitud rechazada |
-| 04 | Suspendido | Proveedor suspendido temporalmente |
 
 ### Entidad: ConfiguracionProveedor
 
@@ -250,7 +249,7 @@ idConfiguracionProveedor    INT IDENTITY PK
 idProveedor                 INT FK UNIQUE
 
 -- Pre-reserva
-duracionPreReserva          INT              -- Horas que tiene el cliente para confirmar (default: 12)
+duracionPreReserva          INT              -- Horas que tiene el cliente para confirmar (default: 24)
 
 -- Politicas de adelanto
 porcentajeAdelantoMinimo    DECIMAL(5,2)     -- % minimo del total que debe adelantar (default: 50%)
@@ -695,9 +694,8 @@ Ejemplo: RES-2025-000001 (primera reserva del año 2025)
 |--------|--------|-------------|
 | 01 | Pendiente | Creada, esperando confirmacion del operador |
 | 02 | Confirmado | Pago confirmado, reserva activa |
-| 03 | Completado | Se realizo exitosamente (pasado) |
-| 04 | Cancelado | Cancelada por cliente/operador/sistema |
-| 05 | No Presentado | Cliente no asistio |
+| 03 | Cancelado | Cancelada por cliente/operador/sistema |
+| 04 | Expirado | Expirada por timeout (BackgroundService) |
 
 ### Ciclo de Vida de una Reserva
 
@@ -706,7 +704,7 @@ Ejemplo: RES-2025-000001 (primera reserva del año 2025)
          │
          ▼
     Pendiente (01)
-    + FechaExpiracion calculada
+    + FechaExpiracion calculada (default: 24h)
     + Notificacion a operadores
          │
     ┌────┴─────────────────────┐
@@ -714,17 +712,12 @@ Ejemplo: RES-2025-000001 (primera reserva del año 2025)
 [Operador confirma]    [Expira FechaExpiracion]
     │                          │
     ▼                          ▼
-Confirmado (02)          Expirado/Cancelado (04)
+Confirmado (02)          Expirado (04)
     │                    [BackgroundService lo procesa]
     │
     │─── [1h antes] ──→ Recordatorio al cliente
     │
-    ├── [Cliente no llega] ──→ No Presentado (05)
-    │
-    └── [Se realiza] ──→ Completado (03)
-
-[En cualquier estado activo]
-    └── [Cancelacion manual] ──→ Cancelado (04)
+    └── [Cancelacion manual] ──→ Cancelado (03)
                                  + Calculo de reembolso
 ```
 
@@ -756,7 +749,7 @@ Confirmado (02)          Expirado/Cancelado (04)
 6. Agregar DetalleReserva (un registro por cada IdHorarioCancha)
 7. AJUSTAR FechaReserva: combinar fecha enviada con hora de inicio del primer horario
 8. CALCULAR EXPIRACION:
-   FechaExpiracion = ahora + ConfiguracionProveedor.DuracionPreReserva horas (default: 12h)
+   FechaExpiracion = ahora + ConfiguracionProveedor.DuracionPreReserva horas (default: 24h)
 9. Estado inicial: Pendiente
    RecordatorioEnviado = false
    NotificacionAdvertenciaEnviada = false
@@ -1203,7 +1196,7 @@ OPERADOR
 ### Sobre Expiracion
 
 1. Al crear una reserva, se calcula automaticamente la `FechaExpiracionPreReserva`.
-2. La duracion es configurable en `ConfiguracionProveedor.DuracionPreReserva` (default: 12 horas).
+2. La duracion es configurable en `ConfiguracionProveedor.DuracionPreReserva` (default: 24 horas).
 3. El background service corre **cada 30 minutos** para expirar reservas vencidas.
 4. Las notificaciones de advertencia se envian cuando falta **menos de 6 horas** para expirar.
 5. Los recordatorios al cliente se envian cuando falta entre **0 y 60 minutos** para la reserva.

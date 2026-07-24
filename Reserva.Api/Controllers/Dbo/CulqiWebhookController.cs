@@ -152,7 +152,7 @@ namespace Reserva.Api.Controllers.Dbo
 
             if (pago.IdEstadoPagoNavigation.Codigo == Constants.ESTADO_PAGO.Pagado)
             {
-                _logger.LogInformation("Pago {IdPagoPlan    } ya estaba marcado como pagado", pago.IdPagoPlan);
+                _logger.LogInformation("Pago {IdPagoPlan} ya estaba marcado como pagado", pago.IdPagoPlan);
                 return;
             }
 

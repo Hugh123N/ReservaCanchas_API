@@ -16,6 +16,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.EstadoCancha> _EstadoCanchaRepository;
         private readonly IDbParameterFactory _parameterFactory;
+        private readonly IPlanLimitValidationService _planLimitService;
 
         public CreateCanchaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -24,17 +25,30 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             CreateCanchaCommandValidator validator,
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.EstadoCancha> EstadoCanchaRepository,
-            IDbParameterFactory parameterFactory
+            IDbParameterFactory parameterFactory,
+            IPlanLimitValidationService planLimitService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _CanchaRepository = CanchaRepository;
             _EstadoCanchaRepository = EstadoCanchaRepository;
             _parameterFactory = parameterFactory;
+            _planLimitService = planLimitService;
         }
 
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(CreateCanchaCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetCanchaDto>();
+
+            var puedeCrear = await _planLimitService.CanCreateCanchaAsync(request.CreateDto.IdProveedor);
+            if (!puedeCrear)
+            {
+                var count = await _planLimitService.GetCanchaCountAsync(request.CreateDto.IdProveedor);
+                var limite = await _planLimitService.GetLimiteAsync(request.CreateDto.IdProveedor, "MAX_CANCHAS");
+                var planNombre = await _planLimitService.GetPlanNombreAsync(request.CreateDto.IdProveedor);
+                response.AddErrorResult($"Ha alcanzado el límite de {limite} cancha(s) de su plan {planNombre}. Mejore su plan para crear más canchas.");
+                return response;
+            }
+
             var estadoCancha = await _EstadoCanchaRepository.GetByAsNoTrackingAsync(x => x.Codigo!.Equals(Constants.ESTADO_CANCHA.Pendiente));
 
             // Expandir horarios: 1 hora → 2 bloques de 30 minutos

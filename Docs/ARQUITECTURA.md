@@ -450,6 +450,23 @@ ESTADO_USUARIO:
   Inactivo     = "02"
   Suspendido   = "03"
 
+ESTADO_PROV_PLAN (Plan de Proveedor):
+  PENDING      = "PENDING"
+  ACTIVE       = "ACTIVE"
+  GRACE        = "GRACE"
+  SUSPENDED    = "SUSPENDED"
+  CANCELLED    = "CANCELLED"
+  PAST_DUE     = "PAST_DUE"
+
+CURRENCY:
+  PEN          = "PEN"    -- Soles peruanos
+
+CULQI_SUBSCRIPTION_STATUS:
+  ACTIVE       = "active"
+
+DEFECT:
+  PRE_RESERVA  = 24       -- Horas default para expiracion de pre-reserva
+
 Role:
   ADMIN, PROVEEDOR, CLIENTE, OPERADOR
 ```

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Reserva.Domain.Services;
 using Reserva.Domain.Services.BackgroundServices;
 using Reserva.Domain.Services.Notificacion;
 using Reserva.Domain.Services.WhatsApp;
@@ -36,6 +37,9 @@ namespace Reserva.Domain.Extensions
 
             // Notification Service
             services.AddScoped<INotificacionService, NotificacionService>();
+
+            // Plan Limit Validation Service
+            services.AddScoped<PlanLimitValidationService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

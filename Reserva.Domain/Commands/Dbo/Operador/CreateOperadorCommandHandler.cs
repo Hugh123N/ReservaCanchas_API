@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Dbo.Usuario;
+using Reserva.Domain.Services;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Operador;
 using Reserva.Dto.Dbo.Usuario;
@@ -17,6 +18,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
     {
         private readonly IRepository<Entity.Operador> _OperadorRepository;
         private readonly IRepository<Entity.OperadorCancha> _OperadorCanchaRepository;
+        private readonly IPlanLimitValidationService _planLimitService;
 
         public CreateOperadorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -24,16 +26,28 @@ namespace Reserva.Domain.Commands.Dbo.Operador
             IMediator mediator,
             CreateOperadorCommandValidator validator,
             IRepository<Entity.Operador> OperadorRepository,
-            IRepository<Entity.OperadorCancha> OperadorCanchaRepository
+            IRepository<Entity.OperadorCancha> OperadorCanchaRepository,
+            IPlanLimitValidationService planLimitService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _OperadorRepository = OperadorRepository;
             _OperadorCanchaRepository = OperadorCanchaRepository;
+            _planLimitService = planLimitService;
         }
 
         public override async Task<ResponseDto<GetOperadorDto>> HandleCommand(CreateOperadorCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetOperadorDto>();
+
+            var puedeCrear = await _planLimitService.CanCreateOperadorAsync(request.CreateDto.IdProveedor);
+            if (!puedeCrear)
+            {
+                var count = await _planLimitService.GetOperadorCountAsync(request.CreateDto.IdProveedor);
+                var limite = await _planLimitService.GetLimiteAsync(request.CreateDto.IdProveedor, "MAX_OPERADORES");
+                var planNombre = await _planLimitService.GetPlanNombreAsync(request.CreateDto.IdProveedor);
+                response.AddErrorResult($"Ha alcanzado el límite de {limite} operador(es) de su plan {planNombre}. Mejore su plan para crear más operadores.");
+                return response;
+            }
 
             var createUserDto = new CreateUsuarioDto
             { 

@@ -20,6 +20,12 @@
 - ✅ WhatsApp Cloud API integrado
 - ✅ Manejo de errores que no afecta el flujo principal
 
+### 4. **Seguridad Implementada**
+- ✅ Rate Limiting (`RateLimitMiddleware.cs`) - Configurable via appsettings.json
+- ✅ Detección de Inyección SQL (`InjectionDetectorMiddleware.cs`)
+- ✅ Autenticación JWT (`Security.Authorize` attribute)
+- ✅ Headers de seguridad (`SecurityHeadersMiddleware.cs`)
+
 ---
 
 ## 🚀 Recomendaciones de Seguridad y Producción
@@ -338,11 +344,11 @@ public async Task<IActionResult> ExportarReservasExcel(int idProveedor, DateTime
 ## 🎯 Prioridades para Producción
 
 ### Alta Prioridad (Hacer ANTES de producción):
-1. ✅ **Agregar `[Authorize]` a todos los endpoints**
-2. ✅ **Validar que usuarios solo accedan a SUS datos**
-3. ✅ **Mover credenciales a Secrets Manager**
-4. ✅ **Implementar Rate Limiting global en API**
-5. ✅ **Agregar índices de base de datos recomendados**
+1. ✅ **Autenticación JWT implementada** (Security.Authorize attribute)
+2. ⚠️ **Validar que usuarios solo accedan a SUS datos** (pendiente por implementar)
+3. ⚠️ **Mover credenciales a Secrets Manager** (actualmente solo UserSecrets para desarrollo)
+4. ✅ **Implementar Rate Limiting global en API** (RateLimitMiddleware implementado)
+5. ⚠️ **Agregar índices de base de datos recomendados** (pendiente)
 
 ### Media Prioridad (Primera versión de producción):
 6. ⏳ Implementar logging con Serilog/Application Insights
@@ -415,7 +421,13 @@ El backend está **sólido y bien estructurado**. Las implementaciones actuales 
 - ✅ CQRS bien separado
 - ✅ Notificaciones duales funcionando
 - ✅ Background services para automatización
+- ✅ Rate Limiting implementado
+- ✅ Detección de inyección SQL
+- ✅ Headers de seguridad
 
-**Lo más crítico antes de producción** es agregar las capas de seguridad (autorización, validaciones de permisos) y mover credenciales a un sistema seguro.
+**Pendiente antes de producción**:
+- ⚠️ Validación de permisos a nivel de datos (usuarios solo acceden a SUS datos)
+- ⚠️ Mover credenciales a Azure Key Vault / AWS Secrets Manager
+- ⚠️ Agregar índices de base de datos para performance
 
 ¡El sistema está listo para el frontend! 🚀

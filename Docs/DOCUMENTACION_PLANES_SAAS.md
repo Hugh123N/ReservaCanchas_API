@@ -109,7 +109,18 @@ El módulo se compone de **3 servicios** independientes:
 | POST | `/api/PagoPlan/list` | Listar pagos de un proveedor | `ResponseDto<IEnumerable<ListPagoPlanDto>>` |
 | POST | `/api/PagoPlan/search` | Buscar pagos con filtros | `ResponseDto<SearchResultDto<SearchPagoPlanDto>>` |
 
-### 3.4 Webhooks
+### 3.4 Service: ComprobantePagoPlan (Comprobantes de Pago)
+
+| Método | Endpoint | Descripción | Respuesta |
+|--------|----------|-------------|-----------|
+| POST | `/api/ComprobantePagoPlan` | Crear comprobante de pago | `ResponseDto<GetComprobantePagoPlanDto>` |
+| PUT | `/api/ComprobantePagoPlan` | Actualizar comprobante | `ResponseDto<GetComprobantePagoPlanDto>` |
+| DELETE | `/api/ComprobantePagoPlan/{id}` | Eliminar comprobante | `ResponseDto` |
+| GET | `/api/ComprobantePagoPlan/{id}` | Obtener comprobante por ID | `ResponseDto<GetComprobantePagoPlanDto>` |
+| POST | `/api/ComprobantePagoPlan/list` | Listar comprobantes de un pago | `ResponseDto<IEnumerable<ListComprobantePagoPlanDto>>` |
+| POST | `/api/ComprobantePagoPlan/search` | Buscar comprobantes con filtros | `ResponseDto<SearchResultDto<SearchComprobantePagoPlanDto>>` |
+
+### 3.5 Webhooks
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -117,6 +128,117 @@ El módulo se compone de **3 servicios** independientes:
 | GET | `/api/culqi/webhook/test` | Test de webhook |
 
 ---
+
+## 3.6 Modelo de Entidades
+
+### Entidad: Plan (Catálogo)
+
+```sql
+IdPlane              INT IDENTITY PK
+Codigo               VARCHAR(50) UNIQUE    -- Código del plan
+Nombre               VARCHAR(200)          -- Nombre del plan
+Descripcion          TEXT                  -- Descripción detallada
+OrdenVisual          INT                   -- Orden de visualización en el catálogo
+Activo               BIT                   -- Activo/Inactivo
+
+-- Relaciones:
+PlanCaracteristica[] <- Características del plan
+PlanTarifa[]         <- Tarifas disponibles (mensual, anual, etc.)
+PlanLimite[]         <- Límites del plan (max canchas, max operadores, etc.)
+ProveedorPlan[]      <- Suscripciones de proveedores
+```
+
+### Entidad: PlanTarifa (Tarifas)
+
+```sql
+IdPlanTarifa         INT IDENTITY PK
+IdPlane              INT FK -> Plan
+Codigo               VARCHAR(50)          -- Código de la tarifa
+Nombre               VARCHAR(200)         -- Nombre (ej: "Mensual", "Anual")
+Precio               DECIMAL(10,2)        -- Precio de la tarifa
+Moneda               CHAR(3)              -- "PEN" (soles)
+DuracionDias         INT                  -- Duración en días (30=mensual, 365=anual)
+PorcentajeDescuento  DECIMAL(5,2)         -- Descuento aplicado (opcional)
+TipoCobro            VARCHAR(50)          -- Tipo de cobro (recurrente, único)
+PermiteAutoRenovacion BIT                 -- Si permite renovación automática
+Activo               BIT
+```
+
+### Entidad: PlanCaracteristica (Características)
+
+```sql
+IdPlanCaracteristica INT IDENTITY PK
+IdPlane              INT FK -> Plan
+Descripcion          VARCHAR(500)         -- Característica (ej: "Hasta 5 canchas")
+Orden                INT                  -- Orden de visualización
+Activo               BIT
+```
+
+### Entidad: PlanLimite (Límites del Plan)
+
+```sql
+IdPlanLimite         INT IDENTITY PK
+IdPlane              INT FK -> Plan
+Codigo               VARCHAR(50)          -- Código del límite
+Valor                INT                  -- Valor numérico del límite
+Activo               BIT
+```
+
+### Entidad: ProveedorPlan (Suscripciones)
+
+```sql
+IdProveedorPlan      INT IDENTITY PK
+IdProveedor          INT FK -> Proveedor
+IdPlane              INT FK -> Plan
+IdPlanTarifa         INT FK -> PlanTarifa
+FechaInicio          DATETIMEOFFSET       -- Inicio de la suscripción
+FechaFin             DATETIMEOFFSET       -- Fin de la suscripción
+FechaProximoCobro    DATETIMEOFFSET       -- Próxima fecha de cobro
+Estado               VARCHAR(20)          -- PENDING|ACTIVE|GRACE|SUSPENDED|CANCELLED
+AutoRenovacion       BIT                  -- Renovación automática habilitada
+EsActual             BIT                  -- Si es el plan actual del proveedor
+CulqiSubscriptionId  VARCHAR(100)         -- ID de suscripción en Culqi
+CulqiCustomerId      VARCHAR(100)         -- ID de cliente en Culqi
+GracePeriodHasta     DATETIMEOFFSET       -- Fecha límite del periodo de gracia
+FechaCancelacion     DATETIMEOFFSET       -- Fecha de cancelación (si aplica)
+MotivoCancelacion    VARCHAR(500)         -- Razón de cancelación
+-- Audit: userNameCreate, createDate, activo
+```
+
+### Entidad: PagoPlan (Pagos)
+
+```sql
+IdPagoPlan           INT IDENTITY PK
+IdProveedorPlan      INT FK -> ProveedorPlan
+Monto                DECIMAL(10,2)        -- Monto pagado
+Moneda               CHAR(3)              -- "PEN"
+IdMetodoPago         INT FK -> MetodoPago
+IdEstadoPago         INT FK -> EstadoPago
+FechaPago            DATETIMEOFFSET       -- Fecha del pago
+CulqiChargeId        VARCHAR(100)         -- ID del cargo en Culqi
+CodigoOperacion      VARCHAR(100)         -- Código de operación del gateway
+RespuestaGateway     TEXT                 -- Respuesta raw de Culqi (JSON)
+-- Audit: userNameCreate, createDate, activo
+```
+
+### Entidad: ComprobantePagoPlan (Comprobantes)
+
+```sql
+IdComprobantePagoPlan INT IDENTITY PK
+IdPagoPlan            INT FK -> PagoPlan
+TipoComprobante       VARCHAR(20)          -- Boleta | Factura | Recibo
+Serie                 VARCHAR(10)          -- Serie del comprobante
+Numero                VARCHAR(20)          -- Número correlativo
+RazonSocial           VARCHAR(200)         -- Razón social (Factura)
+Ruc                   VARCHAR(11)          -- RUC (Factura)
+Direccion             VARCHAR(500)         -- Dirección fiscal
+UrlPdf                VARCHAR(500)         -- URL del PDF
+UrlXml                VARCHAR(500)         -- URL del XML
+FechaEmision          DATETIMEOFFSET       -- Fecha de emisión
+EstadoSunat           VARCHAR(20)          -- Estado ante SUNAT
+Hash                  VARCHAR(500)         -- Hash de seguridad
+-- Audit: userNameCreate, createDate, activo
+```
 
 ## 5. Flujo de Checkout (Frontend)
 
@@ -281,8 +403,8 @@ El módulo se compone de **3 servicios** independientes:
 |-------|------------------|
 | `charge.succeeded` | Activar plan (ACTIVE) + Notificar |
 | `charge.failed` | Pasar a GRACE + Notificar |
-| `order.status.changed` (paid) | Activar plan |
-| `order.status.changed` (expired) | Pasar a GRACE |
+| `order.status.changed` state=`paid` o `paid_out` | Activar plan |
+| `order.status.changed` state=`expired` o `deleted` | Pasar a GRACE |
 | `subscription.created` | Log de nueva suscripción |
 | `subscription.updated` | Actualizar `FechaProximoCobro` |
 | `subscription.deleted` | Cancelar `AutoRenovacion` |
@@ -300,7 +422,16 @@ El módulo se compone de **3 servicios** independientes:
 
 | Job | Frecuencia | Acción |
 |-----|-----------|--------|
-| PlanExpirationService | Cada 24h | Verificar vencimientos, notificar, suspender |
+| PlanExpirationService | Cada 24h | Gestión completa de vencimientos y renovaciones |
+
+#### Tareas del PlanExpirationService
+
+| Tarea | Descripción |
+|-------|-------------|
+| `NotificarVencimiento1Dia` | Envía email a proveedores cuyo plan vence mañana |
+| `NotificarVencimiento5Dias` | Envía email a proveedores en estado GRACE por 5 días |
+| `ProcesarMoraYSuspension` | Cambia a SUSPENDED los planes en GRACE que ya expiraron |
+| `ProcesarRenovacionesAutomaticas` | Procesa renovaciones vía Culqi para planes con AutoRenovación |
 
 ---
 
