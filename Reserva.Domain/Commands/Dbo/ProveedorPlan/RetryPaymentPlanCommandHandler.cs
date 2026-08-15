@@ -1,6 +1,7 @@
 using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Culqi;
@@ -19,7 +20,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
         private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
         private readonly IRepository<Entity.PagoPlan> _pagoPlanRepository;
+        private readonly IRepository<Entity.Proveedor> _proveedorRepository;
         private readonly ICulqiService _culqiService;
+        private readonly ILogger<RetryPaymentPlanCommandHandler> _logger;
 
         public RetryPaymentPlanCommandHandler(
             IUnitOfWork unitOfWork,
@@ -31,7 +34,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             IRepository<Entity.EstadoPago> estadoPagoRepository,
             IRepository<Entity.MetodoPago> metodoPagoRepository,
             IRepository<Entity.PagoPlan> pagoPlanRepository,
-            ICulqiService culqiService
+            IRepository<Entity.Proveedor> proveedorRepository,
+            ICulqiService culqiService,
+            ILogger<RetryPaymentPlanCommandHandler> logger
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _proveedorPlanRepository = proveedorPlanRepository;
@@ -39,7 +44,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             _estadoPagoRepository = estadoPagoRepository;
             _metodoPagoRepository = metodoPagoRepository;
             _pagoPlanRepository = pagoPlanRepository;
+            _proveedorRepository = proveedorRepository;
             _culqiService = culqiService;
+            _logger = logger;
         }
 
         public override async Task<ResponseDto> HandleCommand(RetryPaymentPlanCommand request, CancellationToken cancellationToken)
@@ -73,11 +80,56 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 monto = monto - (monto * tarifa.PorcentajeDescuento.Value / 100);
             }
 
+            var proveedor = await _proveedorRepository.GetByAsync(
+                x => x.IdProveedor == proveedorPlan.IdProveedor,
+                x => x.IdUsuarioNavigation
+            );
+
+            if (proveedor == null)
+            {
+                response.AddErrorResult("Proveedor no encontrado");
+                return response;
+            }
+
+            // Si se proporcionó un token, actualizar la tarjeta del cliente
+            if (!string.IsNullOrEmpty(dto.CulqiToken) && !string.IsNullOrEmpty(proveedor.CulqiCustomerId))
+            {
+                try
+                {
+                    var existingCard = await _culqiService.GetCardAsync(proveedor.CulqiCustomerId);
+
+                    var newCard = await _culqiService.CreateCardAsync(proveedor.CulqiCustomerId, dto.CulqiToken);
+
+                    if (existingCard != null)
+                    {
+                        await _culqiService.DeleteCardAsync(existingCard.Id);
+                        _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
+                    }
+
+                    // Actualizar suscripción con la nueva tarjeta
+                    if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
+                    {
+                        var updateRequest = new CulqiUpdateSubscriptionRequest
+                        {
+                            CardId = newCard.Id
+                        };
+
+                        await _culqiService.UpdateSubscriptionAsync(proveedorPlan.CulqiSubscriptionId, updateRequest);
+                        _logger.LogInformation("Suscripción {SubscriptionId} actualizada con nueva tarjeta", proveedorPlan.CulqiSubscriptionId);
+                    }
+                }
+                catch (CulqiException ex)
+                {
+                    _logger.LogError(ex, "Error al actualizar tarjeta en Culqi");
+                    response.AddErrorResult(ex.UserMessage ?? "Error al actualizar la tarjeta");
+                    return response;
+                }
+            }
+
+            // Registrar el pago
             var estadoPendiente = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pendiente);
             var metodoPago = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.METODO_PAGO.Yape);
 
-            // Para suscripciones, Culqi maneja los reintentos automáticamente
-            // Solo registramos el intento manual de pago
             var pagoPlan = new Entity.PagoPlan
             {
                 IdProveedorPlan = proveedorPlan.IdProveedorPlan,
@@ -93,7 +145,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             await _pagoPlanRepository.AddAsync(pagoPlan);
             await _pagoPlanRepository.SaveAsync();
 
-            response.AddOkResult("Reintento de pago registrado. Culqi procesará el cobro automáticamente.");
+            _logger.LogInformation("Pago registrado para ProveedorPlan {IdProveedorPlan}. Culqi procesará el cobro automáticamente.", proveedorPlan.IdProveedorPlan);
+
+            response.AddOkResult("Pago registrado. Culqi procesará el cobro automáticamente.");
             return response;
         }
     }
@@ -107,6 +161,11 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 RuleFor(x => x.RetryPaymentDto.IdProveedorPlan)
                     .GreaterThan(0)
                     .WithMessage("La suscripción es requerida");
+
+                RuleFor(x => x.RetryPaymentDto.Email)
+                    .EmailAddress()
+                    .When(x => !string.IsNullOrEmpty(x.RetryPaymentDto.CulqiToken))
+                    .WithMessage("El email es requerido cuando se envía un token de tarjeta");
             });
         }
     }

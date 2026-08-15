@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Culqi;
 using Reserva.Dto.Base;
@@ -38,20 +39,41 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 return response;
             }
 
-            // Cancelar suscripción en Culqi si existe
-            if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
+            // Validar que el plan esté activo y tenga renovación automática
+            if (proveedorPlan.Estado != Constants.ESTADO_PROV_PLAN.ACTIVE)
             {
-                await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionId);
+                response.AddErrorResult("Solo se puede cancelar la renovación de planes activos");
+                return response;
             }
 
+            if (!proveedorPlan.AutoRenovacion)
+            {
+                response.AddErrorResult("La renovación automática ya está desactivada");
+                return response;
+            }
+
+            // Cancelar suscripción en Culqi (permanentemente)
+            if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
+            {
+                var culqiResult = await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionId);
+                if (!culqiResult)
+                {
+                    response.AddErrorResult("Error al cancelar la suscripción en Culqi");
+                    return response;
+                }
+            }
+
+            // Actualizar estado local
+            // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
             proveedorPlan.AutoRenovacion = false;
+            proveedorPlan.CancelAtPeriodEnd = true;
             proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
             proveedorPlan.MotivoCancelacion = "Cancelado por el proveedor";
 
             await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
             await _proveedorPlanRepository.SaveAsync();
 
-            response.AddOkResult("Renovación automática cancelada correctamente");
+            response.AddOkResult("Renovación automática cancelada correctamente. El plan permanece activo hasta " + proveedorPlan.FechaFin.ToString("dd/MM/yyyy"));
             return response;
         }
     }

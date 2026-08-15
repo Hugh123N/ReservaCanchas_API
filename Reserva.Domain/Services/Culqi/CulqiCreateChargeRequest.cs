@@ -30,13 +30,19 @@ namespace Reserva.Domain.Services.Culqi
         /// Email del cliente
         /// </summary>
         [JsonPropertyName("email")]
-        public string Email { get; set; } = null!;
+        public string? Email { get; set; }
 
         /// <summary>
         /// ID del token o tarjeta generado en el frontend
         /// </summary>
         [JsonPropertyName("source_id")]
-        public string SourceId { get; set; } = null!;
+        public string? SourceId { get; set; }
+
+        /// <summary>
+        /// ID del cliente en Culqi (para cargos con tarjeta guardada)
+        /// </summary>
+        [JsonPropertyName("customer_id")]
+        public string? CustomerId { get; set; }
 
         /// <summary>
         /// Metadata adicional del pago (opcional)

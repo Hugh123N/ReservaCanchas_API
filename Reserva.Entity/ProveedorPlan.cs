@@ -35,6 +35,10 @@ public partial class ProveedorPlan
 
     public string? MotivoCancelacion { get; set; }
 
+    public bool CancelAtPeriodEnd { get; set; }
+
+    public decimal SaldoFavor { get; set; }
+
     public string UserNameCreate { get; set; } = null!;
 
     public DateTimeOffset CreateDate { get; set; }

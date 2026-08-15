@@ -29,10 +29,10 @@ namespace Reserva.Domain.Services.Culqi
             _logger = logger;
 
             // Obtener configuración de Culqi
-            _secretKey = _configuration["Culqi:SecretKey"]
+            _secretKey = Environment.GetEnvironmentVariable("CULQI_SECRETKEY") ?? _configuration["Culqi:SecretKey"]
                 ?? throw new InvalidOperationException("Culqi:SecretKey no configurado");
 
-            _apiBaseUrl = _configuration["Culqi:ApiBaseUrl"] ?? "https://api.culqi.com";
+            _apiBaseUrl = Environment.GetEnvironmentVariable("CULQI_BASE_URL") ??  "https://api.culqi.com"; // _configuration["Culqi:ApiBaseUrl"] ??
 
             // Configurar HttpClient con autenticación Bearer
             _httpClient.BaseAddress = new Uri(_apiBaseUrl);
@@ -429,6 +429,128 @@ namespace Reserva.Domain.Services.Culqi
             {
                 _logger.LogError(ex, "Error al obtener cliente");
                 return null;
+            }
+        }
+
+        #endregion
+
+        #region Tarjetas (Cards)
+
+        /// <summary>
+        /// Obtiene la tarjeta de un cliente en Culqi
+        /// </summary>
+        public async Task<CulqiCardResponse?> GetCardAsync(string customerId)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo tarjeta del cliente - CustomerId: {CustomerId}", customerId);
+
+                var response = await _httpClient.GetAsync($"/v2/customers/{customerId}/cards");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("No se pudo obtener tarjeta del cliente: {CustomerId}", customerId);
+                    return null;
+                }
+
+                var cardsResponse = JsonSerializer.Deserialize<CulqiCardsListResponse>(responseContent);
+                return cardsResponse?.Data?.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener tarjeta del cliente");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Crea una tarjeta en Culqi asociada a un cliente
+        /// </summary>
+        public async Task<CulqiCardResponse> CreateCardAsync(string customerId, string tokenId)
+        {
+            try
+            {
+                _logger.LogInformation("Creando tarjeta en Culqi - CustomerId: {CustomerId}", customerId);
+
+                var request = new CulqiCreateCardRequest
+                {
+                    TokenId = tokenId,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "customer_id", customerId }
+                    }
+                };
+
+                var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                });
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"/v2/customers/{customerId}/cards", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Error al crear tarjeta en Culqi. Status: {StatusCode}, Response: {Response}",
+                        response.StatusCode, responseContent);
+
+                    var errorResponse = JsonSerializer.Deserialize<CulqiErrorResponse>(responseContent);
+                    throw new CulqiException(
+                        errorResponse?.MerchantMessage ?? "Error al crear tarjeta",
+                        errorResponse?.UserMessage,
+                        errorResponse?.Code
+                    );
+                }
+
+                var cardResponse = JsonSerializer.Deserialize<CulqiCardResponse>(responseContent)
+                    ?? throw new CulqiException("Respuesta inválida de Culqi");
+
+                _logger.LogInformation("Tarjeta creada exitosamente - CardId: {CardId}", cardResponse.Id);
+
+                return cardResponse;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Error de conexión al comunicarse con Culqi");
+                throw new CulqiException("Error de conexión con el servicio de pagos", null, null, ex);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error al deserializar la respuesta de Culqi");
+                throw new CulqiException("Error al procesar la respuesta del servicio de pagos", null, null, ex);
+            }
+        }
+
+        /// <summary>
+        /// Elimina una tarjeta de Culqi
+        /// </summary>
+        public async Task<bool> DeleteCardAsync(string cardId)
+        {
+            try
+            {
+                _logger.LogInformation("Eliminando tarjeta de Culqi - CardId: {CardId}", cardId);
+
+                var response = await _httpClient.DeleteAsync($"/v2/cards/{cardId}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Error al eliminar tarjeta. Status: {StatusCode}, Response: {Response}",
+                        response.StatusCode, responseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("Tarjeta eliminada exitosamente - CardId: {CardId}", cardId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar tarjeta");
+                return false;
             }
         }
 

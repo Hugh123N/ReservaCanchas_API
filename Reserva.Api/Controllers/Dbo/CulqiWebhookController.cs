@@ -123,11 +123,32 @@ namespace Reserva.Api.Controllers.Dbo
         {
             _logger.LogInformation("Procesando pago exitoso - ChargeId: {ChargeId}", data.Id);
 
+            // Buscar ProveedorPlan por subscription ID (para suscripciones)
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
                 pp => pp.CulqiSubscriptionId == data.Id,
                 pp => pp.IdPlaneNavigation,
                 pp => pp.PagoPlan
             );
+
+            // Si no encuentra por subscription, buscar por metadata (para pagos únicos)
+            if (proveedorPlan == null && data.Metadata != null)
+            {
+                if (data.Metadata.TryGetValue("proveedor_id", out var proveedorIdStr) &&
+                    data.Metadata.TryGetValue("tipo", out var tipo) && tipo == "pago_unico")
+                {
+                    // Para pagos únicos, buscar el plan activo más reciente del proveedor
+                    if (int.TryParse(proveedorIdStr, out var proveedorId))
+                    {
+                        proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                            pp => pp.IdProveedor == proveedorId
+                                && pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
+                                && pp.Activo,
+                            pp => pp.IdPlaneNavigation,
+                            pp => pp.PagoPlan
+                        );
+                    }
+                }
+            }
 
             if (proveedorPlan != null)
             {
@@ -139,6 +160,7 @@ namespace Reserva.Api.Controllers.Dbo
                 return;
             }
 
+            // Buscar pago por charge ID
             var pago = await _pagoRepository.GetByAsync(
                 p => p.CulqiChargeId == data.Id,
                 p => p.IdEstadoPagoNavigation
@@ -224,11 +246,31 @@ namespace Reserva.Api.Controllers.Dbo
         {
             _logger.LogInformation("Procesando pago fallido - ChargeId: {ChargeId}", data.Id);
 
+            // Buscar ProveedorPlan por subscription ID
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
                 pp => pp.CulqiSubscriptionId == data.Id,
                 pp => pp.IdPlaneNavigation,
                 pp => pp.PagoPlan
             );
+
+            // Si no encuentra por subscription, buscar por metadata (para pagos únicos)
+            if (proveedorPlan == null && data.Metadata != null)
+            {
+                if (data.Metadata.TryGetValue("proveedor_id", out var proveedorIdStr) &&
+                    data.Metadata.TryGetValue("tipo", out var tipo) && tipo == "pago_unico")
+                {
+                    if (int.TryParse(proveedorIdStr, out var proveedorId))
+                    {
+                        proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                            pp => pp.IdProveedor == proveedorId
+                                && pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
+                                && pp.Activo,
+                            pp => pp.IdPlaneNavigation,
+                            pp => pp.PagoPlan
+                        );
+                    }
+                }
+            }
 
             if (proveedorPlan != null)
             {
@@ -315,6 +357,21 @@ namespace Reserva.Api.Controllers.Dbo
             {
                 case "subscription.created":
                     _logger.LogInformation("Suscripción creada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
+
+                    if (data.Metadata != null && data.Metadata.TryGetValue("next_billing_date", out var nextBillingCreatedStr))
+                    {
+                        if (long.TryParse(nextBillingCreatedStr, out var nextBillingCreatedTimestamp))
+                        {
+                            proveedorPlan.FechaProximoCobro = DateTimeOffset.FromUnixTimeSeconds(nextBillingCreatedTimestamp);
+                        }
+                    }
+                    else if (data.NextBillingDate.HasValue)
+                    {
+                        proveedorPlan.FechaProximoCobro = DateTimeOffset.FromUnixTimeSeconds(data.NextBillingDate.Value);
+                    }
+
+                    await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
+                    await _proveedorPlanRepository.SaveAsync();
                     break;
 
                 case "subscription.updated":
@@ -322,21 +379,30 @@ namespace Reserva.Api.Controllers.Dbo
                     {
                         if (long.TryParse(nextBillingStr, out var nextBillingTimestamp))
                         {
-                            proveedorPlan.FechaFin = DateTimeOffset.FromUnixTimeSeconds(nextBillingTimestamp);
-                            proveedorPlan.FechaProximoCobro = proveedorPlan.FechaFin;
+                            proveedorPlan.FechaProximoCobro = DateTimeOffset.FromUnixTimeSeconds(nextBillingTimestamp);
                             await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
                             await _proveedorPlanRepository.SaveAsync();
                         }
                     }
+                    else if (data.NextBillingDate.HasValue)
+                    {
+                        proveedorPlan.FechaProximoCobro = DateTimeOffset.FromUnixTimeSeconds(data.NextBillingDate.Value);
+                        await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
+                        await _proveedorPlanRepository.SaveAsync();
+                    }
                     break;
 
                 case "subscription.deleted":
+                    // La suscripción fue cancelada en Culqi
+                    // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
                     proveedorPlan.AutoRenovacion = false;
+                    proveedorPlan.CancelAtPeriodEnd = true;
                     proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
                     proveedorPlan.MotivoCancelacion = "Cancelado en Culqi";
                     await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
                     await _proveedorPlanRepository.SaveAsync();
-                    _logger.LogInformation("Suscripción cancelada en Culqi para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
+                    _logger.LogInformation("Suscripción cancelada en Culqi para ProveedorPlan {Id}. Plan permanece activo hasta {FechaFin}", 
+                        proveedorPlan.IdProveedorPlan, proveedorPlan.FechaFin);
                     break;
             }
         }

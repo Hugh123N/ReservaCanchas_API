@@ -90,6 +90,15 @@ namespace Reserva.Common
             public const string PAST_DUE = "PAST_DUE";
         }
 
+        public struct PLAN_TARIFA
+        {
+            public const string MONTHLY = "MONTHLY";
+            public const string YEARLY = "YEARLY";
+            public const string UNIQUE = "UNIQUE";
+            public const string BLACKFRIDAY = "BLACKFRIDAY"; //promociones
+            public const string TEST = "TEST";
+        }
+
         public struct CURRENCY
         {
             public const string PEN = "PEN";

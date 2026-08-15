@@ -99,5 +99,35 @@ namespace Reserva.Domain.Services.Culqi
         /// </summary>
         [JsonPropertyName("outcome")]
         public CulqiOutcome? Outcome { get; set; }
+
+        /// <summary>
+        /// Próxima fecha de facturación (timestamp en segundos) - para eventos de suscripción
+        /// </summary>
+        [JsonPropertyName("next_billing_date")]
+        public long? NextBillingDate { get; set; }
+
+        /// <summary>
+        /// Fuente del pago (token info) - para identificar tipo de pago (card/yape)
+        /// </summary>
+        [JsonPropertyName("source")]
+        public CulqiSource? Source { get; set; }
+    }
+
+    /// <summary>
+    /// Información de la fuente del pago (token)
+    /// </summary>
+    public class CulqiSource
+    {
+        /// <summary>
+        /// Tipo de token: "card" o "yape"
+        /// </summary>
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }
+
+        /// <summary>
+        /// ID del token
+        /// </summary>
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
     }
 }

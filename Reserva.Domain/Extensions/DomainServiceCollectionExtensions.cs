@@ -39,7 +39,7 @@ namespace Reserva.Domain.Extensions
             services.AddScoped<INotificacionService, NotificacionService>();
 
             // Plan Limit Validation Service
-            services.AddScoped<PlanLimitValidationService>();
+            services.AddScoped<IPlanLimitValidationService, PlanLimitValidationService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

@@ -1,17 +1,18 @@
 using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Culqi;
-using Reserva.Dto.Dbo.ProveedorPlan;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.ProveedorPlan;
+using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
-using Reserva.Entity;
-using Microsoft.EntityFrameworkCore;
+using static Reserva.Common.Constants;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 {
@@ -73,109 +74,287 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 return response;
             }
 
-            var estadoPendiente = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pendiente);
-            var metodoPago = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.METODO_PAGO.Yape);
+            var esPagoConTarjeta = dto.PaymentType == "card";
 
+            var estadoPendiente = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pendiente);
+
+            var codigoMetodoPago = esPagoConTarjeta ? Constants.METODO_PAGO.Tarjeta : Constants.METODO_PAGO.Yape;
+            var metodoPago = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == codigoMetodoPago);
+
+            var esPagoUnico = tarifa.Codigo?.ToUpper() is PLAN_TARIFA.UNIQUE or PLAN_TARIFA.BLACKFRIDAY;
+            
             decimal monto = tarifa.Precio;
             if (tarifa.PorcentajeDescuento.HasValue && tarifa.PorcentajeDescuento > 0)
             {
                 monto = monto - (monto * tarifa.PorcentajeDescuento.Value / 100);
             }
 
-            // Paso 1: Crear o obtener Customer en Culqi
-            var customerId = proveedor.CulqiCustomerId;
-            if (string.IsNullOrEmpty(customerId))
+            // Configuración del plan Culqi según código de tarifa
+            var (culqiInterval, culqiIntervalCount, shouldCreateCulqiPlan) = GetCulqiPlanConfig(tarifa);
+            var culqiPlanId = $"plan_{tarifa.IdPlanTarifa}";
+
+            // Variables para tracking
+            string? customerId = null;
+            string? culqiSubscriptionId = null;
+            string? culqiChargeId = null;
+
+            if (esPagoUnico)
             {
+                // ═══════════════════════════════════════════════════════════════
+                // PAGO ÚNICO (UNIQUE/BLACKFRIDAY): SIEMPRE crear Charge
+                // NO crear Customer, NO Card, NO Subscription
+                // ═══════════════════════════════════════════════════════════════
+                _logger.LogInformation("Procesando pago único (Plan {Codigo}) para Proveedor {IdProveedor}", tarifa.Codigo, dto.IdProveedor);
+
+                if (string.IsNullOrEmpty(dto.CulqiToken))
+                {
+                    response.AddErrorResult("Token de pago requerido");
+                    return response;
+                }
+
                 try
                 {
-                    var customerRequest = new CulqiCreateCustomerRequest
+                    var chargeResponse = await _culqiService.CreateChargeAsync(new CulqiCreateChargeRequest
                     {
+                        Amount = CulqiService.ConvertToCents(monto),
+                        CurrencyCode = Constants.CURRENCY.PEN,
                         Email = dto.Email,
-                        Code = $"prov_{proveedor.IdProveedor}",
-                        FirstName = proveedor.IdUsuarioNavigation?.FirstName,
-                        LastName = proveedor.IdUsuarioNavigation?.LastName,
+                        SourceId = dto.CulqiToken,
+                        Description = $"Pago plan {tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
                         Metadata = new Dictionary<string, string>
                         {
-                            { "proveedor_id", proveedor.IdProveedor.ToString() }
+                            { "proveedor_id", dto.IdProveedor.ToString() },
+                            { "plan_id", dto.IdPlane.ToString() },
+                            { "tarifa_id", dto.IdPlanTarifa.ToString() },
+                            { "tipo", "pago_unico" }
                         }
-                    };
+                    });
 
-                    var customerResponse = await _culqiService.CreateCustomerAsync(customerRequest);
-                    customerId = customerResponse.Id;
-
-                    // Guardar CustomerId en el proveedor
-                    proveedor.CulqiCustomerId = customerId;
-                    await _proveedorRepository.UpdateAsync(proveedor);
-                    await _proveedorRepository.SaveAsync();
+                    culqiChargeId = chargeResponse.Id;
+                    _logger.LogInformation("Cargo único creado exitosamente: {ChargeId}", culqiChargeId);
                 }
                 catch (CulqiException ex)
                 {
-                    response.AddErrorResult(ex.UserMessage ?? "Error al crear cliente en Culqi");
+                    response.AddErrorResult(ex.UserMessage ?? "Error al procesar el pago");
                     return response;
                 }
             }
-
-            // Paso 2: Crear Plan en Culqi (si no existe)
-            var culqiPlanId = $"plan_{tarifa.IdPlanTarifa}";
-            try
+            else
             {
-                var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId);
-                if (existingPlan == null)
+                // ═══════════════════════════════════════════════════════════════
+                // PLAN DE SUSCRIPCIÓN (MONTHLY/YEARLY)
+                // ├─ Si PaymentType == 'card' → Customer + Card + Subscription
+                // └─ Si PaymentType == 'order' (Yape) → Charge + Customer, SIN Subscription
+                //    (Suscripciones requieren tarjeta para cobros recurrentes)
+                // ═══════════════════════════════════════════════════════════════
+                
+                _logger.LogInformation("Procesando suscripción (Plan {Codigo}, Método: {PaymentType}) para Proveedor {IdProveedor}",
+                    tarifa.Codigo, dto.PaymentType, dto.IdProveedor);
+
+                // Paso 1: Crear o obtener Customer en Culqi (requerido para ambos casos)
+                customerId = proveedor.CulqiCustomerId;
+                if (string.IsNullOrEmpty(customerId))
                 {
-                    var planRequest = new CulqiCreatePlanRequest
+                    try
                     {
-                        Id = culqiPlanId,
-                        Name = $"{tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
-                        Amount = CulqiService.ConvertToCents(monto),
-                         CurrencyCode = Constants.CURRENCY.PEN,
-                        Interval = "months",
-                        IntervalCount = tarifa.DuracionDias >= 30 ? tarifa.DuracionDias / 30 : 1,
-                        Description = tarifa.Nombre,
-                        Metadata = new Dictionary<string, string>
+                        var customerRequest = new CulqiCreateCustomerRequest
                         {
-                            { "tarifa_id", tarifa.IdPlanTarifa.ToString() },
-                            { "plan_id", tarifa.IdPlane.ToString() }
-                        }
-                    };
+                            Email = dto.Email,
+                            Code = $"prov_{proveedor.IdProveedor}",
+                            FirstName = proveedor.IdUsuarioNavigation?.FirstName,
+                            LastName = proveedor.IdUsuarioNavigation?.LastName,
+                            Metadata = new Dictionary<string, string>
+                            {
+                                { "proveedor_id", proveedor.IdProveedor.ToString() }
+                            }
+                        };
 
-                    await _culqiService.CreatePlanAsync(planRequest);
-                }
-            }
-            catch (CulqiException ex)
-            {
-                _logger.LogWarning("Error al crear plan en Culqi (puede que ya exista): {Message}", ex.Message);
-            }
+                        var customerResponse = await _culqiService.CreateCustomerAsync(customerRequest);
+                        customerId = customerResponse.Id;
 
-            // Paso 3: Crear Suscripción en Culqi
-            CulqiSubscriptionResponse? culqiResponse = null;
-            try
-            {
-                var subscriptionRequest = new CulqiCreateSubscriptionRequest
-                {
-                    PlanId = culqiPlanId,
-                    CustomerId = customerId!,
-                    CardId = dto.CulqiToken,
-                    Metadata = new Dictionary<string, string>
-                    {
-                        { "plan_id", dto.IdPlane.ToString() },
-                        { "proveedor_id", dto.IdProveedor.ToString() },
-                        { "tarifa_id", dto.IdPlanTarifa.ToString() },
-                        { "tipo", "plan_proveedor" }
+                        // Guardar CustomerId en el proveedor
+                        proveedor.CulqiCustomerId = customerId;
+                        await _proveedorRepository.UpdateAsync(proveedor);
+                        await _proveedorRepository.SaveAsync();
                     }
-                };
+                    catch (CulqiException ex)
+                    {
+                        response.AddErrorResult(ex.UserMessage ?? "Error al crear cliente en Culqi");
+                        return response;
+                    }
+                }
 
-                culqiResponse = await _culqiService.CreateSubscriptionAsync(subscriptionRequest);
-            }
-            catch (CulqiException ex)
-            {
-                response.AddErrorResult(ex.UserMessage ?? "Error al procesar la suscripción con Culqi");
-                return response;
+                // Paso 1.5: Si es pago con tarjeta, actualizar tarjeta y cancelar suscripción anterior
+                var oldSubscriptionId = (string?)null;
+                string? newCardId = null;
+                if (esPagoConTarjeta && !string.IsNullOrEmpty(dto.CulqiToken) && !string.IsNullOrEmpty(customerId))
+                {
+                    try
+                    {
+                        // Buscar suscripción anterior del proveedor
+                        var oldProveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                            x => x.IdProveedor == dto.IdProveedor
+                                && x.Activo
+                                && x.Estado != Constants.ESTADO_PROV_PLAN.CANCELLED
+                                && !string.IsNullOrEmpty(x.CulqiSubscriptionId),
+                            x => x.IdPlaneNavigation
+                        );
+
+                        if (oldProveedorPlan != null)
+                        {
+                            oldSubscriptionId = oldProveedorPlan.CulqiSubscriptionId;
+                            _logger.LogInformation("Suscripción anterior encontrada: {SubscriptionId}", oldSubscriptionId);
+                        }
+
+                        // Obtener tarjeta actual del customer
+                        var existingCard = await _culqiService.GetCardAsync(customerId);
+
+                        // Crear nueva tarjeta con el token
+                        var newCard = await _culqiService.CreateCardAsync(customerId, dto.CulqiToken);
+                        newCardId = newCard.Id;
+
+                        // Eliminar tarjeta anterior si existía
+                        if (existingCard != null)
+                        {
+                            await _culqiService.DeleteCardAsync(existingCard.Id);
+                            _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
+                        }
+
+                        // Cancelar suscripción anterior si existe
+                        if (!string.IsNullOrEmpty(oldSubscriptionId))
+                        {
+                            await _culqiService.CancelSubscriptionAsync(oldSubscriptionId);
+                            _logger.LogInformation("Suscripción anterior cancelada: {SubscriptionId}", oldSubscriptionId);
+
+                            // Marcar el ProveedorPlan anterior como inactivo
+                            if (oldProveedorPlan != null)
+                            {
+                                oldProveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
+                                oldProveedorPlan.EsActual = false;
+                                await _proveedorPlanRepository.UpdateAsync(oldProveedorPlan);
+                            }
+                        }
+                    }
+                    catch (CulqiException ex)
+                    {
+                        _logger.LogError(ex, "Error al actualizar tarjeta o cancelar suscripción anterior");
+                        response.AddErrorResult(ex.UserMessage ?? "Error al actualizar método de pago");
+                        return response;
+                    }
+                }
+
+                // Paso 2: Crear Plan en Culqi (solo si es suscripción con tarjeta)
+                if (esPagoConTarjeta && shouldCreateCulqiPlan)
+                {
+                    try
+                    {
+                        var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId);
+                        if (existingPlan == null)
+                        {
+                            var planRequest = new CulqiCreatePlanRequest
+                            {
+                                Id = culqiPlanId,
+                                Name = $"{tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
+                                Amount = CulqiService.ConvertToCents(monto),
+                                CurrencyCode = Constants.CURRENCY.PEN,
+                                Interval = culqiInterval,
+                                IntervalCount = culqiIntervalCount,
+                                Description = tarifa.Nombre,
+                                Metadata = new Dictionary<string, string>
+                                {
+                                    { "tarifa_id", tarifa.IdPlanTarifa.ToString() },
+                                    { "plan_id", tarifa.IdPlane.ToString() }
+                                }
+                            };
+
+                            await _culqiService.CreatePlanAsync(planRequest);
+                        }
+                    }
+                    catch (CulqiException ex)
+                    {
+                        _logger.LogWarning("Error al crear plan en Culqi (puede que ya exista): {Message}", ex.Message);
+                    }
+                }
+
+                // Paso 3: Crear Suscripción o Cargo según método de pago
+                CulqiSubscriptionResponse? culqiResponse = null;
+                if (esPagoConTarjeta)
+                {
+                    // ═══════════════════════════════════════════════════════════════
+                    // TARJETA: Crear Customer + Card + Subscription
+                    // ═══════════════════════════════════════════════════════════════
+                    try
+                    {
+                        var cardIdForSubscription = newCardId ?? dto.CulqiToken;
+
+                        var subscriptionRequest = new CulqiCreateSubscriptionRequest
+                        {
+                            PlanId = culqiPlanId,
+                            CustomerId = customerId!,
+                            CardId = cardIdForSubscription,
+                            Metadata = new Dictionary<string, string>
+                            {
+                                { "plan_id", dto.IdPlane.ToString() },
+                                { "proveedor_id", dto.IdProveedor.ToString() },
+                                { "tarifa_id", dto.IdPlanTarifa.ToString() },
+                                { "tipo", "plan_proveedor" }
+                            }
+                        };
+
+                        culqiResponse = await _culqiService.CreateSubscriptionAsync(subscriptionRequest);
+                        culqiSubscriptionId = culqiResponse.Id;
+                    }
+                    catch (CulqiException ex)
+                    {
+                        response.AddErrorResult(ex.UserMessage ?? "Error al procesar la suscripción con Culqi");
+                        return response;
+                    }
+                }
+                else
+                {
+                    // ═══════════════════════════════════════════════════════════════
+                    // YAPE/ORDER en plan de suscripción: Solo crear Charge
+                    // NO crear Subscription (requiere tarjeta para cobros recurrentes)
+                    // El usuario deberá agregar tarjeta después para activar renovación
+                    // ═══════════════════════════════════════════════════════════════
+                    try
+                    {
+                        var chargeResponse = await _culqiService.CreateChargeAsync(new CulqiCreateChargeRequest
+                        {
+                            Amount = CulqiService.ConvertToCents(monto),
+                            CurrencyCode = Constants.CURRENCY.PEN,
+                            Email = dto.Email,
+                            SourceId = dto.CulqiToken,
+                            Description = $"Pago inicial plan {tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
+                            Metadata = new Dictionary<string, string>
+                            {
+                                { "proveedor_id", dto.IdProveedor.ToString() },
+                                { "plan_id", dto.IdPlane.ToString() },
+                                { "tarifa_id", dto.IdPlanTarifa.ToString() },
+                                { "tipo", "pago_inicial_yape" }
+                            }
+                        });
+
+                        culqiChargeId = chargeResponse.Id;
+                        _logger.LogInformation("Cargo Yape creado para plan de suscripción: {ChargeId}", culqiChargeId);
+                    }
+                    catch (CulqiException ex)
+                    {
+                        response.AddErrorResult(ex.UserMessage ?? "Error al procesar el pago con Yape");
+                        return response;
+                    }
+                }
             }
 
             // Calcular fechas basadas en la duración de la tarifa
             var fechaInicio = DateTimeOffset.UtcNow;
-            var fechaFin = fechaInicio.AddDays(tarifa.DuracionDias); //TODO: deberia ser cada mes o cada año dependiendo de la tarifa, no necesariamente en base a dias
-            var fechaProximoCobro = tarifa.PermiteAutoRenovacion == true
+            var fechaFin = fechaInicio.AddDays(tarifa.DuracionDias);
+            
+            // Determinar si es suscripción con tarjeta (para fechas y estados)
+            var esSuscripcionConTarjeta = !esPagoUnico && dto.PaymentType == "card";
+            
+            // FechaProximoCobro solo se setea para suscripciones con tarjeta (webhook la actualizará)
+            var fechaProximoCobro = esSuscripcionConTarjeta && tarifa.PermiteAutoRenovacion == true
                 ? fechaFin : (DateTimeOffset?)null;
 
             var proveedorPlan = new Entity.ProveedorPlan
@@ -186,10 +365,12 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
                 FechaProximoCobro = fechaProximoCobro,
-                Estado = Constants.ESTADO_PROV_PLAN.PENDING,
-                AutoRenovacion = tarifa.PermiteAutoRenovacion ?? false,
+                // Estado: ACTIVE para pagos directos (único o Yape), PENDING solo para suscripción con tarjeta
+                Estado = esSuscripcionConTarjeta ? Constants.ESTADO_PROV_PLAN.PENDING : Constants.ESTADO_PROV_PLAN.ACTIVE,
+                // AutoRenovacion: true solo si hay tarjeta y plan lo permite
+                AutoRenovacion = esSuscripcionConTarjeta && (tarifa.PermiteAutoRenovacion ?? false),
                 EsActual = true,
-                CulqiSubscriptionId = culqiResponse?.Id,
+                CulqiSubscriptionId = culqiSubscriptionId, // null para pagos únicos y Yape en suscripción
                 CulqiCustomerId = customerId,
                 GracePeriodHasta = null
             };
@@ -211,16 +392,46 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 Monto = monto,
                 Moneda = Constants.CURRENCY.PEN,
                 IdMetodoPago = metodoPago?.IdMetodoPago ?? 1,
-                IdEstadoPago = estadoPendiente?.IdEstadoPago ?? 1,
-                CulqiChargeId = culqiResponse?.Id,
-                CodigoOperacion = culqiResponse?.ReferenceCode
+                IdEstadoPago = esPagoUnico ? estadoPendiente?.IdEstadoPago ?? 1 : estadoPendiente?.IdEstadoPago ?? 1,
+                CulqiChargeId = culqiChargeId ?? culqiSubscriptionId,
+                CodigoOperacion = culqiChargeId ?? null
             };
 
             await _pagoPlanRepository.AddAsync(pagoPlan);
             await _pagoPlanRepository.SaveAsync();
 
-            response.AddOkResult("Suscripción iniciada. Espera la confirmación del webhook de Culqi.");
+            string mensajeExito;
+            if (esPagoUnico)
+            {
+                // Plan UNIQUE/BLACKFRIDAY: siempre activo directamente
+                mensajeExito = "Pago registrado. Tu plan está activo.";
+            }
+            else if (esSuscripcionConTarjeta)
+            {
+                // Suscripción con tarjeta: esperando webhook
+                mensajeExito = "Suscripción iniciada. Espera la confirmación del webhook de Culqi.";
+            }
+            else
+            {
+                // Yape en plan de suscripción: activo pero sin renovación automática
+                mensajeExito = "Pago registrado. Tu plan está activo. Para activar la renovación automática, agrega una tarjeta desde tu perfil.";
+            }
+            
+            response.AddOkResult(mensajeExito);
             return response;
+        }
+
+        /// <summary>
+        /// Obtiene la configuración del plan Culqi según el código de la tarifa
+        /// </summary>
+        private (string interval, int intervalCount, bool shouldCreateCulqiPlan) GetCulqiPlanConfig(Entity.PlanTarifa tarifa)
+        {
+            return tarifa.Codigo?.ToUpper() switch
+            {
+                PLAN_TARIFA.MONTHLY => ("months", 1, true),
+                PLAN_TARIFA.YEARLY => ("years", 1, true),
+                _ => ("months", 1, false)  // BLACKFRIDAY, UNIQUE, etc. - No crear plan Culqi
+            };
         }
     }
 

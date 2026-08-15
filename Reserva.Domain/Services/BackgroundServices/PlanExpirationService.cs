@@ -41,6 +41,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                     await NotificarVencimiento5Dias(stoppingToken);
                     await ProcesarMoraYSuspension(stoppingToken);
                     await ProcesarRenovacionesAutomaticas(stoppingToken);
+                    await ProcesarCancelacionesAlFinPeriodo(stoppingToken);
                 }
                 catch (Exception ex)
                 {
@@ -63,8 +64,10 @@ namespace Reserva.Domain.Services.BackgroundServices
             var manana = DateTimeOffset.UtcNow.AddDays(1).Date;
             var finManana = manana.AddDays(1);
 
+            // EXCLUIR planes con CancelAtPeriodEnd=true (cancelación programada)
             var planesPorVencer = await repos.FindByAsync(x =>
                 x.EsActual && x.Activo &&
+                !x.CancelAtPeriodEnd &&
                 x.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE &&
                 x.FechaFin >= manana && x.FechaFin < finManana,
                 x => x.IdPlaneNavigation
@@ -239,8 +242,10 @@ namespace Reserva.Domain.Services.BackgroundServices
             var Ahora = DateTimeOffset.UtcNow;
 
             // Buscar planes con AutoRenovacion=true y cuya FechaProximoCobro ya pasó
+            // EXCLUIR planes con CancelAtPeriodEnd=true (cancelación programada)
             var planesARenovar = await repos.FindByAsync(x =>
                 x.EsActual && x.Activo &&
+                !x.CancelAtPeriodEnd &&
                 x.AutoRenovacion &&
                 x.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE &&
                 x.FechaProximoCobro.HasValue &&
@@ -272,6 +277,36 @@ namespace Reserva.Domain.Services.BackgroundServices
             }
 
             if (planesARenovar.Any())
+            {
+                await repos.SaveAsync();
+            }
+        }
+
+        private async Task ProcesarCancelacionesAlFinPeriodo(CancellationToken stoppingToken)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var repos = scope.ServiceProvider.GetRequiredService<IRepository<Entity.ProveedorPlan>>();
+
+            var Ahora = DateTimeOffset.UtcNow;
+
+            // Buscar planes con CancelAtPeriodEnd=true y cuya FechaFin ya pasó
+            // Estos planes deben cambiar a CANCELLED (no GRACE, no notificaciones)
+            var planesACancelar = await repos.FindByAsync(x =>
+                x.EsActual && x.Activo &&
+                x.CancelAtPeriodEnd &&
+                x.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE &&
+                x.FechaFin < Ahora
+            );
+
+            foreach (var pp in planesACancelar)
+            {
+                pp.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
+                pp.EsActual = false;
+                await repos.UpdateAsync(pp);
+                _logger.LogInformation("Proveedor plan {Id} cancelado al finalizar período (CancelAtPeriodEnd)", pp.IdProveedorPlan);
+            }
+
+            if (planesACancelar.Any())
             {
                 await repos.SaveAsync();
             }

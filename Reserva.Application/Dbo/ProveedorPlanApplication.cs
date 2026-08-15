@@ -43,5 +43,8 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<ChangePlanResponseDto>> ChangePlan(ChangePlanDto changePlanDto)
             => await _mediator.Send(new ChangePlanCommand(changePlanDto));
 
+        public async Task<ResponseDto<CalculateProrationResponseDto>> CalculateProration(CalculateProrationDto calculateProrationDto)
+            => await _mediator.Send(new CalculateProrationQuery(calculateProrationDto));
+
     }
 }

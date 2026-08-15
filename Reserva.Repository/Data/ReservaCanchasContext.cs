@@ -1287,6 +1287,13 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(300)
                 .IsUnicode(false)
                 .HasColumnName("motivoCancelacion");
+            entity.Property(e => e.CancelAtPeriodEnd)
+                .HasDefaultValue(false)
+                .HasColumnName("cancelAtPeriodEnd");
+            entity.Property(e => e.SaldoFavor)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0m)
+                .HasColumnName("saldoFavor");
             entity.Property(e => e.UserNameCreate)
                 .HasMaxLength(250)
                 .IsUnicode(false)

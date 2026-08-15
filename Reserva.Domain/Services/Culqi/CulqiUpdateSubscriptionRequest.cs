@@ -13,6 +13,11 @@ namespace Reserva.Domain.Services.Culqi
         public string? PlanId { get; set; }
 
         /// <summary>
+        /// ID de la nueva tarjeta a usar para la suscripción
+        /// </summary>
+        public string? CardId { get; set; }
+
+        /// <summary>
         /// Metadatos adicionales (opcional)
         /// </summary>
         public Dictionary<string, string>? Metadata { get; set; }

@@ -63,6 +63,25 @@ namespace Reserva.Domain.Services.Culqi
 
         #endregion
 
+        #region Tarjetas (Cards)
+
+        /// <summary>
+        /// Obtiene la tarjeta de un cliente en Culqi
+        /// </summary>
+        Task<CulqiCardResponse?> GetCardAsync(string customerId);
+
+        /// <summary>
+        /// Crea una tarjeta en Culqi asociada a un cliente
+        /// </summary>
+        Task<CulqiCardResponse> CreateCardAsync(string customerId, string tokenId);
+
+        /// <summary>
+        /// Elimina una tarjeta de Culqi
+        /// </summary>
+        Task<bool> DeleteCardAsync(string cardId);
+
+        #endregion
+
     #region Métodos Helper
 
     /// <summary>

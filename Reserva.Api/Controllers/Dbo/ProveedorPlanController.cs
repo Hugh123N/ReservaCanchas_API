@@ -52,5 +52,9 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("change-plan")]
         public async Task<ResponseDto<ChangePlanResponseDto>> ChangePlan([FromBody] ChangePlanDto changePlanDto)
             => await _ProveedorPlanApplication.ChangePlan(changePlanDto);
+
+        [HttpPost("calculate-proration")]
+        public async Task<ResponseDto<CalculateProrationResponseDto>> CalculateProration([FromBody] CalculateProrationDto calculateProrationDto)
+            => await _ProveedorPlanApplication.CalculateProration(calculateProrationDto);
     }
 }
