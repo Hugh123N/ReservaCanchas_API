@@ -17,7 +17,7 @@ public partial class PlanTarifa
 
     public string Moneda { get; set; } = null!;
 
-    public int DuracionDias { get; set; }
+    public int? DuracionDias { get; set; }
 
     public decimal? PorcentajeDescuento { get; set; }
 

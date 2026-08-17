@@ -1290,6 +1290,9 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.CancelAtPeriodEnd)
                 .HasDefaultValue(false)
                 .HasColumnName("cancelAtPeriodEnd");
+            entity.Property(e => e.EsPruebaGratis)
+                .HasDefaultValue(false)
+                .HasColumnName("esPruebaGratis");
             entity.Property(e => e.SaldoFavor)
                 .HasPrecision(18, 2)
                 .HasDefaultValue(0m)

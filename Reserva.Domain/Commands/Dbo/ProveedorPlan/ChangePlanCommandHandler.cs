@@ -105,10 +105,10 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             var ahora = DateTimeOffset.UtcNow;
             var diasRestantes = Math.Max(1, (int)(proveedorPlan.FechaFin - ahora).TotalDays);
-            var duracionNueva = nuevaTarifa.DuracionDias;
+            var duracionNueva = nuevaTarifa.DuracionDias ?? 0;
 
             decimal creditoPlanActual = tarifaActual.DuracionDias > 0
-                ? Math.Round((precioActual / tarifaActual.DuracionDias) * diasRestantes, 2)
+                ? Math.Round((precioActual / tarifaActual.DuracionDias ?? 0) * diasRestantes, 2)
                 : 0;
 
             decimal cargoPlanNuevo = duracionNueva > 0

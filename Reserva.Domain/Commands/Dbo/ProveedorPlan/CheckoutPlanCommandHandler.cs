@@ -348,7 +348,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             // Calcular fechas basadas en la duración de la tarifa
             var fechaInicio = DateTimeOffset.UtcNow;
-            var fechaFin = fechaInicio.AddDays(tarifa.DuracionDias);
+            var fechaFin = fechaInicio.AddDays(tarifa.DuracionDias ?? 0);
             
             // Determinar si es suscripción con tarjeta (para fechas y estados)
             var esSuscripcionConTarjeta = !esPagoUnico && dto.PaymentType == "card";

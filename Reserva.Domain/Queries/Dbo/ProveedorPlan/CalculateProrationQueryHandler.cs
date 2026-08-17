@@ -80,11 +80,11 @@ namespace Reserva.Domain.Queries.Dbo.ProveedorPlan
             }
 
             decimal creditoPlanActual = duracionActual > 0
-                ? Math.Round((precioActual / duracionActual) * diasRestantes, 2)
+                ? Math.Round((precioActual / duracionActual ?? 0) * diasRestantes, 2)
                 : 0;
 
             decimal cargoPlanNuevo = duracionNueva > 0
-                ? Math.Round((precioNuevo / duracionNueva) * diasRestantes, 2)
+                ? Math.Round((precioNuevo / duracionNueva ?? 0) * diasRestantes, 2)
                 : 0;
 
             decimal saldoAFavorActual = proveedorPlan.SaldoFavor;
