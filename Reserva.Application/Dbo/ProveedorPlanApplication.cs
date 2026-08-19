@@ -2,9 +2,12 @@ using MediatR;
 using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Application.Base;
+using Reserva.Domain.Commands.Dbo.Proveedor;
 using Reserva.Domain.Commands.Dbo.ProveedorPlan;
 using Reserva.Domain.Queries.Dbo.ProveedorPlan;
+using Reserva.Dto.Dbo.Proveedor;
 using Reserva.Dto.Dbo.ProveedorPlan;
+using Reserva.Dto.User;
 
 namespace Reserva.Application.Dbo
 {
@@ -46,5 +49,7 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<CalculateProrationResponseDto>> CalculateProration(CalculateProrationDto calculateProrationDto)
             => await _mediator.Send(new CalculateProrationQuery(calculateProrationDto));
 
+        public async Task<ResponseDto<LoginResultDto>> RegisterWithPlan(RegisterWithPlanDto registerWithPlanDto)
+            => await _mediator.Send(new RegisterWithPlanCommand(registerWithPlanDto));
     }
 }

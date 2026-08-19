@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Dbo;
+using Reserva.Dto.Dbo.Proveedor;
 using Reserva.Dto.Dbo.ProveedorPlan;
+using Reserva.Dto.User;
 
 namespace Reserva.Api.Controllers.Dbo
 {
@@ -56,5 +59,14 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("calculate-proration")]
         public async Task<ResponseDto<CalculateProrationResponseDto>> CalculateProration([FromBody] CalculateProrationDto calculateProrationDto)
             => await _ProveedorPlanApplication.CalculateProration(calculateProrationDto);
+
+        /// <summary>
+        /// Registro de proveedor con plan gratuito (onboarding).
+        /// Crea usuario + proveedor + plan + retorna token de acceso.
+        /// </summary>
+        [HttpPost("register-with-plan")]
+        [AllowAnonymous]
+        public async Task<ResponseDto<LoginResultDto>> RegisterWithPlan([FromBody] RegisterWithPlanDto registerWithPlanDto)
+            => await _ProveedorPlanApplication.RegisterWithPlan(registerWithPlanDto);
     }
 }

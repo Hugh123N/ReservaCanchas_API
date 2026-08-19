@@ -8,10 +8,9 @@ using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Culqi;
 using Reserva.Dto.Base;
-using Reserva.Dto.Dbo.ProveedorPlan;
-using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Repository.Utils;
 using static Reserva.Common.Constants;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
@@ -348,7 +347,8 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             // Calcular fechas basadas en la duración de la tarifa
             var fechaInicio = DateTimeOffset.UtcNow;
-            var fechaFin = fechaInicio.AddDays(tarifa.DuracionDias ?? 0);
+            var billingDay = fechaInicio.Day;
+            var fechaFin = DateTimeHelper.GetNextBillingDate(fechaInicio, billingDay, tarifa.DuracionDias ?? 0);
             
             // Determinar si es suscripción con tarjeta (para fechas y estados)
             var esSuscripcionConTarjeta = !esPagoUnico && dto.PaymentType == "card";

@@ -33,4 +33,9 @@ public class ProveedorPlanDto
     public DateTimeOffset? FechaCancelacion { get; set; }
 
     public string? MotivoCancelacion { get; set; }
+    public bool? CancelAtPeriodEnd { get; set; }
+
+    public bool? EsPruebaGratis { get; set; }
+
+    public decimal? SaldoFavor { get; set; }
 }

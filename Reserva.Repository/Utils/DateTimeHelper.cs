@@ -3,6 +3,43 @@ namespace Reserva.Repository.Utils
     public static class DateTimeHelper
     {
         /// <summary>
+        /// Calcula la fecha de próximo cobro basada en la duración del plan.
+        /// Mapea duración en días a meses: 30→1, 90→3, 365→12.
+        /// </summary>
+        public static DateTimeOffset GetNextBillingDate(
+            DateTimeOffset currentDate,
+            int billingDay,
+            int durationDays)
+        {
+            int monthsToAdd = durationDays switch
+            {
+                30 => 1,    // Mensual
+                90 => 3,    // Trimestral
+                365 => 12,  // Anual
+                _ => throw new ArgumentException(
+                    $"Duración no soportada: {durationDays} días")
+            };
+
+            var nextMonth = currentDate.AddMonths(monthsToAdd);
+
+            var lastDay = DateTime.DaysInMonth(
+                nextMonth.Year,
+                nextMonth.Month
+            );
+
+            var day = Math.Min(billingDay, lastDay);
+
+            return new DateTimeOffset(
+                nextMonth.Year,
+                nextMonth.Month,
+                day,
+                currentDate.Hour,
+                currentDate.Minute,
+                currentDate.Second,
+                currentDate.Offset
+            );
+        }
+        /// <summary>
         /// Normaliza una fecha a la zona horaria local de la cancha, con hora 00:00:00.
         /// Esto garantiza que "18 de marzo 11pm en Lima (UTC-5)" se normalice como 18 de marzo,
         /// no como 19 de marzo (que sería si se convirtiera a UTC primero).

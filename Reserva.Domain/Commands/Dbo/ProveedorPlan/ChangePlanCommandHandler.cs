@@ -1,16 +1,15 @@
 using AutoMapper;
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Services.Culqi;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.ProveedorPlan;
-using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Repository.Utils;
 using static Reserva.Common.Constants;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
@@ -380,8 +379,8 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 IdPlane = dto.IdNuevoPlane,
                 IdPlanTarifa = dto.IdNuevaPlanTarifa,
                 FechaInicio = ahora,
-                FechaFin = ahora.AddDays(duracionNueva),
-                FechaProximoCobro = esPagoConTarjeta && !esPagoUnico ? ahora.AddDays(duracionNueva) : null,
+                FechaFin = DateTimeHelper.GetNextBillingDate(ahora, ahora.Day, duracionNueva),
+                FechaProximoCobro = esPagoConTarjeta && !esPagoUnico ? DateTimeHelper.GetNextBillingDate(ahora, ahora.Day, duracionNueva) : null,
                 // Estado: ACTIVE para pagos directos, PENDING solo para suscripción con tarjeta
                 Estado = esPagoConTarjeta && !esPagoUnico ? Constants.ESTADO_PROV_PLAN.PENDING : Constants.ESTADO_PROV_PLAN.ACTIVE,
                 // AutoRenovacion: true solo si hay tarjeta y plan lo permite

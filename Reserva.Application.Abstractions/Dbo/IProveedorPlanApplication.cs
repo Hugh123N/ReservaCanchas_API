@@ -1,5 +1,7 @@
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.Proveedor;
 using Reserva.Dto.Dbo.ProveedorPlan;
+using Reserva.Dto.User;
 
 namespace Reserva.Application.Abstractions.Dbo
 {
@@ -19,6 +21,11 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<ChangePlanResponseDto>> ChangePlan(ChangePlanDto changePlanDto);
         Task<ResponseDto<CalculateProrationResponseDto>> CalculateProration(CalculateProrationDto calculateProrationDto);
 
+        /// <summary>
+        /// Registro de proveedor con plan gratuito (onboarding).
+        /// Crea usuario + proveedor + plan + retorna token de acceso.
+        /// </summary>
+        Task<ResponseDto<LoginResultDto>> RegisterWithPlan(RegisterWithPlanDto registerWithPlanDto);
     }
 }
 
