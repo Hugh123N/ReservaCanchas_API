@@ -30,6 +30,12 @@ namespace Reserva.Common
             public const string Aprobado = "02";
             public const string Rechazado = "03";
         }
+
+        public struct TIPO_PROVEEDOR
+        {
+            public const string Empresa = "01";
+            public const string persona_natural = "02";
+        }
         public struct ESTADO_USUARIO
         {
             public const string Activo = "01";

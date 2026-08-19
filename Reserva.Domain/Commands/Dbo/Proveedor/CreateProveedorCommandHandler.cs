@@ -16,6 +16,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
     {
         private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
         private readonly IRepository<Entity.EstadoProveedor> _EstadoProveedorRepository;
+        private readonly IRepository<Entity.TipoProveedor> _TipoProveedorRepository;
 
         public CreateProveedorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -23,11 +24,13 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
             IMediator mediator,
             CreateProveedorCommandValidator validator,
             IRepository<Entity.Proveedor> ProveedorRepository,
-            IRepository<Entity.EstadoProveedor> EstadoProveedorRepository
+            IRepository<Entity.EstadoProveedor> EstadoProveedorRepository,
+            IRepository<Entity.TipoProveedor> TipoProveedorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ProveedorRepository = ProveedorRepository;
             _EstadoProveedorRepository = EstadoProveedorRepository;
+            _TipoProveedorRepository = TipoProveedorRepository;
         }
 
         public override async Task<ResponseDto<GetProveedorDto>> HandleCommand(CreateProveedorCommand request, CancellationToken cancellationToken)
@@ -36,6 +39,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
             var proveedorDto = request.CreateDto;
 
             var estadoProveedor = await _EstadoProveedorRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(Constants.ESTADO_PROVEEDOR.Aprobado));
+            var tipoProveedor = await _TipoProveedorRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(Constants.TIPO_PROVEEDOR.persona_natural));
 
             var Proveedor = _mapper?.Map<Entity.Proveedor>(proveedorDto);
 
@@ -60,6 +64,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                     return response;
                 }
 
+                Proveedor.IdTipoProveedor = tipoProveedor!.IdTipoProveedor;
                 Proveedor.IdEstadoProveedor = estadoProveedor!.IdEstadoProveedor;
                 Proveedor.IdUsuario = responseUser.Data.Id;
 
