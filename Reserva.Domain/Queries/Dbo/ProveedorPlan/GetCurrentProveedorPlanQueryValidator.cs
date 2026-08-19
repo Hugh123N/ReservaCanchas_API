@@ -7,10 +7,10 @@ namespace Reserva.Domain.Queries.Dbo.ProveedorPlan
 {
     public class GetCurrentProveedorPlanQueryValidator : QueryValidatorBase<GetCurrentProveedorPlanQuery>
     {
-        private readonly IRepository<Entity.ProveedorPlan> _ProveedorPlanRepository;
-        public GetCurrentProveedorPlanQueryValidator(IRepository<Entity.ProveedorPlan> ProveedorPlanRepository)
+        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        public GetCurrentProveedorPlanQueryValidator(IRepository<Entity.Proveedor> ProveedorRepository)
         {
-             _ProveedorPlanRepository = ProveedorPlanRepository;
+             _ProveedorRepository = ProveedorRepository;
 
             RequiredField(x => x.IdProveedor, Resources.Dbo.ProveedorPlan.IdProveedorPlan)
                 .DependentRules(() =>
@@ -23,7 +23,7 @@ namespace Reserva.Domain.Queries.Dbo.ProveedorPlan
 
         protected async Task<bool> ValidateExistenceAsync(GetCurrentProveedorPlanQuery command, int id, ValidationContext<GetCurrentProveedorPlanQuery> context, CancellationToken cancellationToken)
         {
-            var exists = await _ProveedorPlanRepository.FindAll().Where(x => x.IdProveedorPlan == id).AnyAsync(cancellationToken);
+            var exists = await _ProveedorRepository.FindAll().Where(x => x.IdProveedor == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
             return true;
         }
