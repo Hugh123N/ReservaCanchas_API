@@ -108,7 +108,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
 
             // Retornar token de acceso
             response.UpdateData(loginResponse.Data);
-            response.AddOkResult("Registro exitoso. Bienvenido a ReservaCanchas.");
+            response.AddOkResult("Registro exitoso. Bienvenido a ReservaFast.");
 
             return await Task.FromResult(response);
         }
