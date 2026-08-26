@@ -14,15 +14,13 @@ using System.Globalization;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
-//conexion a base de datos desde secretos de usuario
-var isProduction = false; //builder.Environment.IsProduction() || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CN_CONECTION"));
-
-var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION")?.Trim() ?? configuration["ConexionString"];
+var provider = configuration["Database:Provider"];
+var connectionString = configuration["ConexionString"];
 
 Console.WriteLine($"Connection String: {connectionString}");
 
 // Configurar ReservaCanchasContext
-if (isProduction)
+if (provider == "SqlServer")
     builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseSqlServer(connectionString));
 else
     builder.Services.AddDbContext<ReservaCanchasContext>(options => options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 7))));
@@ -55,7 +53,7 @@ builder.Services.UseRepositories(
     connectionString,
     configuration["AuditOptions:ApiUrl"]!,
     typeof(Program).Assembly.GetName().Name!,
-    isProduction
+    provider == "SqlServer"
  );
 
 // Domain Services
@@ -70,7 +68,7 @@ builder.Services.AddSingleton<Reserva.Domain.Services.Storage.IStorageService, R
 
 // Security
 builder.Services.AddHttpContextAccessor();
-builder.Services.UseSecurity(configuration, isProduction);
+builder.Services.UseSecurity(configuration, provider == "SqlServer");
 
 // Api Protection Options (Rate Limit + Injection Detection)
 builder.Services.Configure<ApiProtectionOptions>(configuration.GetSection("ApiProtection"));
@@ -94,7 +92,6 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
 {
     opt.TokenLifespan = TimeSpan.FromHours(1); // valido por 1 horas
 });
-
 
 var app = builder.Build();
 

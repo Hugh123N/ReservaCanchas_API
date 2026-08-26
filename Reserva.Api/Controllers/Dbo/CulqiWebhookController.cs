@@ -95,11 +95,11 @@ namespace Reserva.Api.Controllers.Dbo
         {
             switch (webhookEvent.Type)
             {
-                case "charge.succeeded":
+                case "charge.creation.succeeded":
                     await HandleChargeSucceeded(webhookEvent.Data);
                     break;
 
-                case "charge.failed":
+                case "charge.creation.failed":
                     await HandleChargeFailed(webhookEvent.Data);
                     break;
 

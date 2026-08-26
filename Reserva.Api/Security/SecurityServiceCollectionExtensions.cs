@@ -13,7 +13,7 @@ namespace Reserva.Api.Security
         public static IServiceCollection UseSecurity(this IServiceCollection services, IConfiguration configuration, bool isProduction)
         {
             #region SecurityDbContext
-            var connectionString = Environment.GetEnvironmentVariable("CN_CONECTION") ??  configuration["ConexionString"];
+            var connectionString = configuration["ConexionString"];
 
             if (isProduction)
                 services.AddDbContext<SecurityDbContext>(options => options.UseSqlServer(connectionString,

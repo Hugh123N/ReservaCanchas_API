@@ -28,11 +28,8 @@ namespace Reserva.Domain.Services.Culqi
             _configuration = configuration;
             _logger = logger;
 
-            // Obtener configuración de Culqi
-            _secretKey = Environment.GetEnvironmentVariable("CULQI_SECRETKEY") ?? _configuration["Culqi:SecretKey"]
-                ?? throw new InvalidOperationException("Culqi:SecretKey no configurado");
-
-            _apiBaseUrl = Environment.GetEnvironmentVariable("CULQI_BASE_URL") ??  "https://api.culqi.com"; // _configuration["Culqi:ApiBaseUrl"] ??
+            _secretKey = _configuration["Culqi:SecretKey"] ?? throw new InvalidOperationException("Culqi:SecretKey no configurado");
+            _apiBaseUrl = _configuration["Culqi:ApiBaseUrl"] ?? throw new InvalidOperationException("Culqi:ApiBaseUrl no configurado");
 
             // Configurar HttpClient con autenticación Bearer
             _httpClient.BaseAddress = new Uri(_apiBaseUrl);
