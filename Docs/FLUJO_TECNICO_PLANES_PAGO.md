@@ -1,9 +1,10 @@
-# Flujo Técnico - Sistema de Planes y Pagos (v4.0)
+# Flujo Técnico - Sistema de Planes y Pagos (v4.2)
 
-> **Versión**: 4.1 | **Fecha**: 2026-08-09
+> **Versión**: 4.2 | **Fecha**: 2026-08-28
 > 
 > **Cambios v4.0**: Detección de método de pago (Yape vs Tarjeta), plan Culqi dinámico, prorrateo con pago único
 > **Cambios v4.1**: `esPagoUnico` se determina por `tarifa.Codigo` (no por `PaymentType`). Soporte Yape en planes de suscripción.
+> **Cambios v4.2**: PagoPlan se crea en webhook (no en handlers). Cada charge genera PagoPlan histórico. Búsqueda unificada por metadata proveedor_id. FechaFin usa DateTimeHelper.GetNextBillingDate.
 
 ## Resumen de Flujos
 
@@ -197,13 +198,13 @@ Proveedor nuevo selecciona un plan del catálogo y se suscribe por primera vez.
 │  │                                                                      │
 │  ├── 7. CREAR PROVEEDOR PLAN                                            │
 │  │   ├── FechaInicio = ahora                                            │
-│  │   ├── FechaFin = ahora + tarifa.DuracionDias                        │
+│  │   ├── FechaFin = DateTimeHelper.GetNextBillingDate(ahora, ahora.Day, tarifa.DuracionDias)                        │
 │  │   ├── FechaProximoCobro = solo si esSuscripcionConTarjeta           │
 │  │   └── CulqiSubscriptionId = solo si esSuscripcionConTarjeta         │
 │  │                                                                      │
-│  └── 8. CREAR PAGO PLAN                                                 │
-│      ├── Monto = monto                                                  │
-│      └── IdMetodoPago = según esPagoUnico y esPagoConTarjeta            │
+│  └── 8. CREAR PAGO PLAN ← ELIMINADO (webhook lo crea)                    │
+       (PagoPlan se crea en CulqiWebhookController al recibir             │
+       charge.creation.succeeded con charge ID real: ch_001, ch_002...)   │
 └─────────────────────────────────────────────────────────────────────────┘
          │
          ▼
@@ -363,16 +364,9 @@ Proveedor con plan vencido (estado GRACE) paga directamente desde la página de 
 │  │   │   │                                                             │
 │  │   │   └── Registrar log: "Tarjeta anterior eliminada"               │
 │  │                                                                      │
-│  ├── 4. REGISTRAR PAGO                                                  │
-│  │   ├── PagoPlan {                                                    │
-│  │   │     IdProveedorPlan,                                            │
-│  │   │     Monto, Moneda,                                              │
-│  │   │     IdMetodoPago (Yape),                                        │
-│  │   │     IdEstadoPago (Pendiente),                                   │
-│  │   │     CulqiChargeId = subscriptionId                              │
-│  │   │   }                                                             │
-│  │   └── INSERT en BD                                                  │
-│  │                                                                      │
+│  ├── 4. REGISTRAR PAGO ← ELIMINADO (webhook lo crea)                      │
+│  │   (PagoPlan se crea en CulqiWebhookController al recibir             │
+│  │    charge.creation.succeeded con charge ID real)                    │                               │
 │  └── Retornar: "Pago registrado. Culqi procesará automáticamente."     │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -742,13 +736,14 @@ Proveedor con plan activo cambia a un plan diferente (superior o inferior). El c
 │  │                                                                      │
 │  ├── 8. CREAR NUEVO PROVEEDOR PLAN                                    │
 │  │   ├── FechaInicio = ahora                                           │
-│  │   ├── FechaFin = ahora + duracionNueva                              │
+│  │   ├── FechaFin = DateTimeHelper.GetNextBillingDate(ahora, ahora.Day, duracionNueva)                              │
 │  │   ├── FechaProximoCobro = solo si esSuscripcionConTarjeta           │
 │  │   ├── Estado = ACTIVE (pago directo) o PENDING (suscripción)        │
 │  │   ├── CulqiSubscriptionId = solo si esSuscripcionConTarjeta         │
 │  │   ├── AutoRenovacion = solo si esSuscripcionConTarjeta              │
 │  │   ├── EsActual = true                                               │
 │  │   └── SaldoAFavor = nuevoSaldoAFavor (solo downgrade)               │
+│  │   └── PagoPlan ← NO se crea aquí (webhook lo crea con charge real)  │
 │  │                                                                      │
 │  └── Retornar ChangePlanResponseDto                                    │
 │      {                                                                  │
@@ -1207,58 +1202,56 @@ case "subscription.deleted":
 ### charge.succeeded
 ```csharp
 case "charge.succeeded":
-    // Buscar ProveedorPlan por CulqiSubscriptionId o por Metadata
-    ProveedorPlan proveedorPlan = null;
-    
-    // 1. Buscar por CulqiSubscriptionId (pago con tarjeta)
-    if (!string.IsNullOrEmpty(data.SubscriptionId))
-    {
-        proveedorPlan = await _repository.GetBySubscriptionId(data.SubscriptionId);
-    }
-    
-    // 2. Si no encontró, buscar por Metadata (pago único Yape)
-    if (proveedorPlan == null && data.Source?.Type == "yape")
-    {
-        proveedorPlan = await _repository.GetByProveedorId(
-            int.Parse(data.Metadata["proveedor_id"]));
-    }
+    // Buscar ProveedorPlan por metadata proveedor_id (unificado)
+    var proveedorPlan = await FindProveedorPlanForCharge(data);
     
     if (proveedorPlan != null)
     {
-        proveedorPlan.Estado = Constants.ESTADO_PROVEEDOR_ACTIVO;
-        proveedorPlan.FechaModificacion = DateTimeOffset.UtcNow;
+        // Crear NUEVO PagoPlan con charge ID real (ch_001, ch_002...)
+        var pagoPlan = new PagoPlan
+        {
+            IdProveedorPlan = proveedorPlan.IdProveedorPlan,
+            Monto = proveedorPlan.IdPlanTarifaNavigation.Precio,
+            CulqiChargeId = data.Id,  // charge ID REAL
+            Estado = PAGADO
+        };
+        await _pagoPlanRepository.AddAsync(pagoPlan);
+        
+        // Actualizar ProveedorPlan
+        proveedorPlan.Estado = ACTIVE;
+        if (data.NextBillingDate.HasValue)
+        {
+            proveedorPlan.FechaFin = data.NextBillingDate;
+            proveedorPlan.FechaProximoCobro = data.NextBillingDate;
+        }
+        proveedorPlan.GracePeriodHasta = null;
     }
     break;
 ```
-
 ### charge.failed
 ```csharp
 case "charge.failed":
-    // Buscar ProveedorPlan por CulqiSubscriptionId o por Metadata
-    ProveedorPlan proveedorPlan = null;
-    
-    // 1. Buscar por CulqiSubscriptionId (pago con tarjeta)
-    if (!string.IsNullOrEmpty(data.SubscriptionId))
-    {
-        proveedorPlan = await _repository.GetBySubscriptionId(data.SubscriptionId);
-    }
-    
-    // 2. Si no encontró, buscar por Metadata (pago único Yape)
-    if (proveedorPlan == null && data.Source?.Type == "yape")
-    {
-        proveedorPlan = await _repository.GetByProveedorId(
-            int.Parse(data.Metadata["proveedor_id"]));
-    }
+    // Buscar ProveedorPlan por metadata proveedor_id (unificado)
+    var proveedorPlan = await FindProveedorPlanForCharge(data);
     
     if (proveedorPlan != null)
     {
-        proveedorPlan.Estado = Constants.ESTADO_PROVEEDOR_GRACE;
-        proveedorPlan.FechaModificacion = DateTimeOffset.UtcNow;
+        // Crear NUEVO PagoPlan RECHAZADO con charge ID real
+        var pagoPlan = new PagoPlan
+        {
+            IdProveedorPlan = proveedorPlan.IdProveedorPlan,
+            Monto = proveedorPlan.IdPlanTarifaNavigation.Precio,
+            CulqiChargeId = data.Id,
+            Estado = RECHAZADO
+        };
+        await _pagoPlanRepository.AddAsync(pagoPlan);
+        
+        // Cambiar ProveedorPlan a GRACE
+        proveedorPlan.Estado = GRACE;
+        proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
     }
     break;
-```
-
----
+```---
 
 ## Estados del Plan
 
@@ -1405,5 +1398,7 @@ Constants.METODO_PAGO.Plin          // "05"
 
 ---
 
-**Última Actualización**: 2026-08-09
-**Versión**: 4.0
+**Última Actualización**: 2026-08-28
+**Versión**: 4.2
+
+

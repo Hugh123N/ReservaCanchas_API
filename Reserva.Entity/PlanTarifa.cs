@@ -24,6 +24,7 @@ public partial class PlanTarifa
     public string TipoCobro { get; set; } = null!;
 
     public bool? PermiteAutoRenovacion { get; set; }
+    public string? IdPlanCulqi { get; set; }
 
     public bool Activo { get; set; }
 

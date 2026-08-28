@@ -112,7 +112,12 @@ namespace Reserva.Common
 
         public struct CULQI_SUBSCRIPTION_STATUS
         {
-            public const string ACTIVE = "active";
+            public const int CREATE = 1;        //Creada
+            public const int DIAS_PRUEBA = 2;   //Días de prueba
+            public const int ACTIVE = 3;        //Activa
+            public const int CANCELED = 4;      //Cancelada
+            public const int EN_COLA = 5;       //En cola
+            public const int FINALIZADO = 6;    //Finalizada
         }
 
         public struct DEFECT

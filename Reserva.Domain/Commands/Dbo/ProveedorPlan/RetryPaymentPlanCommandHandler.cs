@@ -96,15 +96,15 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             {
                 try
                 {
-                    var existingCard = await _culqiService.GetCardAsync(proveedor.CulqiCustomerId);
+                    //var existingCard = await _culqiService.GetCardAsync(proveedor.CulqiCustomerId);
 
                     var newCard = await _culqiService.CreateCardAsync(proveedor.CulqiCustomerId, dto.CulqiToken);
 
-                    if (existingCard != null)
-                    {
-                        await _culqiService.DeleteCardAsync(existingCard.Id);
-                        _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
-                    }
+                    //if (existingCard != null)
+                    //{
+                    //    await _culqiService.DeleteCardAsync(existingCard.Id);
+                    //    _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
+                    //}
 
                     // Actualizar suscripción con la nueva tarjeta
                     if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))

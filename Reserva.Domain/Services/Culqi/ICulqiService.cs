@@ -39,7 +39,7 @@ namespace Reserva.Domain.Services.Culqi
         /// <summary>
         /// Crea un plan en Culqi (necesario para suscripciones)
         /// </summary>
-        Task<CulqiPlanResponse> CreatePlanAsync(CulqiCreatePlanRequest request);
+        Task<CulqiCreatePlanResponse> CreatePlanAsync(CulqiCreatePlanRequest request);
 
         /// <summary>
         /// Obtiene un plan de Culqi por su ID

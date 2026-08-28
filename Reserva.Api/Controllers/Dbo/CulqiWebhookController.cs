@@ -87,7 +87,8 @@ namespace Reserva.Api.Controllers.Dbo
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al procesar webhook de Culqi");
-                return Ok(new { message = "Error al procesar webhook, pero recibido" });
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                new {message = "Error interno al procesar webhook"});
             }
         }
 
@@ -107,8 +108,8 @@ namespace Reserva.Api.Controllers.Dbo
                     await HandleOrderStatusChanged(webhookEvent.Data);
                     break;
 
-                case "subscription.created.succeeded":
-                case "subscription.updated.succeeded":
+                case "subscription.creation.succeeded":
+                case "subscription.update.succeeded":
                 case "subscription.cancel.succeeded":
                     await HandleSubscriptionEvent(webhookEvent.Data, webhookEvent.Type);
                     break;

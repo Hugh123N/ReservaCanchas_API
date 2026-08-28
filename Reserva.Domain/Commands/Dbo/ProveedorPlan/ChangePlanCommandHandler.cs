@@ -48,6 +48,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         {
             var response = new ResponseDto<ChangePlanResponseDto>();
             var dto = request.ChangePlanDto;
+            string? newCardId = null;
 
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
                 x => x.IdProveedorPlan == dto.IdProveedorPlan,
@@ -194,13 +195,8 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     {
                         try
                         {
-                            var existingCard = await _culqiService.GetCardAsync(proveedor!.CulqiCustomerId!);
                             var newCard = await _culqiService.CreateCardAsync(proveedor!.CulqiCustomerId!, dto.CulqiToken);
-
-                            if (existingCard != null)
-                            {
-                                await _culqiService.DeleteCardAsync(existingCard.Id);
-                            }
+                            newCardId = newCard.Id;
 
                             _logger.LogInformation("Tarjeta actualizada para cambio de plan");
                         }
@@ -264,7 +260,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             // Configuración del plan Culqi según código de tarifa
             var (culqiInterval, culqiIntervalCount, shouldCreateCulqiPlan) = GetCulqiPlanConfig(nuevaTarifa);
-            var nuevoCulqiPlanId = $"plan_{nuevaTarifa.IdPlanTarifa}";
+            string? nuevoCulqiPlanId = null;
 
             // Crear plan Culqi solo si es suscripción con tarjeta
             if (esPagoConTarjeta && shouldCreateCulqiPlan)
@@ -276,21 +272,32 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     {
                         var planRequest = new CulqiCreatePlanRequest
                         {
-                            Id = nuevoCulqiPlanId,
                             Name = $"{nuevaTarifa.IdPlaneNavigation?.Nombre} - {nuevaTarifa.Nombre}",
+                            Description = $"{nuevaTarifa.IdPlaneNavigation?.Nombre} - {nuevaTarifa.Nombre} - {nuevaTarifa.IdPlaneNavigation?.Descripcion}",
                             Amount = CulqiService.ConvertToCents(precioNuevo),
-                            CurrencyCode = Constants.CURRENCY.PEN,
+                            Currency = Constants.CURRENCY.PEN,
                             Interval = culqiInterval,
                             IntervalCount = culqiIntervalCount,
-                            Description = nuevaTarifa.Nombre,
+                            InitialCycles = new CulqiInitialCycles
+                            {
+                                Count = 0,
+                                HasInitialCharge = false,
+                                Amount = 0,
+                                IntervalUnitTime = culqiInterval
+                            },
                             Metadata = new Dictionary<string, string>
-                        {
-                            { "tarifa_id", nuevaTarifa.IdPlanTarifa.ToString() },
-                            { "plan_id", nuevaTarifa.IdPlane.ToString() }
-                        }
+                            {
+                                { "tarifa_id", nuevaTarifa.IdPlanTarifa.ToString() },
+                                { "plan_id", nuevaTarifa.IdPlane.ToString() }
+                            }
                         };
 
-                        await _culqiService.CreatePlanAsync(planRequest);
+                        var responsePlan = await _culqiService.CreatePlanAsync(planRequest);
+
+                        nuevoCulqiPlanId = responsePlan.Id;
+                        nuevaTarifa.IdPlanCulqi = nuevoCulqiPlanId;
+                        await _tarifaRepository.UpdateAsync(nuevaTarifa);
+                        await _tarifaRepository.SaveAsync();
                     }
                 }
                 catch (CulqiException ex)
@@ -311,14 +318,15 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     var nuevaSuscripcion = await _culqiService.CreateSubscriptionAsync(new CulqiCreateSubscriptionRequest
                     {
                         PlanId = nuevoCulqiPlanId,
-                        CustomerId = proveedor!.CulqiCustomerId!,
+                        CardId = newCardId!,
+                        TyC = true,
                         Metadata = new Dictionary<string, string>
-                    {
-                        { "tipo", "plan_change" },
-                        { "proveedor_id", proveedorPlan.IdProveedor.ToString() },
-                        { "plan_anterior_id", proveedorPlan.IdProveedorPlan.ToString() },
-                        { "prorrateo", montoProrrateo.ToString("F2") }
-                    }
+                        {
+                            { "tipo", "plan_change" },
+                            { "proveedor_id", proveedorPlan.IdProveedor.ToString() },
+                            { "plan_anterior_id", proveedorPlan.IdProveedorPlan.ToString() },
+                            { "prorrateo", montoProrrateo.ToString("F2") }
+                        }
                     });
 
                     nuevaSuscripcionId = nuevaSuscripcion.Id;
@@ -402,13 +410,21 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         /// <summary>
         /// Obtiene la configuración del plan Culqi según el código de la tarifa
         /// </summary>
-        private (string interval, int intervalCount, bool shouldCreateCulqiPlan) GetCulqiPlanConfig(Entity.PlanTarifa tarifa)
+        private (int interval, int intervalCount, bool shouldCreateCulqiPlan) GetCulqiPlanConfig(Entity.PlanTarifa tarifa)
         {
+            ///API CULQI
+            ///1 = Diario
+            ///2 = Semanal
+            ///3 = Mensual
+            ///4 = Anual
+            ///5 = Trimestral
+            ///6 = Semestral
+
             return tarifa.Codigo?.ToUpper() switch
             {
-                "MONTHLY" => ("months", 1, true),
-                "YEARLY" => ("years", 1, true),
-                _ => ("months", 1, false)  // BLACKFRIDAY, UNIQUE, etc. - No crear plan Culqi
+                PLAN_TARIFA.MONTHLY => (1, 1, true),
+                PLAN_TARIFA.YEARLY => (4, 1, true),
+                _ => (3, 1, false)  // BLACKFRIDAY, UNIQUE, etc. - No crear plan Culqi
             };
         }
     }

@@ -99,15 +99,11 @@ namespace Reserva.Domain.Services.Culqi
 
         #region Suscripciones (Para Planes SaaS)
 
-        /// <summary>
-        /// Crea una suscripción en Culqi para cobros recurrentes
-        /// </summary>
         public async Task<CulqiSubscriptionResponse> CreateSubscriptionAsync(CulqiCreateSubscriptionRequest request)
         {
             try
             {
-                _logger.LogInformation("Creando suscripción en Culqi - Plan: {PlanId}, Customer: {CustomerId}",
-                    request.PlanId, request.CustomerId);
+                _logger.LogInformation("Creando suscripción en Culqi - Plan: {PlanId}", request.PlanId);
 
                 var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
                 {
@@ -117,7 +113,7 @@ namespace Reserva.Domain.Services.Culqi
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("/v2/subscriptions", content);
+                var response = await _httpClient.PostAsync("v2/recurrent/subscriptions/create", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
@@ -153,16 +149,13 @@ namespace Reserva.Domain.Services.Culqi
             }
         }
 
-        /// <summary>
-        /// Cancela una suscripción en Culqi
-        /// </summary>
         public async Task<bool> CancelSubscriptionAsync(string subscriptionId)
         {
             try
             {
                 _logger.LogInformation("Cancelando suscripción en Culqi - SubscriptionId: {SubscriptionId}", subscriptionId);
 
-                var response = await _httpClient.DeleteAsync($"/v2/subscriptions/{subscriptionId}");
+                var response = await _httpClient.DeleteAsync($"/v2/recurrent/subscriptions/{subscriptionId}");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
@@ -182,14 +175,11 @@ namespace Reserva.Domain.Services.Culqi
             }
         }
 
-        /// <summary>
-        /// Obtiene los detalles de una suscripción
-        /// </summary>
         public async Task<CulqiSubscriptionResponse?> GetSubscriptionAsync(string subscriptionId)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/v2/subscriptions/{subscriptionId}");
+                var response = await _httpClient.GetAsync($"/v2/recurrent/subscriptions/{subscriptionId}");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
@@ -200,22 +190,31 @@ namespace Reserva.Domain.Services.Culqi
 
                 return JsonSerializer.Deserialize<CulqiSubscriptionResponse>(responseContent);
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Error al obtener suscripción");
+                _logger.LogError(
+                    ex,
+                    "Error de conexión al obtener suscripción - SubscriptionId: {SubscriptionId}",
+                    subscriptionId);
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error al deserializar suscripción - SubscriptionId: {SubscriptionId}",
+                    subscriptionId);
+
                 return null;
             }
         }
 
-        /// <summary>
-        /// Actualiza una suscripción en Culqi (ej: cambiar plan con prorrateo)
-        /// </summary>
         public async Task<CulqiSubscriptionResponse?> UpdateSubscriptionAsync(string subscriptionId, CulqiUpdateSubscriptionRequest request)
         {
             try
             {
-                _logger.LogInformation("Actualizando suscripción en Culqi - SubscriptionId: {SubscriptionId}, NewPlanId: {PlanId}",
-                    subscriptionId, request.PlanId);
+                _logger.LogInformation("Actualizando suscripción en Culqi - SubscriptionId: {SubscriptionId}", subscriptionId);
 
                 var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
                 {
@@ -225,7 +224,7 @@ namespace Reserva.Domain.Services.Culqi
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var httpRequest = new HttpRequestMessage(new HttpMethod("PATCH"), $"/v2/subscriptions/{subscriptionId}")
+                var httpRequest = new HttpRequestMessage(new HttpMethod("PATCH"), $"/v2/recurrent/subscriptions/{subscriptionId}")
                 {
                     Content = content
                 };
@@ -273,12 +272,11 @@ namespace Reserva.Domain.Services.Culqi
         /// <summary>
         /// Crea un plan en Culqi (necesario para suscripciones)
         /// </summary>
-        public async Task<CulqiPlanResponse> CreatePlanAsync(CulqiCreatePlanRequest request)
+        public async Task<CulqiCreatePlanResponse> CreatePlanAsync(CulqiCreatePlanRequest request)
         {
             try
             {
-                _logger.LogInformation("Creando plan en Culqi - ID: {PlanId}, Nombre: {Name}",
-                    request.Id, request.Name);
+                _logger.LogInformation("Creando plan en Culqi - Nombre: {Name}",request.Name);
 
                 var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
                 {
@@ -288,7 +286,7 @@ namespace Reserva.Domain.Services.Culqi
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("/v2/plans", content);
+                var response = await _httpClient.PostAsync("/v2/recurrent/plans/create", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
@@ -304,7 +302,7 @@ namespace Reserva.Domain.Services.Culqi
                     );
                 }
 
-                var planResponse = JsonSerializer.Deserialize<CulqiPlanResponse>(responseContent)
+                var planResponse = JsonSerializer.Deserialize<CulqiCreatePlanResponse>(responseContent)
                     ?? throw new CulqiException("Respuesta inválida de Culqi");
 
                 _logger.LogInformation("Plan creado exitosamente - PlanId: {PlanId}", planResponse.Id);
@@ -330,7 +328,7 @@ namespace Reserva.Domain.Services.Culqi
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/v2/plans/{planId}");
+                var response = await _httpClient.GetAsync($"/v2/recurrent/plans/{planId}");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)

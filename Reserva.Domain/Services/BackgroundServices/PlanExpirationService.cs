@@ -236,14 +236,14 @@ namespace Reserva.Domain.Services.BackgroundServices
         private async Task ProcesarRenovacionesAutomaticas(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
-            var repos = scope.ServiceProvider.GetRequiredService<IRepository<Entity.ProveedorPlan>>();
+            var proveedorPlanRepository = scope.ServiceProvider.GetRequiredService<IRepository<Entity.ProveedorPlan>>();
             var culqiService = scope.ServiceProvider.GetRequiredService<ICulqiService>();
 
             var Ahora = DateTimeOffset.UtcNow;
 
             // Buscar planes con AutoRenovacion=true y cuya FechaProximoCobro ya pasó
             // EXCLUIR planes con CancelAtPeriodEnd=true (cancelación programada)
-            var planesARenovar = await repos.FindByAsync(x =>
+            var planesARenovar = await proveedorPlanRepository.FindByAsync(x =>
                 x.EsActual && x.Activo &&
                 !x.CancelAtPeriodEnd &&
                 x.AutoRenovacion &&
@@ -265,7 +265,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                             // La renovación ya se procesó en Culqi, solo actualizamos fechas
                             pp.FechaFin = DateTimeOffset.FromUnixTimeSeconds(subscription.NextBillingDate ?? 0);
                             pp.FechaProximoCobro = pp.FechaFin;
-                            await repos.UpdateAsync(pp);
+                            await proveedorPlanRepository.UpdateAsync(pp);
                             _logger.LogInformation("Renovación automática procesada para ProveedorPlan {Id}", pp.IdProveedorPlan);
                         }
                     }
@@ -278,7 +278,7 @@ namespace Reserva.Domain.Services.BackgroundServices
 
             if (planesARenovar.Any())
             {
-                await repos.SaveAsync();
+                await proveedorPlanRepository.SaveAsync();
             }
         }
 

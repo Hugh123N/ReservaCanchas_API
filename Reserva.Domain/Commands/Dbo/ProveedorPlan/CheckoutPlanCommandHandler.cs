@@ -75,7 +75,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             // Configuración del plan Culqi según código de tarifa
             var (culqiInterval, culqiIntervalCount, shouldCreateCulqiPlan) = GetCulqiPlanConfig(tarifa);
-            var culqiPlanId = $"plan_{tarifa.IdPlanTarifa}";
+            var culqiPlanId = tarifa.IdPlanCulqi;
 
             // Variables para tracking
             string? customerId = null;
@@ -147,8 +147,8 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             Code = $"prov_{proveedor.IdProveedor}",
                             FirstName = proveedor.IdUsuarioNavigation?.FirstName,
                             LastName = proveedor.IdUsuarioNavigation?.LastName,
-                            Address = "de su casa",
-                            AddressCity = "Peru - Provincia",
+                            Address = "Av. Proceres - Lima",
+                            AddressCity = "Lima",
                             CountryCode = "PE",
                             PhoneNumber = proveedor.Telefono,
                             Metadata = new Dictionary<string, string>
@@ -195,18 +195,18 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         }
 
                         // Obtener tarjeta actual del customer
-                        var existingCard = await _culqiService.GetCardAsync(customerId);
+                        //var existingCard = await _culqiService.GetCardAsync(customerId);
 
                         // Crear nueva tarjeta con el token
                         var newCard = await _culqiService.CreateCardAsync(customerId, dto.CulqiToken);
                         newCardId = newCard.Id;
 
                         // Eliminar tarjeta anterior si existía
-                        if (existingCard != null)
-                        {
-                            await _culqiService.DeleteCardAsync(existingCard.Id);
-                            _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
-                        }
+                        //if (existingCard != null)
+                        //{
+                        //    await _culqiService.DeleteCardAsync(existingCard.Id);
+                        //    _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
+                        //}
 
                         // Cancelar suscripción anterior si existe
                         if (!string.IsNullOrEmpty(oldSubscriptionId))
@@ -236,18 +236,25 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 {
                     try
                     {
-                        var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId);
+                        var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId!);
                         if (existingPlan == null)
                         {
                             var planRequest = new CulqiCreatePlanRequest
                             {
-                                Id = culqiPlanId,
                                 Name = $"{tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre}",
+                                ShortName = tarifa.Nombre!,
+                                Description = $"{tarifa.IdPlaneNavigation?.Nombre} - {tarifa.Nombre} - {tarifa.IdPlaneNavigation?.Descripcion}",
                                 Amount = CulqiService.ConvertToCents(monto),
-                                CurrencyCode = Constants.CURRENCY.PEN,
+                                Currency = Constants.CURRENCY.PEN,
                                 Interval = culqiInterval,
                                 IntervalCount = culqiIntervalCount,
-                                Description = tarifa.Nombre,
+                                InitialCycles = new CulqiInitialCycles
+                                {
+                                    Count = 0,
+                                    HasInitialCharge = false,
+                                    Amount = 0,
+                                    IntervalUnitTime = culqiInterval
+                                },
                                 Metadata = new Dictionary<string, string>
                                 {
                                     { "tarifa_id", tarifa.IdPlanTarifa.ToString() },
@@ -255,7 +262,12 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                                 }
                             };
 
-                            await _culqiService.CreatePlanAsync(planRequest);
+                            var responsePlan = await _culqiService.CreatePlanAsync(planRequest);
+
+                            culqiPlanId = responsePlan.Id;
+                            tarifa.IdPlanCulqi = culqiPlanId;
+                            await _tarifaRepository.UpdateAsync(tarifa);
+                            await _tarifaRepository.SaveAsync();
                         }
                     }
                     catch (CulqiException ex)
@@ -273,13 +285,11 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     // ═══════════════════════════════════════════════════════════════
                     try
                     {
-                        var cardIdForSubscription = newCardId ?? dto.CulqiToken;
-
                         var subscriptionRequest = new CulqiCreateSubscriptionRequest
                         {
-                            PlanId = culqiPlanId,
-                            CustomerId = customerId!,
-                            CardId = cardIdForSubscription,
+                            PlanId = culqiPlanId!,
+                            CardId = newCardId!,
+                            TyC = true,
                             Metadata = new Dictionary<string, string>
                             {
                                 { "plan_id", dto.IdPlane.ToString() },
@@ -399,13 +409,21 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         /// <summary>
         /// Obtiene la configuración del plan Culqi según el código de la tarifa
         /// </summary>
-        private (string interval, int intervalCount, bool shouldCreateCulqiPlan) GetCulqiPlanConfig(Entity.PlanTarifa tarifa)
+        private (int interval, int intervalCount, bool shouldCreateCulqiPlan) GetCulqiPlanConfig(Entity.PlanTarifa tarifa)
         {
+            ///API CULQI
+            ///1 = Diario
+            ///2 = Semanal
+            ///3 = Mensual
+            ///4 = Anual
+            ///5 = Trimestral
+            ///6 = Semestral
+
             return tarifa.Codigo?.ToUpper() switch
             {
-                PLAN_TARIFA.MONTHLY => ("months", 1, true),
-                PLAN_TARIFA.YEARLY => ("years", 1, true),
-                _ => ("months", 1, false)  // BLACKFRIDAY, UNIQUE, etc. - No crear plan Culqi
+                PLAN_TARIFA.MONTHLY => (1, 1, true),
+                PLAN_TARIFA.YEARLY => (4, 1, true),
+                _ => (3, 1, false)  // BLACKFRIDAY, UNIQUE, etc. - No crear plan Culqi
             };
         }
     }
