@@ -150,6 +150,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             Address = "de su casa",
                             AddressCity = "Peru - Provincia",
                             CountryCode = "PE",
+                            PhoneNumber = proveedor.Telefono,
                             Metadata = new Dictionary<string, string>
                             {
                                 { "proveedor_id", proveedor.IdProveedor.ToString() }
