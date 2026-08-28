@@ -10,6 +10,12 @@ namespace Reserva.Domain.Services.Culqi
         [JsonPropertyName("token_id")]
         public string TokenId { get; set; } = null!;
 
+        [JsonPropertyName("customer_id")]
+        public string CustomerId { get; set; } = null!;
+
+        [JsonPropertyName("validate")]
+        public bool? Validate { get; set; }
+
         [JsonPropertyName("metadata")]
         public Dictionary<string, string>? Metadata { get; set; }
     }

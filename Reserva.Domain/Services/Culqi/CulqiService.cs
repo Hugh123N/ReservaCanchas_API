@@ -473,10 +473,8 @@ namespace Reserva.Domain.Services.Culqi
                 var request = new CulqiCreateCardRequest
                 {
                     TokenId = tokenId,
-                    Metadata = new Dictionary<string, string>
-                    {
-                        { "customer_id", customerId }
-                    }
+                    CustomerId = customerId,
+                    Validate = true
                 };
 
                 var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
@@ -487,7 +485,7 @@ namespace Reserva.Domain.Services.Culqi
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"/v2/customers/{customerId}/cards", content);
+                var response = await _httpClient.PostAsync($"/v2/cards", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
