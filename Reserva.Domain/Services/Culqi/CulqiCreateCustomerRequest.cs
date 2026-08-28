@@ -44,6 +44,12 @@ namespace Reserva.Domain.Services.Culqi
         [JsonPropertyName("address")]
         public string? Address { get; set; }
 
+        [JsonPropertyName("address_city")]
+        public string? AddressCity { get; set; }
+
+        [JsonPropertyName("country_code")]
+        public string? CountryCode { get; set; }
+
         /// <summary>
         /// Metadata adicional
         /// </summary>
