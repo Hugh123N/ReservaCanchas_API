@@ -149,7 +149,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             LastName = proveedor.IdUsuarioNavigation?.LastName,
                             Address = "de su casa",
                             AddressCity = "Peru - Provincia",
-                            CountryCode = "500001",
+                            CountryCode = "PE",
                             Metadata = new Dictionary<string, string>
                             {
                                 { "proveedor_id", proveedor.IdProveedor.ToString() }
