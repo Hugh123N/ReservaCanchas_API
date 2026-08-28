@@ -147,6 +147,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             Code = $"prov_{proveedor.IdProveedor}",
                             FirstName = proveedor.IdUsuarioNavigation?.FirstName,
                             LastName = proveedor.IdUsuarioNavigation?.LastName,
+                            Address = "de su casa",
                             Metadata = new Dictionary<string, string>
                             {
                                 { "proveedor_id", proveedor.IdProveedor.ToString() }
