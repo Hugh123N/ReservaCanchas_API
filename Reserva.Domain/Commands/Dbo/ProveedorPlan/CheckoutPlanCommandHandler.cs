@@ -20,9 +20,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
         private readonly IRepository<Entity.Plane> _planeRepository;
         private readonly IRepository<Entity.PlanTarifa> _tarifaRepository;
-        private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
-        private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
-        private readonly IRepository<Entity.PagoPlan> _pagoPlanRepository;
         private readonly IRepository<Entity.Proveedor> _proveedorRepository;
         private readonly ICulqiService _culqiService;
         private readonly ILogger<CheckoutPlanCommandHandler> _logger;
@@ -35,9 +32,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             IRepository<Entity.ProveedorPlan> proveedorPlanRepository,
             IRepository<Entity.Plane> planeRepository,
             IRepository<Entity.PlanTarifa> tarifaRepository,
-            IRepository<Entity.EstadoPago> estadoPagoRepository,
-            IRepository<Entity.MetodoPago> metodoPagoRepository,
-            IRepository<Entity.PagoPlan> pagoPlanRepository,
             IRepository<Entity.Proveedor> proveedorRepository,
             ICulqiService culqiService,
             ILogger<CheckoutPlanCommandHandler> logger
@@ -46,9 +40,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             _proveedorPlanRepository = proveedorPlanRepository;
             _planeRepository = planeRepository;
             _tarifaRepository = tarifaRepository;
-            _estadoPagoRepository = estadoPagoRepository;
-            _metodoPagoRepository = metodoPagoRepository;
-            _pagoPlanRepository = pagoPlanRepository;
             _proveedorRepository = proveedorRepository;
             _culqiService = culqiService;
             _logger = logger;
@@ -74,12 +65,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             }
 
             var esPagoConTarjeta = dto.PaymentType == "card";
-
-            var estadoPendiente = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pendiente);
-
-            var codigoMetodoPago = esPagoConTarjeta ? Constants.METODO_PAGO.Tarjeta : Constants.METODO_PAGO.Yape;
-            var metodoPago = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == codigoMetodoPago);
-
             var esPagoUnico = tarifa.Codigo?.ToUpper() is PLAN_TARIFA.UNIQUE or PLAN_TARIFA.BLACKFRIDAY;
             
             decimal monto = tarifa.Precio;
@@ -385,20 +370,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             await _proveedorPlanRepository.AddAsync(proveedorPlan);
             await _proveedorPlanRepository.SaveAsync();
-
-            var pagoPlan = new Entity.PagoPlan
-            {
-                IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                Monto = monto,
-                Moneda = Constants.CURRENCY.PEN,
-                IdMetodoPago = metodoPago?.IdMetodoPago ?? 1,
-                IdEstadoPago = esPagoUnico ? estadoPendiente?.IdEstadoPago ?? 1 : estadoPendiente?.IdEstadoPago ?? 1,
-                CulqiChargeId = culqiChargeId ?? culqiSubscriptionId,
-                CodigoOperacion = culqiChargeId ?? null
-            };
-
-            await _pagoPlanRepository.AddAsync(pagoPlan);
-            await _pagoPlanRepository.SaveAsync();
 
             string mensajeExito;
             if (esPagoUnico)
