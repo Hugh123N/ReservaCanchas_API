@@ -107,9 +107,9 @@ namespace Reserva.Api.Controllers.Dbo
                     await HandleOrderStatusChanged(webhookEvent.Data);
                     break;
 
-                case "subscription.created":
-                case "subscription.updated":
-                case "subscription.deleted":
+                case "subscription.created.succeeded":
+                case "subscription.updated.succeeded":
+                case "subscription.cancel.succeeded":
                     await HandleSubscriptionEvent(webhookEvent.Data, webhookEvent.Type);
                     break;
 
@@ -326,7 +326,7 @@ namespace Reserva.Api.Controllers.Dbo
 
             switch (eventType)
             {
-                case "subscription.created":
+                case "subscription.created.succeeded":
                     _logger.LogInformation("Suscripción creada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
 
                     if (data.Metadata != null && data.Metadata.TryGetValue("next_billing_date", out var nextBillingCreatedStr))
@@ -345,7 +345,7 @@ namespace Reserva.Api.Controllers.Dbo
                     await _proveedorPlanRepository.SaveAsync();
                     break;
 
-                case "subscription.updated":
+                case "subscription.updated.succeeded":
                     if (data.Metadata != null && data.Metadata.TryGetValue("next_billing_date", out var nextBillingStr))
                     {
                         if (long.TryParse(nextBillingStr, out var nextBillingTimestamp))
@@ -363,7 +363,7 @@ namespace Reserva.Api.Controllers.Dbo
                     }
                     break;
 
-                case "subscription.deleted":
+                case "subscription.cancel.succeeded":
                     // La suscripción fue cancelada en Culqi
                     // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
                     proveedorPlan.AutoRenovacion = false;
