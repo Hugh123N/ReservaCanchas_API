@@ -19,9 +19,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
         private readonly IRepository<Entity.Plane> _planeRepository;
         private readonly IRepository<Entity.PlanTarifa> _tarifaRepository;
-        private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
-        private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
-        private readonly IRepository<Entity.PagoPlan> _pagoPlanRepository;
         private readonly IRepository<Entity.Proveedor> _proveedorRepository;
         private readonly ICulqiService _culqiService;
         private readonly ILogger<ChangePlanCommandHandler> _logger;
@@ -34,9 +31,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             IRepository<Entity.ProveedorPlan> proveedorPlanRepository,
             IRepository<Entity.Plane> planeRepository,
             IRepository<Entity.PlanTarifa> tarifaRepository,
-            IRepository<Entity.EstadoPago> estadoPagoRepository,
-            IRepository<Entity.MetodoPago> metodoPagoRepository,
-            IRepository<Entity.PagoPlan> pagoPlanRepository,
             IRepository<Entity.Proveedor> proveedorRepository,
             ICulqiService culqiService,
             ILogger<ChangePlanCommandHandler> logger
@@ -45,9 +39,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             _proveedorPlanRepository = proveedorPlanRepository;
             _planeRepository = planeRepository;
             _tarifaRepository = tarifaRepository;
-            _estadoPagoRepository = estadoPagoRepository;
-            _metodoPagoRepository = metodoPagoRepository;
-            _pagoPlanRepository = pagoPlanRepository;
             _proveedorRepository = proveedorRepository;
             _culqiService = culqiService;
             _logger = logger;
@@ -84,7 +75,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 return response;
             }
             var esPagoUnico = nuevaTarifa.Codigo?.ToUpper() is PLAN_TARIFA.UNIQUE or PLAN_TARIFA.BLACKFRIDAY;
-            
+
             // Para planes de suscripción, validar que el plan actual tenga CulqiSubscriptionId
             if (!esPagoUnico && string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
             {
@@ -186,23 +177,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
                         var chargeResponse = await _culqiService.CreateChargeAsync(chargeRequest);
                         _logger.LogInformation("Cargo prorrateo creado en Culqi - ChargeId: {ChargeId}", chargeResponse.Id);
-
-                        var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pagado);
-                        var metodoPagoProrrateo = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.METODO_PAGO.Yape);
-
-                        var pagoProrrateo = new Entity.PagoPlan
-                        {
-                            IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                            Monto = montoProrrateo,
-                            Moneda = Constants.CURRENCY.PEN,
-                            IdMetodoPago = metodoPagoProrrateo?.IdMetodoPago ?? 1,
-                            IdEstadoPago = estadoPagado?.IdEstadoPago ?? 1,
-                            CulqiChargeId = chargeResponse.Id,
-                            CodigoOperacion = chargeResponse.ReferenceCode,
-                            FechaPago = DateTimeOffset.UtcNow
-                        };
-
-                        await _pagoPlanRepository.AddAsync(pagoProrrateo);
                     }
                     catch (CulqiException ex)
                     {
@@ -256,23 +230,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
                         var chargeResponse = await _culqiService.CreateChargeAsync(chargeRequest);
                         _logger.LogInformation("Cargo prorrateo creado en Culqi - ChargeId: {ChargeId}", chargeResponse.Id);
-
-                        var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pagado);
-                        var metodoPagoProrrateo = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.METODO_PAGO.Tarjeta);
-
-                        var pagoProrrateo = new Entity.PagoPlan
-                        {
-                            IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                            Monto = montoProrrateo,
-                            Moneda = Constants.CURRENCY.PEN,
-                            IdMetodoPago = metodoPagoProrrateo?.IdMetodoPago ?? 1,
-                            IdEstadoPago = estadoPagado?.IdEstadoPago ?? 1,
-                            CulqiChargeId = chargeResponse.Id,
-                            CodigoOperacion = chargeResponse.ReferenceCode,
-                            FechaPago = DateTimeOffset.UtcNow
-                        };
-
-                        await _pagoPlanRepository.AddAsync(pagoProrrateo);
                     }
                     catch (CulqiException ex)
                     {
@@ -281,6 +238,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         return response;
                     }
                 }
+
             }
 
             // Cancelar suscripción anterior (solo si el plan anterior era de suscripción)
@@ -326,10 +284,10 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             IntervalCount = culqiIntervalCount,
                             Description = nuevaTarifa.Nombre,
                             Metadata = new Dictionary<string, string>
-                            {
-                                { "tarifa_id", nuevaTarifa.IdPlanTarifa.ToString() },
-                                { "plan_id", nuevaTarifa.IdPlane.ToString() }
-                            }
+                        {
+                            { "tarifa_id", nuevaTarifa.IdPlanTarifa.ToString() },
+                            { "plan_id", nuevaTarifa.IdPlane.ToString() }
+                        }
                         };
 
                         await _culqiService.CreatePlanAsync(planRequest);
@@ -355,12 +313,12 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         PlanId = nuevoCulqiPlanId,
                         CustomerId = proveedor!.CulqiCustomerId!,
                         Metadata = new Dictionary<string, string>
-                        {
-                            { "tipo", "plan_change" },
-                            { "proveedor_id", proveedorPlan.IdProveedor.ToString() },
-                            { "plan_anterior_id", proveedorPlan.IdProveedorPlan.ToString() },
-                            { "prorrateo", montoProrrateo.ToString("F2") }
-                        }
+                    {
+                        { "tipo", "plan_change" },
+                        { "proveedor_id", proveedorPlan.IdProveedor.ToString() },
+                        { "plan_anterior_id", proveedorPlan.IdProveedorPlan.ToString() },
+                        { "prorrateo", montoProrrateo.ToString("F2") }
+                    }
                     });
 
                     nuevaSuscripcionId = nuevaSuscripcion.Id;
@@ -395,24 +353,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             await _proveedorPlanRepository.AddAsync(nuevoProveedorPlan);
             await _proveedorPlanRepository.SaveAsync();
 
-            var estadoPendiente = await _estadoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == Constants.ESTADO_PAGO.Pendiente);
-            var codigoMetodoPago = esPagoUnico || !esPagoConTarjeta ? Constants.METODO_PAGO.Yape : Constants.METODO_PAGO.Tarjeta;
-            var metodoPago = await _metodoPagoRepository.GetByAsNoTrackingAsync(x => x.Codigo == codigoMetodoPago);
-
-            var pagoPlan = new Entity.PagoPlan
-            {
-                IdProveedorPlan = nuevoProveedorPlan.IdProveedorPlan,
-                Monto = 0,
-                Moneda = Constants.CURRENCY.PEN,
-                IdMetodoPago = metodoPago?.IdMetodoPago ?? 1,
-                IdEstadoPago = estadoPendiente?.IdEstadoPago ?? 1,
-                CulqiChargeId = nuevaSuscripcionId,
-                CodigoOperacion = null
-            };
-
-            await _pagoPlanRepository.AddAsync(pagoPlan);
-            await _pagoPlanRepository.SaveAsync();
-
             var changePlanResponse = new ChangePlanResponseDto
             {
                 IdProveedorPlan = nuevoProveedorPlan.IdProveedorPlan,
@@ -429,7 +369,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             };
 
             response.UpdateData(changePlanResponse);
-            
+
             string mensajeExito;
             if (esPagoUnico)
             {
@@ -453,7 +393,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     : $"Plan cambiado. Saldo a favor: S/ {nuevoSaldoAFavor:F2}.";
                 mensajeExito += " Para activar la renovación automática, agrega una tarjeta desde tu perfil.";
             }
-            
+
             response.AddOkResult(mensajeExito);
 
             return response;
@@ -472,8 +412,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             };
         }
     }
-
-    public class ChangePlanCommandValidator : CommandValidatorBase<ChangePlanCommand>
+     public class ChangePlanCommandValidator : CommandValidatorBase<ChangePlanCommand>
     {
         public ChangePlanCommandValidator()
         {
@@ -499,4 +438,5 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             });
         }
     }
+    
 }
