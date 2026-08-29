@@ -333,7 +333,9 @@ namespace Reserva.Domain.Services.Culqi
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Plan no encontrado: {PlanId}", planId);
+                    _logger.LogWarning("Error al consultar plan {PlanId}. StatusCode: {StatusCode}. Response: {Response}",
+                    planId, response.StatusCode, responseContent);
+
                     return null;
                 }
 
@@ -341,7 +343,7 @@ namespace Reserva.Domain.Services.Culqi
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener plan");
+                _logger.LogError(ex, "Error al consultar plan {PlanId}", planId);
                 return null;
             }
         }

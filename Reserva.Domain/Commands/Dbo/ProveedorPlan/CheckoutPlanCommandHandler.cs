@@ -163,7 +163,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         // Guardar CustomerId en el proveedor
                         proveedor.CulqiCustomerId = customerId;
                         await _proveedorRepository.UpdateAsync(proveedor);
-                        await _proveedorRepository.SaveAsync();
                     }
                     catch (CulqiException ex)
                     {
@@ -267,7 +266,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             culqiPlanId = responsePlan.Id;
                             tarifa.IdPlanCulqi = culqiPlanId;
                             await _tarifaRepository.UpdateAsync(tarifa);
-                            await _tarifaRepository.SaveAsync();
                         }
                     }
                     catch (CulqiException ex)
@@ -383,7 +381,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             await _proveedorPlanRepository.UpdateAsync(pagosAnteriores.ToArray());
 
             await _proveedorPlanRepository.AddAsync(proveedorPlan);
-            await _proveedorPlanRepository.SaveAsync();
 
             string mensajeExito;
             if (esPagoUnico)
