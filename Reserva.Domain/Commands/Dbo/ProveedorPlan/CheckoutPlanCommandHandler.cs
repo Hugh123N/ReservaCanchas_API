@@ -235,8 +235,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 {
                     try
                     {
-                        var existingPlan = await _culqiService.GetPlanAsync(culqiPlanId!);
-                        if (existingPlan == null)
+                        if (string.IsNullOrWhiteSpace(culqiPlanId))
                         {
                             var planRequest = new CulqiCreatePlanRequest
                             {
