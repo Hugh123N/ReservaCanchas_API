@@ -89,7 +89,7 @@ namespace Reserva.Domain.Commands.Dbo.MiEntidad
 
             // 2. Guardar en base de datos
             await _miEntidadRepository.AddAsync(entidad);
-            await _unitOfWork.SaveAsync(cancellationToken);
+            // NO llamar SaveAsync() - UnitOfWork hace commit automático al final
 
             // 3. Mapear respuesta
             var resultado = _mapper.Map<GetMiEntidadDto>(entidad);
@@ -148,7 +148,7 @@ namespace Reserva.Domain.Commands.Dbo.MiEntidad
             // 2. Soft delete (marcar como inactivo)
             entidad.Activo = false;
             await _miEntidadRepository.UpdateAsync(entidad);
-            await _unitOfWork.SaveAsync(cancellationToken);
+            // NO llamar SaveAsync() - UnitOfWork hace commit automático al final
 
             response.AddOkResult("MiEntidad eliminada exitosamente");
             return response;
@@ -251,6 +251,29 @@ Los CommandHandlers ejecutan automáticamente en transacción:
 - Reintentos automáticos en caso de `DbUpdateConcurrencyException` (3 intentos)
 
 **NO crear transacciones manuales** a menos que sea absolutamente necesario.
+
+---
+
+### ⚠️ REGLA DE ORO: **NO llamar `SaveAsync()` en CommandHandlers**
+
+El `CommandHandlerBase` usa `UnitOfWork.ExecuteInTransactionAsync` que maneja la transacción completa. **Si llamas `SaveAsync()` (o `_unitOfWork.SaveAsync()`):**
+
+1. Ejecuta `SaveChangesAsync()` directo → se ve el SQL en logs
+2. Si hay **excepción posterior** en el handler → `UnitOfWork` hace **rollback**
+3. **Cambios perdidos** → campos como `culqiCustomerId` quedan `NULL` en BD
+
+**Correcto:** Solo usar `AddAsync()`, `UpdateAsync()`, `DeleteAsync()` en repositories. El commit lo hace el `UnitOfWork` al final.
+
+```csharp
+// ❌ INCORRECTO - Pierde cambios si hay error después
+await _repo.UpdateAsync(entity);
+await _repo.SaveAsync();        // NO HACER
+await _unitOfWork.SaveAsync();  // TAMPOCO HACER
+
+// ✅ CORRECTO - UnitOfWork hace commit al final
+await _repo.UpdateAsync(entity);
+// Sin SaveAsync()
+```
 
 ---
 

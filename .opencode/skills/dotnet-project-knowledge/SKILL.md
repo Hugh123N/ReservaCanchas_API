@@ -164,12 +164,12 @@ await _repository.FindByAsync(x => x.Activo);
 await _repository.SearchByAsync(page, pageSize, sort, filter);
 
 // Crear
-await _repository.AddAsync(entidad);
-await _repository.SaveAsync();
+            await _repository.AddAsync(entidad);
+            // NO SaveAsync() - UnitOfWork hace commit automático en CommandHandlers
 
-// Actualizar
-await _repository.UpdateAsync(entidad);
-await _repository.SaveAsync();
+            // Actualizar
+            await _repository.UpdateAsync(entidad);
+            // NO SaveAsync() - UnitOfWork hace commit automático en CommandHandlers
 ```
 
 ### 4. Auditoría Automática
@@ -193,6 +193,29 @@ Los `CommandHandlers` ejecutan automáticamente en transacción vía `UnitOfWork
 - Reintentos automáticos en caso de conflictos de concurrencia (3 intentos)
 
 **NO crear transacciones manuales** a menos que sea absolutamente necesario.
+
+---
+
+### ⚠️ REGLA DE ORO: **NO llamar `SaveAsync()` en CommandHandlers**
+
+El `CommandHandlerBase` usa `UnitOfWork.ExecuteInTransactionAsync` que maneja la transacción completa. **Si llamas `SaveAsync()` (o `_unitOfWork.SaveAsync()`):**
+
+1. Ejecuta `SaveChangesAsync()` directo → se ve el SQL en logs
+2. Si hay **excepción posterior** en el handler → `UnitOfWork` hace **rollback**
+3. **Cambios perdidos** → campos como `culqiCustomerId` quedan `NULL` en BD
+
+**Correcto:** Solo usar `AddAsync()`, `UpdateAsync()`, `DeleteAsync()` en repositories. El commit lo hace el `UnitOfWork` al final.
+
+```csharp
+// ❌ INCORRECTO - Pierde cambios si hay error después
+await _repo.UpdateAsync(entity);
+await _repo.SaveAsync();        // NO HACER
+await _unitOfWork.SaveAsync();  // TAMPOCO HACER
+
+// ✅ CORRECTO - UnitOfWork hace commit al final
+await _repo.UpdateAsync(entity);
+// Sin SaveAsync()
+```
 
 ---
 

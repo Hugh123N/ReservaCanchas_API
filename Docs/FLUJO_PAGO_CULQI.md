@@ -261,7 +261,7 @@ if (string.IsNullOrEmpty(customerId))
     // Guardar en la base de datos
     proveedor.CulqiCustomerId = customerId;
     await _proveedorRepository.UpdateAsync(proveedor);
-    await _proveedorRepository.SaveAsync();
+    // NO SaveAsync() - UnitOfWork hace commit automático en CommandHandlers
 }
 ```
 
@@ -338,7 +338,7 @@ var proveedorPlan = new Entity.ProveedorPlan
 };
 
 await _proveedorPlanRepository.AddAsync(proveedorPlan);
-await _proveedorPlanRepository.SaveAsync();
+// NO SaveAsync() - UnitOfWork hace commit automático en CommandHandlers
 ```
 
 ### FASE 3: Webhook - Confirmación Automática

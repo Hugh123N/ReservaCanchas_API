@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Reserva.Domain.Services.Culqi
@@ -38,7 +39,7 @@ namespace Reserva.Domain.Services.Culqi
         public CulqiWebhookData Data { get; set; } = null!;
     }
 
-    public class CulqiWebhookData
+    public class CulqiWebhookDataTest
     {
         /// <summary>
         /// ID del objeto (charge_id, order_id, etc.)
@@ -50,7 +51,7 @@ namespace Reserva.Domain.Services.Culqi
         /// Tipo de objeto (charge, order, etc.)
         /// </summary>
         [JsonPropertyName("object")]
-        public string Object { get; set; } = null!;
+        public string? Object { get; set; } = null!;
 
         /// <summary>
         /// Monto en centavos
@@ -129,5 +130,62 @@ namespace Reserva.Domain.Services.Culqi
         /// </summary>
         [JsonPropertyName("id")]
         public string? Id { get; set; }
+    }
+
+
+    public class CulqiWebhookData
+    {
+        [JsonPropertyName("message")]
+        public CulqiWebhookMessage Message { get; set; } = null!;
+    }
+
+    public class CulqiWebhookMessage
+    {
+        [JsonPropertyName("object")]
+        public JsonElement Object { get; set; }
+    }
+
+    public class CulqiSubscriptionWebhookObject
+    {
+        [JsonPropertyName("planId")]
+        public string? PlanId { get; set; }
+
+        [JsonPropertyName("subsId")]
+        public string? SubsId { get; set; }
+
+        [JsonPropertyName("merchantId")]
+        public string? MerchantId { get; set; }
+
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
+    }
+
+    public class CulqiChargeWebhookObject
+    {
+
+        [JsonPropertyName("charId")]
+        public string? CharId { get; set; }
+
+        [JsonPropertyName("subsId")]
+        public string? SubsId { get; set; }
+
+        [JsonPropertyName("amount")]
+        public int? Amount { get; set; }
+
+        [JsonPropertyName("reference_code")]
+        public string? ReferenceCode { get; set; }
+
+        [JsonPropertyName("currency_code")]
+        public string? CurrencyCode { get; set; }
+
+        [JsonPropertyName("next_billing_date")]
+        public long? NextBillingDate { get; set; }
+
+
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
+
+        [JsonPropertyName("metadata")]
+        public Dictionary<string, string>? Metadata { get; set; }
     }
 }

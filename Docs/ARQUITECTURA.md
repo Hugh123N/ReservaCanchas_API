@@ -503,6 +503,29 @@ Todos los comandos (create, update, delete) estan envueltos automaticamente en u
 
 ---
 
+### ⚠️ REGLA DE ORO: **NO llamar `SaveAsync()` en CommandHandlers**
+
+**Por qué:** El `CommandHandlerBase` usa `UnitOfWork.ExecuteInTransactionAsync` que maneja la transacción completa. Si llamas `SaveAsync()` (que hace `SaveChangesAsync()` directo en el DbContext):
+
+1. Se ejecuta el UPDATE/INSERT en BD (se ve en logs)
+2. Pero si hay **cualquier excepción posterior** en el handler
+3. El `UnitOfWork` hace **rollback automático** → **los cambios se pierden**
+4. Resultado: campos como `culqiCustomerId` quedan `NULL` en BD
+
+**Correcto:** Solo usar `AddAsync()`, `UpdateAsync()`, `DeleteAsync()` en repositories. El commit lo hace el `UnitOfWork` al final de la transacción.
+
+```csharp
+// ❌ INCORRECTO - Pierde cambios si hay error después
+await _proveedorRepository.UpdateAsync(proveedor);
+await _proveedorRepository.SaveAsync();  // NO HACER ESTO
+
+// ✅ CORRECTO - UnitOfWork hace commit al final
+await _proveedorRepository.UpdateAsync(proveedor);
+// NO llamar SaveAsync()
+```
+
+---
+
 ## 6. EJEMPLO COMPLETO: NEGOCIO DE CANCHA
 
 A continuacion se muestra el flujo completo de **crear una cancha**, desde el endpoint hasta la base de datos.

@@ -143,7 +143,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             };
 
             await _pagoPlanRepository.AddAsync(pagoPlan);
-            await _pagoPlanRepository.SaveAsync();
 
             _logger.LogInformation("Pago registrado para ProveedorPlan {IdProveedorPlan}. Culqi procesará el cobro automáticamente.", proveedorPlan.IdProveedorPlan);
 

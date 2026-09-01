@@ -1236,6 +1236,30 @@ activo          → false = soft delete (registro existe pero no se usa)
 
 ---
 
+### ⚠️ REGLA CRÍTICA: **NO llamar `SaveAsync()` en CommandHandlers**
+
+El `CommandHandlerBase` ejecuta todo dentro de `UnitOfWork.ExecuteInTransactionAsync`. **Si llamas `SaveAsync()` en un repository:**
+
+1. Hace `SaveChangesAsync()` directo → se ejecuta SQL (se ve en logs)
+2. Si hay **excepción posterior** en el handler → `UnitOfWork` hace **rollback**
+3. **Cambios perdidos** → campos como `culqiCustomerId` quedan `NULL`
+
+**Correcto:** Solo `AddAsync()`, `UpdateAsync()`, `DeleteAsync()`. El commit lo hace el UnitOfWork al final.
+
+```csharp
+// ❌ INCORRECTO - Pierde cambios
+await _repo.UpdateAsync(entity);
+await _repo.SaveAsync();  // NO HACER
+
+// ✅ CORRECTO
+await _repo.UpdateAsync(entity);
+// Sin SaveAsync()
+```
+
+---
+
+## 15. PENDIENTES DE IMPLEMENTACION
+
 ## 15. PENDIENTES DE IMPLEMENTACION
 
 ### Backend no conectado (datos mockeados en frontend)

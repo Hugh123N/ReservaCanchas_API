@@ -260,15 +260,14 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 
             // Configuración del plan Culqi según código de tarifa
             var (culqiInterval, culqiIntervalCount, shouldCreateCulqiPlan) = GetCulqiPlanConfig(nuevaTarifa);
-            string? nuevoCulqiPlanId = null;
+            string? nuevoCulqiPlanId = nuevaTarifa.IdPlanCulqi;
 
             // Crear plan Culqi solo si es suscripción con tarjeta
             if (esPagoConTarjeta && shouldCreateCulqiPlan)
             {
                 try
                 {
-                    var existingPlan = await _culqiService.GetPlanAsync(nuevoCulqiPlanId);
-                    if (existingPlan == null)
+                    if (string.IsNullOrWhiteSpace(nuevoCulqiPlanId))
                     {
                         var planRequest = new CulqiCreatePlanRequest
                         {
@@ -297,7 +296,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         nuevoCulqiPlanId = responsePlan.Id;
                         nuevaTarifa.IdPlanCulqi = nuevoCulqiPlanId;
                         await _tarifaRepository.UpdateAsync(nuevaTarifa);
-                        await _tarifaRepository.SaveAsync();
                     }
                 }
                 catch (CulqiException ex)
@@ -359,7 +357,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             };
 
             await _proveedorPlanRepository.AddAsync(nuevoProveedorPlan);
-            await _proveedorPlanRepository.SaveAsync();
 
             var changePlanResponse = new ChangePlanResponseDto
             {

@@ -361,23 +361,14 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
                 FechaProximoCobro = fechaProximoCobro,
-                // Estado: ACTIVE para pagos directos (único o Yape), PENDING solo para suscripción con tarjeta
-                Estado = esSuscripcionConTarjeta ? Constants.ESTADO_PROV_PLAN.PENDING : Constants.ESTADO_PROV_PLAN.ACTIVE,
+                Estado = Constants.ESTADO_PROV_PLAN.PENDING,
                 // AutoRenovacion: true solo si hay tarjeta y plan lo permite
                 AutoRenovacion = esSuscripcionConTarjeta && (tarifa.PermiteAutoRenovacion ?? false),
-                EsActual = true,
                 CulqiSubscriptionId = culqiSubscriptionId, // null para pagos únicos y Yape en suscripción
-                CulqiCustomerId = customerId,
-                GracePeriodHasta = null
+                CulqiCustomerId = customerId
             };
 
-            var pagosAnteriores = await _proveedorPlanRepository.FindByAsync(x => x.IdProveedor == dto.IdProveedor && x.EsActual && x.Activo);
-            foreach (var pp in pagosAnteriores)
-            {
-                pp.EsActual = false;
-            }
-
-            await _proveedorPlanRepository.UpdateAsync(pagosAnteriores.ToArray());
+            
 
             await _proveedorPlanRepository.AddAsync(proveedorPlan);
 
