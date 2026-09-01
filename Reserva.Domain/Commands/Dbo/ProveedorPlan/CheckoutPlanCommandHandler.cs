@@ -50,8 +50,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             var response = new ResponseDto();
             var dto = request.CheckoutDto;
 
-            _logger.LogInformation("Request de checkout: {dto}", dto);
-
             var tarifa = await _tarifaRepository.GetByAsync(x => x.IdPlanTarifa == dto.IdPlanTarifa, x => x.IdPlaneNavigation);
             if (tarifa == null)
             {

@@ -133,7 +133,9 @@ namespace Reserva.Domain.Services.Culqi
     }
 
 
-    public class CulqiWebhookData
+
+
+    public class CulqiSuscriptionWebhookData
     {
         [JsonPropertyName("message")]
         public CulqiWebhookMessage Message { get; set; } = null!;
