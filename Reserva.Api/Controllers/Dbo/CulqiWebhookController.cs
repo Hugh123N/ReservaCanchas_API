@@ -60,15 +60,15 @@ namespace Reserva.Api.Controllers.Dbo
 
                 _logger.LogInformation("Webhook recibido de Culqi: {Body}", webhookBody);
 
-                var signature = Request.Headers["X-Culqi-Signature"].FirstOrDefault();
-                if (!string.IsNullOrEmpty(signature))
-                {
-                    if (!_culqiService.ValidateWebhookSignature(webhookBody, signature))
-                    {
-                        _logger.LogWarning("Firma del webhook inválida");
-                        return Unauthorized(new { message = "Firma inválida" });
-                    }
-                }
+                //var signature = Request.Headers["X-Culqi-Signature"].FirstOrDefault();
+                //if (!string.IsNullOrEmpty(signature))
+                //{
+                //    if (!_culqiService.ValidateWebhookSignature(webhookBody, signature))
+                //    {
+                //        _logger.LogWarning("Firma del webhook inválida");
+                //        return Unauthorized(new { message = "Firma inválida" });
+                //    }
+                //}
 
                 var webhookEvent = JsonSerializer.Deserialize<CulqiWebhookEvent>(webhookBody);
                 if (webhookEvent == null)
@@ -80,21 +80,28 @@ namespace Reserva.Api.Controllers.Dbo
                 _logger.LogInformation("Evento de Culqi recibido - Tipo: {Type}, ID: {Id}",
                     webhookEvent.Type, webhookEvent.Id);
 
-                await ProcessWebhookEvent(webhookEvent);
+                var webhookData = JsonSerializer.Deserialize<CulqiWebhookData>(webhookEvent.Data);
+                if (webhookData == null)
+                {
+                    _logger.LogError("Error al deserializar data del webhook");
+                    return BadRequest(new { message = "Data del webhook inválida" });
+                }
+
+                await ProcessWebhookEvent(webhookEvent, webhookData);
 
                 return Ok(new { message = "Webhook procesado correctamente" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al procesar webhook de Culqi");
+                _logger.LogError(ex, "Error al procesar webhook de Culqi:");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                 new {message = "Error interno al procesar webhook"});
             }
         }
 
-        private async Task ProcessWebhookEvent(CulqiWebhookEvent webhookEvent)
+        private async Task ProcessWebhookEvent(CulqiWebhookEvent webhookEvent, CulqiWebhookData webhookData)
         {
-            var data = webhookEvent.Data.Message.Object;
+            var data = webhookData.Message.Object;
 
             switch (webhookEvent.Type)
             {

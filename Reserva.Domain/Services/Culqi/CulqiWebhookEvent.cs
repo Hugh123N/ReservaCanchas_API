@@ -9,16 +9,16 @@ namespace Reserva.Domain.Services.Culqi
     public class CulqiWebhookEvent
     {
         /// <summary>
-        /// ID del evento
-        /// </summary>
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = null!;
-
-        /// <summary>
         /// Tipo de objeto (event)
         /// </summary>
         [JsonPropertyName("object")]
         public string Object { get; set; } = null!;
+
+        /// <summary>
+        /// ID del evento
+        /// </summary>
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = null!;
 
         /// <summary>
         /// Tipo de evento (charge.succeeded, order.status.changed, etc.)
@@ -36,7 +36,7 @@ namespace Reserva.Domain.Services.Culqi
         /// Datos del evento (puede ser charge, order, etc.)
         /// </summary>
         [JsonPropertyName("data")]
-        public CulqiWebhookData Data { get; set; } = null!;
+        public string Data { get; set; } = null!;
     }
 
     public class CulqiWebhookDataTest
