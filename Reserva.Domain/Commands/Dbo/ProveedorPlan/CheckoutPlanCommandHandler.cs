@@ -182,6 +182,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         var oldProveedorPlan = await _proveedorPlanRepository.GetByAsync(
                             x => x.IdProveedor == dto.IdProveedor
                                 && x.Activo
+                                && x.EsActual
                                 && x.Estado != Constants.ESTADO_PROV_PLAN.CANCELLED
                                 && !string.IsNullOrEmpty(x.CulqiSubscriptionId),
                             x => x.IdPlaneNavigation
@@ -216,8 +217,8 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                             // Marcar el ProveedorPlan anterior como inactivo
                             if (oldProveedorPlan != null)
                             {
-                                oldProveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
-                                oldProveedorPlan.EsActual = false;
+                                oldProveedorPlan.CancelAtPeriodEnd = false;
+                                oldProveedorPlan.MotivoCancelacion = "Cancelado por cambio de suscription a otro plan.";
                                 await _proveedorPlanRepository.UpdateAsync(oldProveedorPlan);
                             }
                         }

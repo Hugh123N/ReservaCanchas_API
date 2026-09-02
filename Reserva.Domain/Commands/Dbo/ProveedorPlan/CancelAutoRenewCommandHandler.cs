@@ -63,12 +63,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 }
             }
 
-            // Actualizar estado local
             // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
-            proveedorPlan.AutoRenovacion = false;
             proveedorPlan.CancelAtPeriodEnd = true;
-            proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
-            proveedorPlan.MotivoCancelacion = "Cancelado por el proveedor";
+            proveedorPlan.MotivoCancelacion = "Cancelado Autorenovacion por el proveedor.";
 
             await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
             await _proveedorPlanRepository.SaveAsync();

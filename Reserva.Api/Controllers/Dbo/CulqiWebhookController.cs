@@ -114,8 +114,7 @@ namespace Reserva.Api.Controllers.Dbo
                 case "subscription.creation.succeeded":
                 case "subscription.update.succeeded":
                 case "subscription.cancel.succeeded":
-                case "subscription.charge.succeeded":
-                case "subscription.charge.failed":
+                case "subscription.cancel.failed":
                     
                     await HandleSubscriptionEvent(data, webhookEvent.Type);
                     break;
@@ -127,7 +126,7 @@ namespace Reserva.Api.Controllers.Dbo
         }
 
         private async Task HandleChargeSucceeded(string data)
-        {
+        {// proceso yape y suscription, falta renovacion automatica.
             var charge = JsonSerializer.Deserialize<CulqiChargeWebhookDto>(data);
 
             _logger.LogInformation("Procesando pago exitoso - ChargeId: {Id}", charge.Id);
@@ -346,33 +345,37 @@ namespace Reserva.Api.Controllers.Dbo
             {
                 case "subscription.created.succeeded":
                     _logger.LogInformation("Suscripción creada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
-                    
                     break;
-
                 case "subscription.updated.succeeded":
-                    
-                    await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
-                    await _proveedorPlanRepository.SaveAsync();
-                    
+                    _logger.LogInformation("Suscripción Actualizada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
+                    //await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
+                    //await _proveedorPlanRepository.SaveAsync();
                     break;
-
                 case "subscription.cancel.succeeded":
-                    // La suscripción fue cancelada en Culqi
                     // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
+                    if (proveedorPlan.CancelAtPeriodEnd) { 
+                        proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.ACTIVE;
+                        proveedorPlan.EsActual = true;
+                    }
+                    else { 
+                        proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
+                        proveedorPlan.EsActual = false;
+                    }
                     proveedorPlan.AutoRenovacion = false;
-                    proveedorPlan.CancelAtPeriodEnd = true;
                     proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
-                    proveedorPlan.MotivoCancelacion = "Cancelado en Culqi";
                     await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
                     await _proveedorPlanRepository.SaveAsync();
                     _logger.LogInformation("Suscripción cancelada en Culqi para ProveedorPlan {Id}. Plan permanece activo hasta {FechaFin}", 
                         proveedorPlan.IdProveedorPlan, proveedorPlan.FechaFin);
                     break;
+                case "subscription.cancel.failed":
+                    // revertir los cambios hecos en Cancel autorenew o cancel para cambio de plan.
+                    proveedorPlan.CancelAtPeriodEnd = false;
 
-                case "subscription.charge.succeeded":
-                    _logger.LogInformation("Suscripción pagado para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
-
-                    await HandlePlanPaymentSucceeded(proveedor, data.CharId, data.ReferenceCode!, data.NextBillingDate);
+                    await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
+                    await _proveedorPlanRepository.SaveAsync();
+                    _logger.LogInformation("Suscripción no se pudo cancelar en Culqi para ProveedorPlan {Id}.",
+                        proveedorPlan.IdProveedorPlan);
                     break;
             }
         }
