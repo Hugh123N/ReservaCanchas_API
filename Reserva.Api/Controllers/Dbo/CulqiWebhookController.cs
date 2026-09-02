@@ -185,15 +185,9 @@ namespace Reserva.Api.Controllers.Dbo
 
             var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pagado);
 
-            var pagosAnteriores = await _proveedorPlanRepository.FindByAsync(x => x.IdProveedor == proveedor.IdProveedor && x.EsActual && x.Activo);
-            foreach (var pp in pagosAnteriores)
-            {
-                pp.EsActual = false;
-            }
-            await _proveedorPlanRepository.UpdateAsync(pagosAnteriores.ToArray());
-
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
-                pp => pp.IdProveedor == proveedor.IdProveedor && pp.Activo && (pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
+                pp => pp.IdProveedor == proveedor.IdProveedor && pp.Activo && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
+                        || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
                 pp => pp.IdPlanTarifaNavigation
             );
 
@@ -216,7 +210,7 @@ namespace Reserva.Api.Controllers.Dbo
             proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.ACTIVE;
             proveedorPlan.EsActual = true;
 
-            // Actualizar FechaFin y FechaProximoCobro si Culqi provee next_billing_date
+            // Actualizar FechaFin y FechaProximoCobro si Culqi provee next_billing_date y es autonew
             if (nextBillingDate.HasValue)
             {
                 var nuevoFin = DateTimeOffset.FromUnixTimeSeconds(nextBillingDate.Value);
