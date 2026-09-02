@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Reserva.Domain.Services.Culqi
+namespace Reserva.Domain.Services.Culqi.Webhook
 {
     /// <summary>
     /// Información principal del Charge recibido desde Culqi.
@@ -95,6 +95,12 @@ namespace Reserva.Domain.Services.Culqi
         /// </summary>
         [JsonPropertyName("id")]
         public string Id { get; set; } = null!;
+
+        /// <summary>
+        /// Id de Cliente registrado
+        /// </summary>
+        [JsonPropertyName("customerId")]
+        public string? CustomerId { get; set; }
 
         /// <summary>
         /// Tipo informado por Culqi.

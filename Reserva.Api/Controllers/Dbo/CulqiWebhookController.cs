@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Services.Culqi;
+using Reserva.Domain.Services.Culqi.Webhook;
 using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Entity;
@@ -131,10 +132,19 @@ namespace Reserva.Api.Controllers.Dbo
 
             _logger.LogInformation("Procesando pago exitoso - ChargeId: {Id}", charge.Id);
 
-            var proveedorId = int.Parse(charge.Metadata?["proveedor_id"]);
+            int? proveedorId = null;
+
+            if (charge.Metadata != null && charge.Metadata.TryGetValue("proveedor_id", out var proveedorIdStr) &&
+                int.TryParse(proveedorIdStr, out var parsedProveedorId))
+            {
+                proveedorId = parsedProveedorId;
+            }
+
+            var idCustomer = charge.Source.CustomerId;
 
             var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                p => p.IdProveedor == proveedorId,
+                p => proveedorId.HasValue ? p.IdProveedor == proveedorId.Value
+                    : p.CulqiCustomerId == idCustomer,
                 p => p.IdUsuarioNavigation
             );
 
@@ -239,24 +249,25 @@ namespace Reserva.Api.Controllers.Dbo
 
         private async Task HandleChargeFailed(string dataEvent)
         {
-            var charge = JsonSerializer.Deserialize<CulqiChargeWebhookObject>(dataEvent);
+            var data = JsonSerializer.Deserialize<CulqiChargeFailedWebhookDto>(dataEvent);
 
-            _logger.LogInformation("Procesando pago fallido - ChargeId: {ChargeId}", charge.CharId);
+            _logger.LogInformation("Procesando pago fallido - ChargeId: {UserMessage} probandoooo: ", data.UserMessage);
 
             // Buscar ProveedorPlan: primero por metadata, luego por subscription
-            var proveedorPlan = await FindProveedorPlanForCharge(1);
+            //var proveedorPlan = await FindProveedorPlanForCharge(1);
 
-            if (proveedorPlan != null)
-            {
-                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                    p => p.IdProveedor == proveedorPlan.IdProveedor,
-                    p => p.IdUsuarioNavigation
-                );
-                await HandlePlanPaymentFailed(proveedorPlan, proveedor, charge);
-                return;
-            }
+            //if (proveedorPlan != null)
+            //{
+            //    var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
+            //        p => p.IdProveedor == proveedorPlan.IdProveedor,
+            //        p => p.IdUsuarioNavigation
+            //    );
+            //    await HandlePlanPaymentFailed(proveedorPlan, proveedor, data);
+            //    return;
+            //}
 
-            _logger.LogWarning("ProveedorPlan no encontrado para ChargeId fallido: {ChargeId}", charge.CharId);
+            _logger.LogWarning("ProveedorPlan no encontrado con ActionCode fallido: {ActionCode}", data.ActionCode);
+            return;
         }
 
         private async Task HandlePlanPaymentFailed(ProveedorPlan proveedorPlan, Entity.Proveedor? proveedor, CulqiChargeWebhookObject data)

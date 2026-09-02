@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Reserva.Domain.Services.Culqi
+namespace Reserva.Domain.Services.Culqi.Webhook
 {
     public class CulqiSuscriptionWebhookDto
     {
