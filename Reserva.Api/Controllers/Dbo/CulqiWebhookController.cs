@@ -133,20 +133,13 @@ namespace Reserva.Api.Controllers.Dbo
 
             var proveedorId = int.Parse(charge.Metadata?["proveedor_id"]);
 
-            // Buscar ProveedorPlan: primero por subscription ID, luego por metadata
-            var proveedorPlan = await FindProveedorPlanForCharge(proveedorId);
+            var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
+                p => p.IdProveedor == proveedorId,
+                p => p.IdUsuarioNavigation
+            );
 
-            if (proveedorPlan != null)
-            {
-                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                    p => p.IdProveedor == proveedorPlan.IdProveedor,
-                    p => p.IdUsuarioNavigation
-                );
-                await HandlePlanPaymentSucceeded(proveedorPlan, proveedor, charge.Id, charge.ReferenceCode!, null);
-                return;
-            }
-
-            _logger.LogWarning("ProveedorPlan no encontrado para ChargeId: {ChargeId}", charge.Id);
+            await HandlePlanPaymentSucceeded(proveedor, proveedorId, charge.Id, charge.ReferenceCode!, null);
+            return;
         }
 
         private async Task<ProveedorPlan?> FindProveedorPlanForCharge(int? idProveedor)
@@ -177,10 +170,9 @@ namespace Reserva.Api.Controllers.Dbo
             return null;
         }
 
-        private async Task HandlePlanPaymentSucceeded(ProveedorPlan proveedorPlan, Entity.Proveedor? proveedor, string charId, string referenceCode, long? nextBillingDate)
+        private async Task HandlePlanPaymentSucceeded(Entity.Proveedor? proveedor, int idProveedor, string charId, string referenceCode, long? nextBillingDate)
         {
-            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}",
-                proveedorPlan.IdProveedorPlan, charId);
+            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}", idProveedor, charId);
 
             var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pagado);
 
@@ -190,6 +182,11 @@ namespace Reserva.Api.Controllers.Dbo
                 pp.EsActual = false;
             }
             await _proveedorPlanRepository.UpdateAsync(pagosAnteriores.ToArray());
+
+            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                pp => pp.IdProveedor == idProveedor && pp.Activo && (pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
+                pp => pp.IdPlanTarifaNavigation
+            );
 
             var pagoPlan = new Entity.PagoPlan
             {
@@ -394,7 +391,7 @@ namespace Reserva.Api.Controllers.Dbo
                 );
                 if (data.State == "paid" || data.State == "paid_out")
                 {
-                    await HandlePlanPaymentSucceeded(proveedorPlan, proveedor, "", "",54346643);
+                    await HandlePlanPaymentSucceeded(proveedor, 1, "", "",54346643);
                 }
                 else if (data.State == "expired" || data.State == "deleted")
                 {
