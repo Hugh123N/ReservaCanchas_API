@@ -133,35 +133,6 @@ namespace Reserva.Domain.Services.Culqi
     }
 
 
-
-
-    public class CulqiSuscriptionWebhookData
-    {
-        [JsonPropertyName("message")]
-        public CulqiWebhookMessage Message { get; set; } = null!;
-    }
-
-    public class CulqiWebhookMessage
-    {
-        [JsonPropertyName("object")]
-        public JsonElement Object { get; set; }
-    }
-
-    public class CulqiSubscriptionWebhookObject
-    {
-        [JsonPropertyName("planId")]
-        public string? PlanId { get; set; }
-
-        [JsonPropertyName("subsId")]
-        public string? SubsId { get; set; }
-
-        [JsonPropertyName("merchantId")]
-        public string? MerchantId { get; set; }
-
-        [JsonPropertyName("email")]
-        public string? Email { get; set; }
-    }
-
     public class CulqiChargeWebhookObject
     {
 

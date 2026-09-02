@@ -138,7 +138,7 @@ namespace Reserva.Api.Controllers.Dbo
                 p => p.IdUsuarioNavigation
             );
 
-            await HandlePlanPaymentSucceeded(proveedor, proveedorId, charge.Id, charge.ReferenceCode!, null);
+            await HandlePlanPaymentSucceeded(proveedor, charge.Id, charge.ReferenceCode!, null);
             return;
         }
 
@@ -170,9 +170,9 @@ namespace Reserva.Api.Controllers.Dbo
             return null;
         }
 
-        private async Task HandlePlanPaymentSucceeded(Entity.Proveedor? proveedor, int idProveedor, string charId, string referenceCode, long? nextBillingDate)
+        private async Task HandlePlanPaymentSucceeded(Entity.Proveedor? proveedor, string charId, string referenceCode, long? nextBillingDate)
         {
-            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}", idProveedor, charId);
+            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}", proveedor.IdProveedor, charId);
 
             var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pagado);
 
@@ -184,7 +184,7 @@ namespace Reserva.Api.Controllers.Dbo
             await _proveedorPlanRepository.UpdateAsync(pagosAnteriores.ToArray());
 
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
-                pp => pp.IdProveedor == idProveedor && pp.Activo && (pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
+                pp => pp.IdProveedor == proveedor.IdProveedor && pp.Activo && (pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
                 pp => pp.IdPlanTarifaNavigation
             );
 
@@ -309,7 +309,8 @@ namespace Reserva.Api.Controllers.Dbo
 
         private async Task HandleSubscriptionEvent(string dataEvento, string eventType)
         {
-            var data = JsonSerializer.Deserialize<CulqiSubscriptionWebhookObject>(dataEvento);
+            var response = JsonSerializer.Deserialize<CulqiSuscriptionWebhookDto>(dataEvento);
+            var data = response.Message.Object;
 
             _logger.LogInformation("Procesando evento de suscripción: {EventType} - SubscriptionId: {SubscriptionId}",
                 eventType, data.SubsId);
@@ -327,17 +328,13 @@ namespace Reserva.Api.Controllers.Dbo
             }
 
             var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                p => p.IdProveedor == proveedorPlan.IdProveedor,
-                p => p.IdUsuarioNavigation
+                p => p.IdProveedor == proveedorPlan.IdProveedor
             );
 
             switch (eventType)
             {
                 case "subscription.created.succeeded":
                     _logger.LogInformation("Suscripción creada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
-
-                    //var data = dataEvent.Deserialize<CulqiSubscriptionWebhookData>();
-
                     
                     break;
 
@@ -364,10 +361,7 @@ namespace Reserva.Api.Controllers.Dbo
                 case "subscription.charge.succeeded":
                     _logger.LogInformation("Suscripción pagado para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
 
-                    proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.ACTIVE;
-                    proveedorPlan.EsActual = true;
-                    await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
-                    await _proveedorPlanRepository.SaveAsync();
+                    await HandlePlanPaymentSucceeded(proveedor, data.CharId, data.ReferenceCode!, data.NextBillingDate);
                     break;
             }
         }
@@ -391,7 +385,7 @@ namespace Reserva.Api.Controllers.Dbo
                 );
                 if (data.State == "paid" || data.State == "paid_out")
                 {
-                    await HandlePlanPaymentSucceeded(proveedor, 1, "", "",54346643);
+                    await HandlePlanPaymentSucceeded(proveedor, "", "",54346643);
                 }
                 else if (data.State == "expired" || data.State == "deleted")
                 {
