@@ -102,23 +102,14 @@ namespace Reserva.Api.Controllers.Dbo
                 case "charge.creation.succeeded":
                     await HandleChargeSucceeded(data);
                     break;
-
                 case "charge.creation.failed":
                     await HandleChargeFailed(data);
                     break;
-
-                case "order.status.changed":
-                    await HandleOrderStatusChanged(data);
-                    break;
-
                 case "subscription.creation.succeeded":
-                case "subscription.update.succeeded":
                 case "subscription.cancel.succeeded":
                 case "subscription.cancel.failed":
-                    
                     await HandleSubscriptionEvent(data, webhookEvent.Type);
                     break;
-
                 default:
                     _logger.LogInformation("Evento de Culqi no manejado: {Type}", webhookEvent.Type);
                     break;  
@@ -244,7 +235,7 @@ namespace Reserva.Api.Controllers.Dbo
         {
             var data = JsonSerializer.Deserialize<CulqiChargeFailedWebhookDto>(dataEvent);
 
-            _logger.LogInformation("Procesando pago fallido - ChargeId: {UserMessage} probandoooo: ", data.UserMessage);
+            _logger.LogInformation("Procesando pago fallido - ChargeId: {ChargeId} probandoooo: ", data.ChargeId);
 
             // Buscar ProveedorPlan: primero por metadata, luego por subscription
             //var proveedorPlan = await FindProveedorPlanForCharge(1);
@@ -340,11 +331,6 @@ namespace Reserva.Api.Controllers.Dbo
                 case "subscription.created.succeeded":
                     _logger.LogInformation("Suscripción creada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
                     break;
-                case "subscription.updated.succeeded":
-                    _logger.LogInformation("Suscripción Actualizada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
-                    //await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
-                    //await _proveedorPlanRepository.SaveAsync();
-                    break;
                 case "subscription.cancel.succeeded":
                     // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
                     if (proveedorPlan.CancelAtPeriodEnd) { 
@@ -357,8 +343,10 @@ namespace Reserva.Api.Controllers.Dbo
                     }
                     proveedorPlan.AutoRenovacion = false;
                     proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
+
                     await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
                     await _proveedorPlanRepository.SaveAsync();
+
                     _logger.LogInformation("Suscripción cancelada en Culqi para ProveedorPlan {Id}. Plan permanece activo hasta {FechaFin}", 
                         proveedorPlan.IdProveedorPlan, proveedorPlan.FechaFin);
                     break;
@@ -373,38 +361,7 @@ namespace Reserva.Api.Controllers.Dbo
                     break;
             }
         }
-
-        private async Task HandleOrderStatusChanged(string dataEvent)
-        {
-            var data = JsonSerializer.Deserialize<CulqiWebhookDataTest>(dataEvent);
-            var datatest = JsonSerializer.Deserialize<CulqiChargeWebhookObject>(dataEvent);
-
-            _logger.LogInformation("Procesando cambio de estado de orden - OrderId: {OrderId}, Estado: {State}",
-                data.Id, data.State);
-
-            // Buscar ProveedorPlan por metadata
-            var proveedorPlan = await FindProveedorPlanForCharge(1);
-
-            if (proveedorPlan != null)
-            {
-                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                    p => p.IdProveedor == proveedorPlan.IdProveedor,
-                    p => p.IdUsuarioNavigation
-                );
-                if (data.State == "paid" || data.State == "paid_out")
-                {
-                    await HandlePlanPaymentSucceeded(proveedor, "", "",54346643);
-                }
-                else if (data.State == "expired" || data.State == "deleted")
-                {
-                    await HandlePlanPaymentFailed(proveedorPlan, proveedor, datatest);
-                }
-                return;
-            }
-
-            _logger.LogWarning("ProveedorPlan no encontrado para OrderId: {OrderId}", data.Id);
-        }
-
+        
         [HttpGet("webhook/test")]
         public IActionResult TestWebhook()
         {
