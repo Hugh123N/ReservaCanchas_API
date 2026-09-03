@@ -81,6 +81,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             string? customerId = null;
             string? culqiSubscriptionId = null;
             string? culqiChargeId = null;
+            string? oldSubscriptionId = null;
 
             if (esPagoUnico)
             {
@@ -171,8 +172,10 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                     }
                 }
 
-                // Paso 1.5: Si es pago con tarjeta, actualizar tarjeta y cancelar suscripción anterior
-                var oldSubscriptionId = (string?)null;
+                // Paso 1.5: Si es pago con tarjeta, actualizar tarjeta y guardar referencia de suscripción anterior
+                // NOTA: NO cancelamos la suscripción anterior inmediatamente.
+                // Se cancelará después de confirmar que el pago del nuevo plan fue exitoso (en el webhook).
+                // Esto evita que el usuario pierda acceso si el nuevo pago falla.
                 string? newCardId = null;
                 if (esPagoConTarjeta && !string.IsNullOrEmpty(dto.CulqiToken) && !string.IsNullOrEmpty(customerId))
                 {
@@ -191,41 +194,21 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         if (oldProveedorPlan != null)
                         {
                             oldSubscriptionId = oldProveedorPlan.CulqiSubscriptionId;
-                            _logger.LogInformation("Suscripción anterior encontrada: {SubscriptionId}", oldSubscriptionId);
-                        }
+                            _logger.LogInformation("Suscripción anterior encontrada: {SubscriptionId}. Se cancelará después de confirmar el nuevo pago.", oldSubscriptionId);
 
-                        // Obtener tarjeta actual del customer
-                        //var existingCard = await _culqiService.GetCardAsync(customerId);
+                            // NO cancelar la suscripción anterior aún
+                            // Solo marcar que tiene una cancelación pendiente
+                            oldProveedorPlan.MotivoCancelacion = "PENDIENTE_CANCELACION_CAMBIO_PLAN";
+                            await _proveedorPlanRepository.UpdateAsync(oldProveedorPlan);
+                        }
 
                         // Crear nueva tarjeta con el token
                         var newCard = await _culqiService.CreateCardAsync(customerId, dto.CulqiToken);
                         newCardId = newCard.Id;
-
-                        // Eliminar tarjeta anterior si existía
-                        //if (existingCard != null)
-                        //{
-                        //    await _culqiService.DeleteCardAsync(existingCard.Id);
-                        //    _logger.LogInformation("Tarjeta anterior eliminada: {CardId}", existingCard.Id);
-                        //}
-
-                        // Cancelar suscripción anterior si existe
-                        if (!string.IsNullOrEmpty(oldSubscriptionId))
-                        {
-                            await _culqiService.CancelSubscriptionAsync(oldSubscriptionId);
-                            _logger.LogInformation("Suscripción anterior cancelada: {SubscriptionId}", oldSubscriptionId);
-
-                            // Marcar el ProveedorPlan anterior como inactivo
-                            if (oldProveedorPlan != null)
-                            {
-                                oldProveedorPlan.CancelAtPeriodEnd = false;
-                                oldProveedorPlan.MotivoCancelacion = "Cancelado por cambio de suscription a otro plan.";
-                                await _proveedorPlanRepository.UpdateAsync(oldProveedorPlan);
-                            }
-                        }
                     }
                     catch (CulqiException ex)
                     {
-                        _logger.LogError(ex, "Error al actualizar tarjeta o cancelar suscripción anterior");
+                        _logger.LogError(ex, "Error al actualizar tarjeta");
                         response.AddErrorResult(ex.UserMessage ?? "Error al actualizar método de pago");
                         return response;
                     }
@@ -366,7 +349,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 // AutoRenovacion: true solo si hay tarjeta y plan lo permite
                 AutoRenovacion = esSuscripcionConTarjeta && (tarifa.PermiteAutoRenovacion ?? false),
                 CulqiSubscriptionId = culqiSubscriptionId, // null para pagos únicos y Yape en suscripción
-                CulqiCustomerId = customerId
+                CulqiCustomerId = customerId,
+                // Guardar referencia de suscripción anterior para cancelar después del webhook
+                CulqiSubscriptionIdAnterior = oldSubscriptionId
             };  
 
             

@@ -1268,6 +1268,10 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(200)
                 .IsUnicode(false)
                 .HasColumnName("culqiSubscriptionId");
+            entity.Property(e => e.CulqiSubscriptionIdAnterior)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .HasColumnName("culqiSubscriptionIdAnterior");
             entity.Property(e => e.EsActual)
                 .HasDefaultValue(true)
                 .HasColumnName("esActual");

@@ -27,6 +27,8 @@ public partial class ProveedorPlan
 
     public string? CulqiSubscriptionId { get; set; }
 
+    public string? CulqiSubscriptionIdAnterior { get; set; }
+
     public string? CulqiCustomerId { get; set; }
 
     public DateTimeOffset? GracePeriodHasta { get; set; }

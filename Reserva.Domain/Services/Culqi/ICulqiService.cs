@@ -17,6 +17,8 @@ namespace Reserva.Domain.Services.Culqi
         /// </summary>
         Task<CulqiChargeResponse> CreateChargeAsync(CulqiCreateChargeRequest request);
 
+        Task<CulqiGetChargeResponse?> GetChargeAsync(string idCharge);
+
         #endregion
 
         #region Suscripciones (Para Planes SaaS)

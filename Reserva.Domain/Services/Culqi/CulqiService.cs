@@ -95,6 +95,43 @@ namespace Reserva.Domain.Services.Culqi
             }
         }
 
+        public async Task<CulqiGetChargeResponse?> GetChargeAsync(string idCharge)
+        { 
+            try
+            {
+                _logger.LogInformation("Obteniendo cargo con el idCharge : {idCharge}", idCharge);
+
+                var response = await _httpClient.GetAsync($"/v2/charges/{idCharge}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Cargo no encontrada: {idCharge}", idCharge);
+                    return null;
+                }
+
+                return JsonSerializer.Deserialize<CulqiGetChargeResponse>(responseContent);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error de conexión al obtener cargo - idCharge: {idCharge}",
+                    idCharge);
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error al deserializar cargo - idCharge: {idCharge}",
+                    idCharge);
+
+                return null;
+            }
+        }
+
         #endregion
 
         #region Suscripciones (Para Planes SaaS)

@@ -185,6 +185,46 @@ namespace Reserva.Api.Controllers.Dbo
                 proveedorPlan.FechaProximoCobro = proveedorPlan.FechaFin;
             }
 
+            // ═══ CANCELACIÓN DIFERIDA DE SUSCRIPCIÓN ANTERIOR ═══
+            // Si hay una suscripción anterior pendiente de cancelar (cambio de plan),
+            // cancelarla ahora que el nuevo pago fue exitoso.
+            if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionIdAnterior))
+            {
+                try
+                {
+                    _logger.LogInformation("Cancelando suscripción anterior diferida: {OldSubscriptionId} para ProveedorPlan {Id}",
+                        proveedorPlan.CulqiSubscriptionIdAnterior, proveedorPlan.IdProveedorPlan);
+
+                    await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionIdAnterior);
+
+                    // Buscar y marcar el ProveedorPlan anterior como CANCELLED
+                    var oldPlan = await _proveedorPlanRepository.GetByAsync(
+                        pp => pp.CulqiSubscriptionId == proveedorPlan.CulqiSubscriptionIdAnterior
+                            && pp.Activo
+                    );
+
+                    if (oldPlan != null)
+                    {
+                        oldPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
+                        oldPlan.EsActual = false;
+                        oldPlan.CancelAtPeriodEnd = false;
+                        oldPlan.FechaCancelacion = DateTimeOffset.UtcNow;
+                        oldPlan.MotivoCancelacion = "Cancelado por cambio a plan " + proveedorPlan.IdPlane;
+                        await _proveedorPlanRepository.UpdateAsync(oldPlan);
+                    }
+
+                    // Limpiar la referencia
+                    proveedorPlan.CulqiSubscriptionIdAnterior = null;
+                    _logger.LogInformation("Suscripción anterior cancelada exitosamente después de confirmar nuevo pago");
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail the whole process
+                    // The old subscription will need manual cleanup
+                    _logger.LogError(ex, "Error al cancelar suscripción anterior diferida. Se requiere limpieza manual.");
+                }
+            }
+
             await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
             await _proveedorPlanRepository.SaveAsync();
 
@@ -207,54 +247,125 @@ namespace Reserva.Api.Controllers.Dbo
         {
             var data = JsonSerializer.Deserialize<CulqiChargeFailedWebhookDto>(dataEvent);
 
-            _logger.LogInformation("Procesando pago fallido - ChargeId: {ChargeId} probandoooo: ", data.ChargeId);
+            _logger.LogInformation("Procesando pago fallido - ChargeId: {ChargeId}, Code: {Code}, ActionCode: {ActionCode}",
+                data.ChargeId, data.Code, data.ActionCode);
 
-            // Buscar ProveedorPlan: primero por metadata, luego por subscription
-            //var proveedorPlan = await FindProveedorPlanForCharge(1);
+            // Intentar obtener información del charge desde Culqi
+            Entity.Proveedor? proveedor = null;
+            Entity.ProveedorPlan? proveedorPlan = null;
 
-            //if (proveedorPlan != null)
-            //{
-            //    var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-            //        p => p.IdProveedor == proveedorPlan.IdProveedor,
-            //        p => p.IdUsuarioNavigation
-            //    );
-            //    await HandlePlanPaymentFailed(proveedorPlan, proveedor, data);
-            //    return;
-            //}
+            try
+            {
+                var charge = await _culqiService.GetChargeAsync(data.ChargeId);
+                if (charge != null && !string.IsNullOrEmpty(charge.Email))
+                {
+                    proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
+                        x => x.IdUsuarioNavigation != null && x.IdUsuarioNavigation.Email == charge.Email,
+                        x => x.IdUsuarioNavigation
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo obtener información del charge {ChargeId} desde Culqi", data.ChargeId);
+            }
 
-            _logger.LogWarning("ProveedorPlan no encontrado con ActionCode fallido: {ActionCode}", data.ActionCode);
-            return;
+            // Buscar ProveedorPlan activo del proveedor
+            if (proveedor != null)
+            {
+                proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                    pp => pp.IdProveedor == proveedor.IdProveedor
+                        && pp.Activo
+                        && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
+                            || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING
+                            || pp.Estado == Constants.ESTADO_PROV_PLAN.GRACE),
+                    pp => pp.IdPlanTarifaNavigation,
+                    pp => pp.IdPlaneNavigation
+                );
+            }
+
+            if (proveedorPlan == null)
+            {
+                _logger.LogWarning("ProveedorPlan no encontrado para charge fallido {ChargeId}. ChargeId podría no estar asociado a una suscripción activa.", data.ChargeId);
+                return;
+            }
+
+            await HandlePlanPaymentFailed(proveedorPlan, proveedor, data.ChargeId, data.Code, data.MerchantMessage);
         }
 
-        private async Task HandlePlanPaymentFailed(ProveedorPlan proveedorPlan, Entity.Proveedor? proveedor, CulqiChargeWebhookObject data)
+        private async Task HandlePlanPaymentFailed(
+            ProveedorPlan proveedorPlan,
+            Entity.Proveedor? proveedor,
+            string? chargeId,
+            string? errorCode,
+            string? merchantMessage)
         {
-            _logger.LogInformation("Procesando pago de plan fallido - ProveedorPlanId: {Id}, ChargeId: {ChargeId}",
-                proveedorPlan.IdProveedorPlan, data.CharId);
+            _logger.LogInformation("Procesando pago de plan fallido - ProveedorPlanId: {Id}, Estado: {Estado}, ChargeId: {ChargeId}",
+                proveedorPlan.IdProveedorPlan, proveedorPlan.Estado, chargeId);
 
-            // Crear PagoPlan RECHAZADO
-            var estadoRechazado = await _estadoPagoRepository.GetByAsNoTrackingAsync(
-                e => e.Codigo == Constants.ESTADO_PAGO.Rechazado
-            );
-
-            var pagoPlan = new Entity.PagoPlan
+            // Crear PagoPlan RECHAZADO (solo si hay chargeId válido)
+            if (!string.IsNullOrEmpty(chargeId))
             {
-                IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                Monto = proveedorPlan.IdPlanTarifaNavigation?.Precio ?? 0,
-                Moneda = Constants.CURRENCY.PEN,
-                IdMetodoPago = 1,
-                IdEstadoPago = estadoRechazado?.IdEstadoPago ?? 5,
-                CulqiChargeId = data.CharId,
-                CodigoOperacion = data.ReferenceCode,
-                FechaPago = DateTimeOffset.UtcNow,
-                Activo = true
-            };
+                var estadoRechazado = await _estadoPagoRepository.GetByAsNoTrackingAsync(
+                    e => e.Codigo == Constants.ESTADO_PAGO.Rechazado
+                );
 
-            await _pagoPlanRepository.AddAsync(pagoPlan);
-            await _pagoPlanRepository.SaveAsync();
+                var pagoPlan = new Entity.PagoPlan
+                {
+                    IdProveedorPlan = proveedorPlan.IdProveedorPlan,
+                    Monto = proveedorPlan.IdPlanTarifaNavigation?.Precio ?? 0,
+                    Moneda = Constants.CURRENCY.PEN,
+                    IdMetodoPago = 1,
+                    IdEstadoPago = estadoRechazado?.IdEstadoPago ?? 5,
+                    CulqiChargeId = chargeId,
+                    CodigoOperacion = errorCode,
+                    FechaPago = DateTimeOffset.UtcNow,
+                    Activo = true
+                };
 
-            // Cambiar ProveedorPlan a GRACE
-            proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.GRACE;
-            proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
+                await _pagoPlanRepository.AddAsync(pagoPlan);
+                await _pagoPlanRepository.SaveAsync();
+            }
+
+            // ═══ DIFERENCIAR POR ESTADO ACTUAL ═══
+            switch (proveedorPlan.Estado)
+            {
+                case var estado when estado == Constants.ESTADO_PROV_PLAN.PENDING:
+                    // ═══ PRIMERA VEZ - Pago inicial falló ═══
+                    // El usuario nunca tuvo servicio activo
+                    _logger.LogInformation("Pago inicial fallido para ProveedorPlan {Id}. Estado: PENDING → CANCELLED", proveedorPlan.IdProveedorPlan);
+                    
+                    proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
+                    proveedorPlan.EsActual = false;
+                    proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
+                    proveedorPlan.MotivoCancelacion = $"Pago inicial rechazado: {merchantMessage ?? errorCode}";
+
+                    // Si hay suscripción anterior pendiente de cancelar, limpiar la referencia
+                    // (el plan anterior sigue activo ya que no se canceló)
+                    if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionIdAnterior))
+                    {
+                        _logger.LogInformation("Limpiando referencia de suscripción anterior. Plan anterior sigue activo.");
+                        proveedorPlan.CulqiSubscriptionIdAnterior = null;
+                    }
+                    break;
+
+                case var estado when estado == Constants.ESTADO_PROV_PLAN.ACTIVE:
+                    // ═══ RENOVACIÓN - Pago recurrente falló ═══
+                    // El usuario ya tenía servicio activo, dar período de gracia
+                    _logger.LogInformation("Renovación fallida para ProveedorPlan {Id}. Estado: ACTIVE → GRACE", proveedorPlan.IdProveedorPlan);
+                    
+                    proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.GRACE;
+                    proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
+                    break;
+
+                case var estado when estado == Constants.ESTADO_PROV_PLAN.GRACE:
+                    // ═══ REINTENTO en gracia falló ═══
+                    // Mantener en GRACE, extender período
+                    _logger.LogInformation("Reintento fallido para ProveedorPlan {Id}. Manteniendo GRACE", proveedorPlan.IdProveedorPlan);
+                    
+                    proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
+                    break;
+            }
 
             await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
             await _proveedorPlanRepository.SaveAsync();
@@ -270,8 +381,8 @@ namespace Reserva.Api.Controllers.Dbo
                 );
             }
 
-            _logger.LogInformation("Pago RECHAZADO registrado y ProveedorPlan {Id} en GRACE. PagoPlanId: {PagoPlanId}",
-                proveedorPlan.IdProveedorPlan, pagoPlan.IdPagoPlan);
+            _logger.LogInformation("Pago RECHAZADO registrado y ProveedorPlan {Id} actualizado. Estado: {Estado}",
+                proveedorPlan.IdProveedorPlan, proveedorPlan.Estado);
         }
 
         private async Task HandleSubscriptionEvent(string dataEvento, string eventType)
@@ -282,11 +393,29 @@ namespace Reserva.Api.Controllers.Dbo
             _logger.LogInformation("Procesando evento de suscripción: {EventType} - SubscriptionId: {SubscriptionId}",
                 eventType, data.SubsId);
 
+            // Buscar por CulqiSubscriptionId principal
             var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
                 pp => pp.CulqiSubscriptionId == data.SubsId,
                 pp => pp.IdPlaneNavigation,
                 pp => pp.PagoPlan
             );
+
+            // Si no se encuentra, buscar en CulqiSubscriptionIdAnterior (cancelación diferida)
+            bool esCancelacionDiferida = false;
+            if (proveedorPlan == null)
+            {
+                proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                    pp => pp.CulqiSubscriptionIdAnterior == data.SubsId,
+                    pp => pp.IdPlaneNavigation,
+                    pp => pp.PagoPlan
+                );
+                if (proveedorPlan != null)
+                {
+                    esCancelacionDiferida = true;
+                    _logger.LogInformation("Suscripción encontrada como CulqiSubscriptionIdAnterior en ProveedorPlan {Id}",
+                        proveedorPlan.IdProveedorPlan);
+                }
+            }
 
             if (proveedorPlan == null)
             {
@@ -303,18 +432,40 @@ namespace Reserva.Api.Controllers.Dbo
                 case "subscription.created.succeeded":
                     _logger.LogInformation("Suscripción creada para ProveedorPlan {Id}", proveedorPlan.IdProveedorPlan);
                     break;
+
                 case "subscription.cancel.succeeded":
-                    // El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
-                    if (proveedorPlan.CancelAtPeriodEnd) { 
+                    // ═══ CANCELACIÓN DIFERIDA ═══
+                    // Si el plan ya está CANCELLED (nuestro internal cancel después de plan change),
+                    // NO procesar nuevamente - ya fue manejado en HandlePlanPaymentSucceeded
+                    if (proveedorPlan.Estado == Constants.ESTADO_PROV_PLAN.CANCELLED)
+                    {
+                        _logger.LogInformation("ProveedorPlan {Id} ya está CANCELLED. Saltando procesamiento de subscription.cancel.succeeded (cancelación diferida ya procesada)",
+                            proveedorPlan.IdProveedorPlan);
+                        break;
+                    }
+
+                    // ═══ CANCELACIÓN NORMAL (usuario o sistema) ═══
+                    //Usuario cancela manualmente de front: El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
+                    if (proveedorPlan.CancelAtPeriodEnd)
+                    { 
                         proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.ACTIVE;
                         proveedorPlan.EsActual = true;
                     }
-                    else { 
+                    else
+                    { 
                         proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
                         proveedorPlan.EsActual = false;
                     }
                     proveedorPlan.AutoRenovacion = false;
                     proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
+
+                    // Si es cancelación de la suscripción anterior (diferida), limpiar referencia
+                    if (esCancelacionDiferida && !string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionIdAnterior))
+                    {
+                        proveedorPlan.CulqiSubscriptionIdAnterior = null;
+                        _logger.LogInformation("Referencia CulqiSubscriptionIdAnterior limpiada para ProveedorPlan {Id}",
+                            proveedorPlan.IdProveedorPlan);
+                    }
 
                     await _proveedorPlanRepository.UpdateAsync(proveedorPlan);
                     await _proveedorPlanRepository.SaveAsync();
@@ -322,6 +473,7 @@ namespace Reserva.Api.Controllers.Dbo
                     _logger.LogInformation("Suscripción cancelada en Culqi para ProveedorPlan {Id}. Plan permanece activo hasta {FechaFin}", 
                         proveedorPlan.IdProveedorPlan, proveedorPlan.FechaFin);
                     break;
+
                 case "subscription.cancel.failed":
                     // revertir los cambios hecos en Cancel autorenew o cancel para cambio de plan.
                     proveedorPlan.CancelAtPeriodEnd = false;
