@@ -142,43 +142,15 @@ namespace Reserva.Api.Controllers.Dbo
             return;
         }
 
-        private async Task<ProveedorPlan?> FindProveedorPlanForCharge(int? idProveedor)
-        {
-            // 1. Buscar por metadata proveedor_id (pagos únicos, Yape en plan, renovaciones)
-            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
-                pp => pp.IdProveedor == idProveedor
-                    && pp.Activo
-                    && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
-                        || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
-                pp => pp.IdPlaneNavigation
-            );
-
-            if (proveedorPlan != null)
-                return proveedorPlan;
-
-            // 2. Fallback: buscar el plan activo más reciente del proveedor
-            if (idProveedor != null)
-            {
-                return await _proveedorPlanRepository.GetByAsync(
-                    pp => pp.IdProveedor == idProveedor
-                        && pp.EsActual
-                        && pp.Activo,
-                    pp => pp.IdPlaneNavigation
-                );
-            }
-
-            return null;
-        }
-
         private async Task HandlePlanPaymentSucceeded(Entity.Proveedor? proveedor, string charId, string referenceCode, long? nextBillingDate)
         {
             _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}", proveedor.IdProveedor, charId);
 
             var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pagado);
 
-            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(
-                pp => pp.IdProveedor == proveedor.IdProveedor && pp.Activo && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
-                        || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
+            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(pp => pp.IdProveedor == proveedor.IdProveedor 
+                && pp.Activo 
+                && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
                 pp => pp.IdPlanTarifaNavigation
             );
 
