@@ -148,11 +148,17 @@ namespace Reserva.Api.Controllers.Dbo
 
             var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pagado);
 
-            var proveedorPlan = await _proveedorPlanRepository.GetByAsync(pp => pp.IdProveedor == proveedor.IdProveedor 
-                && pp.Activo 
-                && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
+            var proveedorPlans = await _proveedorPlanRepository.FindByAsync(
+                pp => pp.IdProveedor == proveedor.IdProveedor 
+                    && pp.Activo 
+                    && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE || pp.Estado == Constants.ESTADO_PROV_PLAN.PENDING),
                 pp => pp.IdPlanTarifaNavigation
             );
+            
+            // Obtener el plan más reciente (último en ser creado)
+            var proveedorPlan = proveedorPlans?
+                .OrderByDescending(x => x.IdProveedorPlan)
+                .FirstOrDefault();
 
             var pagoPlan = new Entity.PagoPlan
             {
@@ -273,7 +279,7 @@ namespace Reserva.Api.Controllers.Dbo
             // Buscar ProveedorPlan activo del proveedor
             if (proveedor != null)
             {
-                proveedorPlan = await _proveedorPlanRepository.GetByAsync(
+                var proveedorPlans = await _proveedorPlanRepository.FindByAsync(
                     pp => pp.IdProveedor == proveedor.IdProveedor
                         && pp.Activo
                         && (pp.Estado == Constants.ESTADO_PROV_PLAN.ACTIVE
@@ -282,6 +288,11 @@ namespace Reserva.Api.Controllers.Dbo
                     pp => pp.IdPlanTarifaNavigation,
                     pp => pp.IdPlaneNavigation
                 );
+                
+                // Obtener el plan más reciente (último en ser creado)
+                proveedorPlan = proveedorPlans?
+                    .OrderByDescending(x => x.IdProveedorPlan)
+                    .FirstOrDefault();
             }
 
             if (proveedorPlan == null)
