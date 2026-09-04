@@ -315,28 +315,28 @@ namespace Reserva.Api.Controllers.Dbo
                 proveedorPlan.IdProveedorPlan, proveedorPlan.Estado, chargeId);
 
             // Crear PagoPlan RECHAZADO (solo si hay chargeId válido)
-            if (!string.IsNullOrEmpty(chargeId))
-            {
-                var estadoRechazado = await _estadoPagoRepository.GetByAsNoTrackingAsync(
-                    e => e.Codigo == Constants.ESTADO_PAGO.Rechazado
-                );
+            //if (!string.IsNullOrEmpty(chargeId))
+            //{
+            //    var estadoRechazado = await _estadoPagoRepository.GetByAsNoTrackingAsync(
+            //        e => e.Codigo == Constants.ESTADO_PAGO.Rechazado
+            //    );
 
-                var pagoPlan = new Entity.PagoPlan
-                {
-                    IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                    Monto = proveedorPlan.IdPlanTarifaNavigation?.Precio ?? 0,
-                    Moneda = Constants.CURRENCY.PEN,
-                    IdMetodoPago = 1,
-                    IdEstadoPago = estadoRechazado?.IdEstadoPago ?? 5,
-                    CulqiChargeId = chargeId,
-                    CodigoOperacion = errorCode,
-                    FechaPago = DateTimeOffset.UtcNow,
-                    Activo = true
-                };
+            //    var pagoPlan = new Entity.PagoPlan
+            //    {
+            //        IdProveedorPlan = proveedorPlan.IdProveedorPlan,
+            //        Monto = proveedorPlan.IdPlanTarifaNavigation?.Precio ?? 0,
+            //        Moneda = Constants.CURRENCY.PEN,
+            //        IdMetodoPago = 1,
+            //        IdEstadoPago = estadoRechazado?.IdEstadoPago ?? 5,
+            //        CulqiChargeId = chargeId,
+            //        CodigoOperacion = errorCode,
+            //        FechaPago = DateTimeOffset.UtcNow,
+            //        Activo = true
+            //    };
 
-                await _pagoPlanRepository.AddAsync(pagoPlan);
-                await _pagoPlanRepository.SaveAsync();
-            }
+            //    await _pagoPlanRepository.AddAsync(pagoPlan);
+            //    await _pagoPlanRepository.SaveAsync();
+            //}
 
             // ═══ DIFERENCIAR POR ESTADO ACTUAL ═══
             switch (proveedorPlan.Estado)

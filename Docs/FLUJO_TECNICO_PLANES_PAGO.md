@@ -1,10 +1,11 @@
-# Flujo Técnico - Sistema de Planes y Pagos (v4.2)
+# Flujo Técnico - Sistema de Planes y Pagos (v5.0)
 
-> **Versión**: 4.2 | **Fecha**: 2026-08-28
+> **Versión**: 5.0 | **Fecha**: 2026-09-04
 > 
 > **Cambios v4.0**: Detección de método de pago (Yape vs Tarjeta), plan Culqi dinámico, prorrateo con pago único
 > **Cambios v4.1**: `esPagoUnico` se determina por `tarifa.Codigo` (no por `PaymentType`). Soporte Yape en planes de suscripción.
 > **Cambios v4.2**: PagoPlan se crea en webhook (no en handlers). Cada charge genera PagoPlan histórico. Búsqueda unificada por metadata proveedor_id. FechaFin usa DateTimeHelper.GetNextBillingDate.
+> **Cambios v5.0**: Cancelación diferida para cambios de plan. Campo `CulqiSubscriptionIdAnterior`. Manejo de reintentos Culqi. `ChangePlanCommandHandler` deprecated - se usa `CheckoutPlanCommandHandler`.
 
 ## Resumen de Flujos
 
@@ -16,8 +17,11 @@
 | 1D | Plan suscripción (MONTHLY/YEARLY) - Yape | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Order → Charge (sin renovación) |
 | 2 | GRACE → Pagar en ver-plan | `ver-plan` | `RetryPaymentPlanCommandHandler` | `/retry-payment` | Card/Order |
 | 3 | GRACE → Catálogo → Plan actual | `planes-catalogo` | `RetryPaymentPlanCommandHandler` | `/retry-payment` | Card/Order |
-| 4 | ACTIVE → Cambio de plan | `planes-catalogo` | `ChangePlanCommandHandler` | `/change-plan` | Card/Order |
+| 4 | **ACTIVE → Cambio de plan (via Checkout)** | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Card/Order (con cancelación diferida) |
 | 5 | ACTIVE → Cancelar renovación | `ver-plan` | `CancelAutoRenewCommandHandler` | `/cancel-auto-renew` | N/A |
+| 6 | **Webhooks Culqi** | - | `CulqiWebhookController` | `/webhook/culqi` | - |
+
+> **NOTA**: `ChangePlanCommandHandler` está deprecated. Los cambios de plan ahora se procesan a través de `CheckoutPlanCommandHandler` con cancelación diferida de la suscripción anterior.
 
 ---
 
@@ -40,6 +44,59 @@
 | UNIQUE | `order` | Charge (pago único con Yape) |
 | MONTHLY | `card` | Customer+Card+Subscription (renovación automática) |
 | MONTHLY | `order` | Customer+Charge (sin renovación, usuario debe agregar tarjeta) |
+
+---
+
+## Campo Clave: CulqiSubscriptionIdAnterior (Cancelación Diferida)
+
+Cuando un usuario con plan activo cambia a otro plan, **NO cancelamos inmediatamente la suscripción anterior**. En su lugar:
+
+1. **CheckoutPlanCommandHandler** guarda la referencia de la suscripción anterior en `CulqiSubscriptionIdAnterior`
+2. **Webhook charge.creation.succeeded** cancela la suscripción anterior DESPUÉS de confirmar que el nuevo pago fue exitoso
+3. **Webhook charge.creation.failed** cancela el nuevo plan y limpia la referencia (el plan anterior se mantiene ACTIVE)
+
+```
+CAMPO: ProveedorPlan.CulqiSubscriptionIdAnterior
+  → Contiene el ID de la suscripción Culqi anterior (solo en cambios de plan)
+  → Se setea en: CheckoutPlanCommandHandler (al cambiar de plan)
+  → Se lee en: CulqiWebhookController.HandlePlanPaymentSucceeded()
+  → Se limpia en: CulqiWebhookController.HandlePlanPaymentFailed() o HandlePlanPaymentSucceeded()
+  → Efecto: Permite cancelación diferida sin perder servicio del plan anterior
+```
+
+**Flujo de cambio de plan:**
+```
+ANTES (v4.x - Problemático):
+  Checkout → CancelSubscription(anterior) → Crear nueva → Si falla → Usuario pierde servicio
+
+AHORA (v5.0 - Corregido):
+  Checkout → Guardar CulqiSubscriptionIdAnterior → Crear nueva
+    ├─ Si éxito → charge.succeeded → CancelSubscription(anterior) → Plan anterior CANCELLED
+    └─ Si falla → charge.failed → Nuevo plan CANCELLED → Plan anterior ACTIVE (sin cambio)
+```
+
+---
+
+## Manejo de Reintentos Culqi
+
+Culqi reintenta automáticamente los cobros fallidos de suscripciones. Nuestra lógica maneja esto:
+
+| Estado | Primer Fallo | Reintentos Culqi | Acción |
+|--------|--------------|------------------|--------|
+| **PENDING** | CANCELLED | **NO reintenta** | Cancelamos suscripción en Culqi para evitar reintentos |
+| **ACTIVE (renovación)** | GRACE | **Sí reintenta** | Culqi reintenta; si paga → vuelve a ACTIVE |
+| **ACTIVE (cambio plan)** | CANCELLED | **NO reintenta** | Cancelamos suscripción para evitar reintentos |
+| **GRACE** | Mantener GRACE | **Sí reintenta** | Culqi reintenta; si paga → vuelve a ACTIVE |
+
+**¿Por qué cancelamos suscripción en PENDING?**
+- El usuario aún no tiene servicio activo
+- Si el pago falla, puede intentar pagar de nuevo desde el catálogo
+- Cancelar la suscripción evita que Culqi siga reintentando cobros fallidos
+
+**¿Por qué NO cancelamos en GRACE/ACTIVE (renovación)?**
+- El usuario ya tiene servicio activo
+- Culqi debe seguir reintentando para recuperar el pago
+- Si el pago se recupera, el plan vuelve a ACTIVE automáticamente
 
 ---
 
@@ -553,10 +610,15 @@ getBotonTexto(plan: ListPlaneDto): string {
 
 ---
 
-## FLUJO 4: Estado ACTIVE → Cambio de Plan (Upgrade/Downgrade)
+## FLUJO 4: Estado ACTIVE → Cambio de Plan (Upgrade/Downgrade) - v5.0
 
 ### Descripción
-Proveedor con plan activo cambia a un plan diferente (superior o inferior). El cambio se realiza **cancelando la suscripción actual y creando una nueva**. Se aplica prorrateo por días y manejo de saldos a favor.
+Proveedor con plan activo cambia a un plan diferente (superior o inferior). **Ahora se procesa a través de `CheckoutPlanCommandHandler`** con cancelación diferida de la suscripción anterior.
+
+**Ventajas de la nueva implementación:**
+- El plan anterior se mantiene ACTIVO hasta que el nuevo pago sea confirmado
+- Si el nuevo pago falla, el usuario conserva su servicio actual
+- La suscripción anterior solo se cancela después de confirmar el nuevo pago
 
 **Importante**: El tipo del **nuevo plan** se determina por su código de tarifa:
 - Si el nuevo plan es UNIQUE/BLACKFRIDAY → pago único (Charge)
@@ -566,7 +628,8 @@ Proveedor con plan activo cambia a un plan diferente (superior o inferior). El c
 
 ### Componentes Involucrados
 - **Frontend**: `planes-catalogo.component.ts`, `culqi.service.ts`
-- **Backend**: `CalculateProrationQueryHandler.cs` + `ChangePlanCommandHandler.cs`
+- **Backend**: `CalculateProrationQueryHandler.cs` + **`CheckoutPlanCommandHandler.cs`** (NO ChangePlanCommandHandler)
+- **Webhook**: `CulqiWebhookController.cs`
 - **Servicio Culqi**: `CulqiService.cs`
 
 ### Diagrama de Flujo
@@ -628,18 +691,203 @@ Proveedor con plan activo cambia a un plan diferente (superior o inferior). El c
 │      │   │   })                                                         │
 │      │   │   → Retorna: { type: 'card' | 'order', id: string }        │
 │      │   │                                                              │
-│      │   └── executeChangePlan(plan, result)                            │
+│      │   └── executeCheckoutPlan(plan, result)                          │
 │      │                                                                  │
 │      └── else (downgrade)                                               │
-│          └── executeChangePlan(plan, null)  // Sin cobro               │
+│          └── executeCheckoutPlan(plan, null)  // Sin cobro              │
 │                                                                         │
-│  executeChangePlan(plan, culqiResult?)                                  │
-│  ├── proveedorPlanService.changePlan({                                  │
-│  │     idProveedorPlanActual,                                           │
-│  │     idProveedor: idProveedor,                                        │
+│  executeCheckoutPlan(plan, culqiResult?)                                │
+│  ├── proveedorPlanService.checkout({                                    │
+│  │     idProveedor,                                                     │
 │  │     idPlanNuevo: plan.idPlane,                                       │
 │  │     idPlanTarifaNueva,                                               │
 │  │     culqiToken: culqiResult?.id,                                     │
+│  │     paymentType: culqiResult?.type ?? 'card',                        │
+│  │     email                                                            │
+│  │   })                                                                 │
+│  │   → POST /api/ProveedorPlan/checkout                                │
+│  │   → Si éxito → mostrar mensaje éxito + refresh                       │
+│  └──────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  BACKEND - CheckoutPlanCommandHandler.cs (v5.0)                         │
+│                                                                         │
+│  HandleCommand(request)                                                 │
+│  │                                                                      │
+│  ├── 1. VALIDACIONES                                                    │
+│  │   ├── Tarifa existe?                                                 │
+│  │   └── Proveedor existe?                                              │
+│  │                                                                      │
+│  ├── 2. CALCULAR MONTO                                                  │
+│  │   monto = tarifa.Precio - (descuento si aplica)                     │
+│  │                                                                      │
+│  ├── 3. DETERMINAR TIPO DE PLAN                                         │
+│  │   ├── esPagoUnico = tarifa.Codigo is "UNIQUE" or "BLACKFRIDAY"      │
+│  │   └── else (MONTHLY/YEARLY) → Plan de suscripción                   │
+│  │                                                                      │
+│  ├── 4. BUSCAR SUSCRIPCIÓN ANTERIOR (si existe plan activo)            │
+│  │   ├── Buscar ProveedorPlan activo del proveedor                     │
+│  │   ├── Si tiene CulqiSubscriptionId → guardar referencia             │
+│  │   └── Marcar plan anterior con MotivoCancelacion =                   │
+│  │       "PENDIENTE_CANCELACION_CAMBIO_PLAN"                           │
+│  │                                                                      │
+│  ├── 5. PROCESAR PAGO                                                   │
+│  │   ├── Si esPagoUnico: Crear Charge                                  │
+│  │   ├── Si esPagoConTarjeta: Customer + Card + Subscription           │
+│  │   └── Si esYape: Customer + Charge (sin subscription)               │
+│  │                                                                      │
+│  ├── 6. CREAR NUEVO PROVEEDOR PLAN                                     │
+│  │   ├── Estado = PENDING (suscripción) o ACTIVE (pago único)          │
+│  │   ├── CulqiSubscriptionId = nueva suscripción (si aplica)           │
+│  │   ├── CulqiSubscriptionIdAnterior = referencia anterior             │
+│  │   └── NO cancelar suscripción anterior aún (cancelación diferida)   │
+│  │                                                                      │
+│  └── Retornar resultado                                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  WEBHOOK - CulqiWebhookController.cs                                    │
+│                                                                         │
+│  ═══ SI CHARGE.SUCCEEDED (pago exitoso): ═══                            │
+│  │                                                                      │
+│  ├── 1. Activar nuevo plan (PENDING → ACTIVE)                          │
+│  ├── 2. Crear PagoPlan con charge ID real                              │
+│  ├── 3. Si tiene CulqiSubscriptionIdAnterior:                          │
+│  │   ├── CancelSubscriptionAsync(suscripción anterior)                 │
+│  │   ├── Buscar plan anterior por CulqiSubscriptionId                  │
+│  │   ├── Marcar plan anterior como CANCELLED                           │
+│  │   └── Limpiar CulqiSubscriptionIdAnterior                          │
+│  └── 4. Notificar éxito al proveedor                                   │
+│                                                                         │
+│  ═══ SI CHARGE.FAILED (pago fallido): ═══                              │
+│  │                                                                      │
+│  ├── Buscar ProveedorPlan más reciente (OrderByDescending)            │
+│  │                                                                      │
+│  ├── Si Estado == PENDING:                                              │
+│  │   ├── CANCELLED (plan nuevo falló)                                  │
+│  │   ├── Cancelar suscripción en Culqi (evitar reintentos)            │
+│  │   ├── Si tiene CulqiSubscriptionIdAnterior → limpiar referencia    │
+│  │   └── Plan anterior se mantiene ACTIVE ✓                            │
+│  │                                                                      │
+│  ├── Si Estado == ACTIVE + tiene CulqiSubscriptionIdAnterior:          │
+│  │   ├── CANCELLED (cambio de plan fallido)                            │
+│  │   ├── Cancelar suscripción en Culqi                                │
+│  │   └── Plan anterior se mantiene ACTIVE ✓                            │
+│  │                                                                      │
+│  └── Si Estado == ACTIVE sin referencia (renovación):                  │
+│      ├── GRACE (período de gracia)                                     │
+│      ├── NO cancelar suscripción (Culqi reintenta)                    │
+│      └── Culqi reintenta cobros automáticos                           │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Lógica de Cancelación Diferida
+
+```
+TIMELINE - Cambio de Plan Exitoso:
+──────────────────────────────────────────────────────
+T0: Checkout
+    ├── Plan A (ACTIVE) → MotivoCancelacion = "PENDIENTE_CANCELACION_CAMBIO_PLAN"
+    ├── Plan B (PENDING) → CulqiSubscriptionIdAnterior = subscription_A
+    └── Culqi cobra al cliente
+
+T1: Webhook charge.succeeded
+    ├── Plan B → ACTIVE
+    ├── CancelSubscriptionAsync(subscription_A)
+    ├── Plan A → CANCELLED
+    └── CulqiSubscriptionIdAnterior = null
+
+RESULTADO: Sin interrupción de servicio ✓
+
+TIMELINE - Cambio de Plan Fallido:
+──────────────────────────────────────────────────────
+T0: Checkout
+    ├── Plan A (ACTIVE) → MotivoCancelacion = "PENDIENTE_CANCELACION_CAMBIO_PLAN"
+    ├── Plan B (PENDING) → CulqiSubscriptionIdAnterior = subscription_A
+    └── Culqi intenta cobrar
+
+T1: Webhook charge.failed
+    ├── Plan B → CANCELLED
+    ├── CancelSubscriptionAsync(subscription_B) ← Evita reintentos
+    ├── CulqiSubscriptionIdAnterior = null
+    └── Plan A → SE MANTIENE ACTIVE ✓
+
+RESULTADO: Usuario conserva su plan actual ✓
+```
+
+### Código Clave
+
+**Frontend** (`planes-catalogo.component.ts`):
+```typescript
+async executeCheckoutPlan(plan: ListPlaneDto, proration: CalculateProrationResponseDto): Promise<void> {
+  let token: string | null = null;
+
+  // Si es upgrade, cobrar prorrateo
+  if (proration.esUpgrade && proration.montoProrrateo > 0) {
+    await this.culqiService.loadScript();
+    token = await this.culqiService.openCheckout({
+      title: `Cambio de plan - ${plan.nombre}`,
+      currency: 'PEN',
+      amount: proration.montoProrrateo * 100,
+      description: `Prorrateo ${proration.diasRestantes} días restantes`,
+      email: this.email
+    });
+  }
+
+  // Ejecutar checkout (mismo endpoint que primera vez)
+  this.proveedorPlanService.checkout({
+    idProveedor: this.idProveedor,
+    idPlane: plan.idPlane,
+    idPlanTarifa: plan.idPlanTarifa,
+    culqiToken: token,
+    email: this.email
+  }).subscribe({
+    next: (response) => {
+      if (response.isValid) {
+        this.openSuccessAlert('Cambio de plan procesado. Esperando confirmación...');
+        this.startPolling();
+      }
+    }
+  });
+}
+```
+
+**Backend** (`CheckoutPlanCommandHandler.cs` - Sección de cambio de plan):
+```csharp
+// Buscar suscripción anterior del proveedor
+var oldProveedorPlan = await _proveedorPlanRepository.GetByAsync(
+    x => x.IdProveedor == dto.IdProveedor
+        && x.Activo
+        && x.Estado != Constants.ESTADO_PROV_PLAN.CANCELLED
+        && !string.IsNullOrEmpty(x.CulqiSubscriptionId),
+    x => x.IdPlaneNavigation
+);
+
+string? oldSubscriptionId = null;
+if (oldProveedorPlan != null)
+{
+    // Guardar referencia para cancelación diferida
+    oldSubscriptionId = oldProveedorPlan.CulqiSubscriptionId;
+    
+    // Marcar plan anterior (se cancelará después del webhook)
+    oldProveedorPlan.MotivoCancelacion = "PENDIENTE_CANCELACION_CAMBIO_PLAN";
+    await _proveedorPlanRepository.UpdateAsync(oldProveedorPlan);
+}
+
+// Crear nuevo ProveedorPlan
+var proveedorPlan = new Entity.ProveedorPlan
+{
+    // ... otros campos ...
+    CulqiSubscriptionId = culqiSubscriptionId,
+    CulqiSubscriptionIdAnterior = oldSubscriptionId  // ← CLAVE
+    // NO cancelamos suscripción anterior aquí
+};
+```
 │  │     paymentType: culqiResult?.type ?? 'card',                        │
 │  │     email                                                            │
 │  │   })                                                                 │
@@ -838,15 +1086,15 @@ async onCambiarPlan(plan: ListPlaneDto): Promise<void> {
   
   if (!confirmed) return;
 
-  // 3. Ejecutar cambio
-  await this.executeChangePlan(plan, proration);
+  // 3. Ejecutar checkout (mismo endpoint que primera vez)
+  await this.executeCheckoutPlan(plan, proration);
 }
 
-async executeChangePlan(plan: ListPlaneDto, proration: CalculateProrationResponseDto): Promise<void> {
+async executeCheckoutPlan(plan: ListPlaneDto, proration: CalculateProrationResponseDto): Promise<void> {
   let token: string | null = null;
 
   // Si es upgrade, cobrar prorrateo
-  if (proration.esUpgrade) {
+  if (proration.esUpgrade && proration.montoProrrateo > 0) {
     await this.culqiService.loadScript();
     token = await this.culqiService.openCheckout({
       title: `Cambio de plan - ${plan.nombre}`,
@@ -857,91 +1105,60 @@ async executeChangePlan(plan: ListPlaneDto, proration: CalculateProrationRespons
     });
   }
 
-  // Ejecutar cambio
-  this.proveedorPlanService.changePlan({
-    idProveedorPlanActual: this.idProveedorPlanActual,
+  // Ejecutar checkout (mismo endpoint que primera vez)
+  this.proveedorPlanService.checkout({
     idProveedor: this.idProveedor,
-    idPlanNuevo: plan.idPlane,
-    idPlanTarifaNueva: plan.idPlanTarifa,
+    idPlane: plan.idPlane,
+    idPlanTarifa: plan.idPlanTarifa,
     culqiToken: token,
+    paymentType: token ? 'card' : 'order',
     email: this.email
   }).subscribe({
     next: (response) => {
       if (response.isValid) {
-        this.openSuccessAlert('Plan cambiado exitosamente');
-        this.loadPlanes(); // Refrescar datos
+        this.openSuccessAlert('Cambio de plan procesado. Esperando confirmación...');
+        this.startPolling();
       }
     }
   });
 }
 ```
 
-**Backend** (`ChangePlanCommandHandler.cs`):
+**Backend** (`CheckoutPlanCommandHandler.cs` - Sección de cambio de plan):
 ```csharp
-// 1. Calcular prorrateo
-var ahora = DateTimeOffset.UtcNow;
-var diasRestantes = Math.Max(1, (int)(proveedorPlan.FechaFin - ahora).TotalDays);
-var duracionNueva = nuevaTarifa.DuracionDias;
+// Buscar suscripción anterior del proveedor
+var oldProveedorPlan = await _proveedorPlanRepository.GetByAsync(
+    x => x.IdProveedor == dto.IdProveedor
+        && x.Activo
+        && x.Estado != Constants.ESTADO_PROV_PLAN.CANCELLED
+        && !string.IsNullOrEmpty(x.CulqiSubscriptionId),
+    x => x.IdPlaneNavigation
+);
 
-decimal creditoPlanActual = tarifaActual.DuracionDias > 0
-    ? Math.Round((precioActual / tarifaActual.DuracionDias) * diasRestantes, 2)
-    : 0;
-
-decimal cargoPlanNuevo = duracionNueva > 0
-    ? Math.Round((precioNuevo / duracionNueva) * diasRestantes, 2)
-    : 0;
-
-decimal montoProrrateo = cargoPlanNuevo - creditoPlanActual - saldoAFavorAnterior;
-
-// 2. Cobrar prorrateo si upgrade
-if (esUpgrade && montoProrrateo > 0)
+string? oldSubscriptionId = null;
+if (oldProveedorPlan != null)
 {
-    var chargeResponse = await _culqiService.CreateChargeAsync(new CulqiCreateChargeRequest
-    {
-        Amount = CulqiService.ConvertToCents(montoProrrateo),
-        CurrencyCode = Constants.CURRENCY.PEN,
-        CustomerId = proveedor.CulqiCustomerId,
-        Description = "Prorrateo cambio de plan - Upgrade"
-    });
+    // Guardar referencia para cancelación diferida
+    oldSubscriptionId = oldProveedorPlan.CulqiSubscriptionId;
+    
+    // Marcar plan anterior (se cancelará después del webhook)
+    oldProveedorPlan.MotivoCancelacion = "PENDIENTE_CANCELACION_CAMBIO_PLAN";
+    await _proveedorPlanRepository.UpdateAsync(oldProveedorPlan);
 }
 
-// 3. Cancelar suscripción actual
-await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionId);
-
-// 4. Marcar plan actual como cancelado
-proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
-proveedorPlan.EsActual = false;
-proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
-proveedorPlan.MotivoCancelacion = "Cambio de plan";
-
-// 5. Crear nueva suscripción en Culqi
-var nuevaSuscripcion = await _culqiService.CreateSubscriptionAsync(new CulqiCreateSubscriptionRequest
-{
-    PlanId = nuevoCulqiPlanId,
-    CustomerId = proveedor.CulqiCustomerId,
-    Metadata = new Dictionary<string, string>
-    {
-        { "tipo", "plan_change" },
-        { "proveedor_id", proveedorPlan.IdProveedor.ToString() },
-        { "plan_anterior_id", proveedorPlan.IdProveedorPlan.ToString() }
-    }
-});
-
-// 6. Crear nuevo ProveedorPlan
-var nuevoProveedorPlan = new ProveedorPlan
+// Crear nuevo ProveedorPlan
+var proveedorPlan = new Entity.ProveedorPlan
 {
     IdProveedor = dto.IdProveedor,
-    IdPlane = dto.IdNuevoPlane,
-    IdPlanTarifa = dto.IdNuevaPlanTarifa,
-    FechaInicio = ahora,
-    FechaFin = ahora.AddDays(duracionNueva),  // ACCESO = duración nueva
-    FechaProximoCobro = null,                  // Webhook la seteará
+    IdPlane = dto.IdPlane,
+    IdPlanTarifa = dto.IdPlanTarifa,
+    FechaInicio = fechaInicio,
+    FechaFin = fechaFin,
     Estado = Constants.ESTADO_PROV_PLAN.PENDING,
-    AutoRenovacion = nuevaTarifa.PermiteAutoRenovacion ?? false,
-    EsActual = true,
-    CulqiSubscriptionId = nuevaSuscripcion.Id,
-    CulqiCustomerId = proveedor.CulqiCustomerId,
-    SaldoFavor = nuevoSaldoAFavor
+    CulqiSubscriptionId = culqiSubscriptionId,
+    CulqiCustomerId = customerId,
+    CulqiSubscriptionIdAnterior = oldSubscriptionId  // ← CLAVE
+    // NO cancelamos suscripción anterior aquí
 };
 ```
 
