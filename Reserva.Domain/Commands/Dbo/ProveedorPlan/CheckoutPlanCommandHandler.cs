@@ -187,8 +187,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                                 && x.Activo
                                 && x.EsActual
                                 && x.Estado != Constants.ESTADO_PROV_PLAN.CANCELLED
-                                && !string.IsNullOrEmpty(x.CulqiSubscriptionId),
-                            x => x.IdPlaneNavigation
+                                && !string.IsNullOrEmpty(x.CulqiSubscriptionId)
                         );
 
                         if (oldProveedorPlan != null)
@@ -353,8 +352,6 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 // Guardar referencia de suscripción anterior para cancelar después del webhook
                 CulqiSubscriptionIdAnterior = oldSubscriptionId
             };  
-
-            
 
             await _proveedorPlanRepository.AddAsync(proveedorPlan);
 
