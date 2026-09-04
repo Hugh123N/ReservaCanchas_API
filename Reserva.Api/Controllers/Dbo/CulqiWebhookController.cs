@@ -342,8 +342,7 @@ namespace Reserva.Api.Controllers.Dbo
             switch (proveedorPlan.Estado)
             {
                 case var estado when estado == Constants.ESTADO_PROV_PLAN.PENDING:
-                    // ═══ PRIMERA VEZ - Pago inicial falló ═══
-                    // El usuario nunca tuvo servicio activo
+                    // ═══ PRIMERA VEZ o CAMBIO DE PLAN - Pago inicial falló ═══
                     _logger.LogInformation("Pago inicial fallido para ProveedorPlan {Id}. Estado: PENDING → CANCELLED", proveedorPlan.IdProveedorPlan);
                     
                     proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
@@ -355,23 +354,36 @@ namespace Reserva.Api.Controllers.Dbo
                     // (el plan anterior sigue activo ya que no se canceló)
                     if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionIdAnterior))
                     {
-                        _logger.LogInformation("Limpiando referencia de suscripción anterior. Plan anterior sigue activo.");
+                        _logger.LogInformation("Cambio de plan fallido. Plan anterior sigue activo. Limpiando referencia.");
                         proveedorPlan.CulqiSubscriptionIdAnterior = null;
                     }
                     break;
 
                 case var estado when estado == Constants.ESTADO_PROV_PLAN.ACTIVE:
-                    // ═══ RENOVACIÓN - Pago recurrente falló ═══
-                    // El usuario ya tenía servicio activo, dar período de gracia
-                    _logger.LogInformation("Renovación fallida para ProveedorPlan {Id}. Estado: ACTIVE → GRACE", proveedorPlan.IdProveedorPlan);
-                    
-                    proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.GRACE;
-                    proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
+                    // ═══ VERIFICAR SI ES CAMBIO DE PLAN o RENOVACIÓN ═══
+                    if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionIdAnterior))
+                    {
+                        // Es un plan NUEVO de cambio de plan → CANCELLED (no GRACE)
+                        _logger.LogInformation("Cambio de plan fallido para ProveedorPlan {Id}. Estado: ACTIVE → CANCELLED (plan anterior mantiene servicio)", proveedorPlan.IdProveedorPlan);
+                        
+                        proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
+                        proveedorPlan.EsActual = false;
+                        proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
+                        proveedorPlan.MotivoCancelacion = $"Cambio de plan fallido: {merchantMessage ?? errorCode}";
+                        proveedorPlan.CulqiSubscriptionIdAnterior = null;
+                    }
+                    else
+                    {
+                        // Es RENOVACIÓN normal → GRACE
+                        _logger.LogInformation("Renovación fallida para ProveedorPlan {Id}. Estado: ACTIVE → GRACE", proveedorPlan.IdProveedorPlan);
+                        
+                        proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.GRACE;
+                        proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
+                    }
                     break;
 
                 case var estado when estado == Constants.ESTADO_PROV_PLAN.GRACE:
                     // ═══ REINTENTO en gracia falló ═══
-                    // Mantener en GRACE, extender período
                     _logger.LogInformation("Reintento fallido para ProveedorPlan {Id}. Manteniendo GRACE", proveedorPlan.IdProveedorPlan);
                     
                     proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
