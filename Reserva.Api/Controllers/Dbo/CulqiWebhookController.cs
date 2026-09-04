@@ -350,6 +350,20 @@ namespace Reserva.Api.Controllers.Dbo
                     proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
                     proveedorPlan.MotivoCancelacion = $"Pago inicial rechazado: {merchantMessage ?? errorCode}";
 
+                    // Cancelar suscripción en Culqi para evitar reintentos
+                    if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
+                    {
+                        try
+                        {
+                            _logger.LogInformation("Cancelando suscripción Culqi {SubscriptionId} para evitar reintentos", proveedorPlan.CulqiSubscriptionId);
+                            await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "No se pudo cancelar suscripción Culqi {SubscriptionId}. Continuando...", proveedorPlan.CulqiSubscriptionId);
+                        }
+                    }
+
                     // Si hay suscripción anterior pendiente de cancelar, limpiar la referencia
                     // (el plan anterior sigue activo ya que no se canceló)
                     if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionIdAnterior))
@@ -371,11 +385,25 @@ namespace Reserva.Api.Controllers.Dbo
                         proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
                         proveedorPlan.MotivoCancelacion = $"Cambio de plan fallido: {merchantMessage ?? errorCode}";
                         proveedorPlan.CulqiSubscriptionIdAnterior = null;
+
+                        // Cancelar suscripción en Culqi para evitar reintentos
+                        if (!string.IsNullOrEmpty(proveedorPlan.CulqiSubscriptionId))
+                        {
+                            try
+                            {
+                                _logger.LogInformation("Cancelando suscripción Culqi {SubscriptionId} para evitar reintentos", proveedorPlan.CulqiSubscriptionId);
+                                await _culqiService.CancelSubscriptionAsync(proveedorPlan.CulqiSubscriptionId);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "No se pudo cancelar suscripción Culqi {SubscriptionId}. Continuando...", proveedorPlan.CulqiSubscriptionId);
+                            }
+                        }
                     }
                     else
                     {
-                        // Es RENOVACIÓN normal → GRACE
-                        _logger.LogInformation("Renovación fallida para ProveedorPlan {Id}. Estado: ACTIVE → GRACE", proveedorPlan.IdProveedorPlan);
+                        // Es RENOVACIÓN normal → GRACE (Culqi sigue reintentando)
+                        _logger.LogInformation("Renovación fallida para ProveedorPlan {Id}. Estado: ACTIVE → GRACE (Culqi reintentará)", proveedorPlan.IdProveedorPlan);
                         
                         proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.GRACE;
                         proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
@@ -384,7 +412,7 @@ namespace Reserva.Api.Controllers.Dbo
 
                 case var estado when estado == Constants.ESTADO_PROV_PLAN.GRACE:
                     // ═══ REINTENTO en gracia falló ═══
-                    _logger.LogInformation("Reintento fallido para ProveedorPlan {Id}. Manteniendo GRACE", proveedorPlan.IdProveedorPlan);
+                    _logger.LogInformation("Reintento fallido para ProveedorPlan {Id}. Manteniendo GRACE (Culqi reintentará)", proveedorPlan.IdProveedorPlan);
                     
                     proveedorPlan.GracePeriodHasta = DateTimeOffset.UtcNow.AddDays(5);
                     break;
