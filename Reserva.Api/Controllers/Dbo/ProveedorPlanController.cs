@@ -48,10 +48,6 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto> CancelAutoRenew(int idProveedorPlan)
             => await _ProveedorPlanApplication.CancelAutoRenew(idProveedorPlan);
 
-        [HttpPost("retry-payment")]
-        public async Task<ResponseDto> RetryPayment([FromBody] RetryPaymentDto retryPaymentDto)
-            => await _ProveedorPlanApplication.RetryPayment(retryPaymentDto);
-
         [HttpPost("change-plan")]
         public async Task<ResponseDto<ChangePlanResponseDto>> ChangePlan([FromBody] ChangePlanDto changePlanDto)
             => await _ProveedorPlanApplication.ChangePlan(changePlanDto);

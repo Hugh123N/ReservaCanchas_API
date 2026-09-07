@@ -40,9 +40,6 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto> CancelAutoRenew(int idProveedorPlan)
             => await _mediator.Send(new CancelAutoRenewCommand(idProveedorPlan));
 
-        public async Task<ResponseDto> RetryPayment(RetryPaymentDto retryPaymentDto)
-            => await _mediator.Send(new RetryPaymentPlanCommand(retryPaymentDto));
-
         public async Task<ResponseDto<ChangePlanResponseDto>> ChangePlan(ChangePlanDto changePlanDto)
             => await _mediator.Send(new ChangePlanCommand(changePlanDto));
 

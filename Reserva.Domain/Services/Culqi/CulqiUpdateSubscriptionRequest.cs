@@ -11,6 +11,7 @@ namespace Reserva.Domain.Services.Culqi
         [JsonPropertyName("card_id")]
         public string? CardId { get; set; }
 
+        [JsonPropertyName("metadata")]
         public Dictionary<string, string>? Metadata { get; set; }
     }
 }

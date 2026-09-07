@@ -536,9 +536,8 @@ Endpoints:
 
 | Command | Handler | Descripción |
 |---------|---------|-------------|
-| `CheckoutPlanCommand` | `CheckoutPlanCommandHandler` | Crea Customer → Plan → Subscription |
+| `CheckoutPlanCommand` | `CheckoutPlanCommandHandler` | Crea Customer → Plan → Subscription (todos los pagos) |
 | `CancelAutoRenewCommand` | `CancelAutoRenewCommandHandler` | Cancela suscripción en Culqi y BD |
-| `RetryPaymentPlanCommand` | `RetryPaymentPlanCommandHandler` | Registra reintento de pago |
 
 ### 6. Queries (CQRS)
 
@@ -883,9 +882,7 @@ UsoPlan
 | CulqiService | ✅ Implementado |
 | UpdateSubscriptionAsync | ✅ Implementado |
 | CheckoutPlanCommandHandler | ✅ Implementado |
-| ChangePlanCommandHandler | ✅ Implementado |
 | CancelAutoRenewCommandHandler | ✅ Implementado |
-| RetryPaymentPlanCommandHandler | ✅ Implementado |
 | WebhookController | ✅ Implementado |
 | PlanExpirationService | ✅ Implementado |
 | ValidateWebhookSignature | ⚠️ PENDIENTE - Requiere documentación Culqi |

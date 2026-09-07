@@ -1,11 +1,12 @@
-# Flujo Técnico - Sistema de Planes y Pagos (v5.0)
+# Flujo Técnico - Sistema de Planes y Pagos (v6.0)
 
-> **Versión**: 5.0 | **Fecha**: 2026-09-04
+> **Versión**: 6.0 | **Fecha**: 2026-09-04
 > 
 > **Cambios v4.0**: Detección de método de pago (Yape vs Tarjeta), plan Culqi dinámico, prorrateo con pago único
 > **Cambios v4.1**: `esPagoUnico` se determina por `tarifa.Codigo` (no por `PaymentType`). Soporte Yape en planes de suscripción.
 > **Cambios v4.2**: PagoPlan se crea en webhook (no en handlers). Cada charge genera PagoPlan histórico. Búsqueda unificada por metadata proveedor_id. FechaFin usa DateTimeHelper.GetNextBillingDate.
 > **Cambios v5.0**: Cancelación diferida para cambios de plan. Campo `CulqiSubscriptionIdAnterior`. Manejo de reintentos Culqi. `ChangePlanCommandHandler` deprecated - se usa `CheckoutPlanCommandHandler`.
+> **Cambios v6.0**: Eliminación de `RetryPaymentPlanCommandHandler`. Todos los pagos (nuevos, renovaciones, cambios de plan) se procesan a través de `CheckoutPlanCommandHandler`.
 
 ## Resumen de Flujos
 
@@ -15,13 +16,13 @@
 | 1B | Plan único (UNIQUE/BLACKFRIDAY) - Yape | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Order → Charge |
 | 1C | Plan suscripción (MONTHLY/YEARLY) - Tarjeta | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Card → Subscription |
 | 1D | Plan suscripción (MONTHLY/YEARLY) - Yape | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Order → Charge (sin renovación) |
-| 2 | GRACE → Pagar en ver-plan | `ver-plan` | `RetryPaymentPlanCommandHandler` | `/retry-payment` | Card/Order |
-| 3 | GRACE → Catálogo → Plan actual | `planes-catalogo` | `RetryPaymentPlanCommandHandler` | `/retry-payment` | Card/Order |
+| 2 | GRACE → Pagar en ver-plan | `ver-plan` | `CheckoutPlanCommandHandler` | `/checkout` | Card/Order |
+| 3 | GRACE → Catálogo → Plan actual | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Card/Order |
 | 4 | **ACTIVE → Cambio de plan (via Checkout)** | `planes-catalogo` | `CheckoutPlanCommandHandler` | `/checkout` | Card/Order (con cancelación diferida) |
 | 5 | ACTIVE → Cancelar renovación | `ver-plan` | `CancelAutoRenewCommandHandler` | `/cancel-auto-renew` | N/A |
 | 6 | **Webhooks Culqi** | - | `CulqiWebhookController` | `/webhook/culqi` | - |
 
-> **NOTA**: `ChangePlanCommandHandler` está deprecated. Los cambios de plan ahora se procesan a través de `CheckoutPlanCommandHandler` con cancelación diferida de la suscripción anterior.
+> **NOTA**: `RetryPaymentPlanCommandHandler` y `ChangePlanCommandHandler` fueron eliminados. Todos los pagos se procesan a través de `CheckoutPlanCommandHandler`.
 
 ---
 
@@ -347,14 +348,15 @@ if (esPagoUnico) {
 
 ---
 
-## FLUJO 2: Estado GRACE → Pagar en Ver Plan
+## FLUJO 2: Estado GRACE → Pagar en Ver Plan (v6.0)
 
 ### Descripción
-Proveedor con plan vencido (estado GRACE) paga directamente desde la página de ver plan.
+Proveedor con plan vencido (estado GRACE) paga directamente desde la página de ver plan. **El cobro es inmediato** a través de `CheckoutPlanCommandHandler`.
 
 ### Componentes Involucrados
 - **Frontend**: `ver-plan.component.ts`
-- **Backend**: `RetryPaymentPlanCommandHandler.cs`
+- **Backend**: `CheckoutPlanCommandHandler.cs`
+- **Webhook**: `CulqiWebhookController.cs`
 - **Servicio Culqi**: `CulqiService.cs`
 
 ### Diagrama de Flujo
@@ -380,51 +382,58 @@ Proveedor con plan vencido (estado GRACE) paga directamente desde la página de 
 │  │     description: `Pago plan ${plan.nombre}`,                        │
 │  │     email                                                           │
 │  │   })                                                                │
-│  │   → Retorna: token                                                  │
+│  │   → Retorna: { type: 'card' | 'order', id: string }                │
 │  │                                                                     │
-│  └── onReintentarPago(token)                                           │
+│  └── onReintentarPago(token, type)                                     │
 │      │                                                                 │
-│      ├── proveedorPlanService.retryPayment({                           │
-│      │     idProveedorPlan,                                            │
+│      ├── proveedorPlanService.checkout({                               │
+│      │     idProveedor,                                                │
+│      │     idPlane,                                                    │
+│      │     idPlanTarifa,                                               │
 │      │     culqiToken: token,                                          │
+│      │     paymentType: type,                                          │
 │      │     email                                                       │
 │      │   })                                                            │
-│      │   → POST /api/ProveedorPlan/retry-payment                       │
+│      │   → POST /api/ProveedorPlan/checkout                            │
 │      │                                                                 │
 │      └── Si éxito → startPolling() (verificar estado cada 5s)          │
 └─────────────────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  BACKEND - RetryPaymentPlanCommandHandler.cs                            │
+│  BACKEND - CheckoutPlanCommandHandler.cs (v6.0)                         │
 │                                                                         │
 │  HandleCommand(request)                                                 │
 │  │                                                                      │
 │  ├── 1. VALIDACIONES                                                    │
-│  │   ├── ProveedorPlan existe?                                         │
-│  │   ├── Estado es GRACE o PAST_DUE?                                   │
-│  │   └── Proveedor existe?                                             │
+│  │   ├── Tarifa existe?                                                 │
+│  │   └── Proveedor existe?                                              │
 │  │                                                                      │
 │  ├── 2. CALCULAR MONTO                                                  │
 │  │   monto = tarifa.Precio - (descuento si aplica)                     │
 │  │                                                                      │
-│  ├── 3. ACTUALIZAR TARJEDA (si se envió token)                         │
-│  │   ├── if (CulqiToken != null && CulqiCustomerId != null)            │
-│  │   │   ├── GetCardAsync(customerId) → existingCard                   │
-│  │   │   ├── CreateCardAsync(customerId, token) → newCard              │
-│  │   │   ├── DeleteCardAsync(existingCard.Id)                          │
-│  │   │   │                                                             │
-│  │   │   ├── if (CulqiSubscriptionId != null)                          │
-│  │   │   │   └── UpdateSubscriptionAsync(subscriptionId, {             │
-│  │   │   │         CardId: newCard.Id                                  │
-│  │   │   │       })                                                    │
-│  │   │   │                                                             │
-│  │   │   └── Registrar log: "Tarjeta anterior eliminada"               │
+│  ├── 3. DETERMINAR TIPO DE PLAN                                         │
+│  │   ├── esPagoUnico = tarifa.Codigo is "UNIQUE" or "BLACKFRIDAY"      │
+│  │   └── else (MONTHLY/YEARLY) → Plan de suscripción                   │
 │  │                                                                      │
-│  ├── 4. REGISTRAR PAGO ← ELIMINADO (webhook lo crea)                      │
-│  │   (PagoPlan se crea en CulqiWebhookController al recibir             │
-│  │    charge.creation.succeeded con charge ID real)                    │                               │
-│  └── Retornar: "Pago registrado. Culqi procesará automáticamente."     │
+│  ├── 4. BUSCAR SUSCRIPCIÓN ANTERIOR (si existe plan activo)            │
+│  │   ├── Buscar ProveedorPlan activo del proveedor                     │
+│  │   ├── Si tiene CulqiSubscriptionId → guardar referencia             │
+│  │   └── Marcar plan anterior con MotivoCancelacion =                   │
+│  │       "PENDIENTE_CANCELACION_CAMBIO_PLAN"                           │
+│  │                                                                      │
+│  ├── 5. PROCESAR PAGO                                                   │
+│  │   ├── Si esPagoUnico: Crear Charge                                  │
+│  │   ├── Si esPagoConTarjeta: Customer + Card + Subscription           │
+│  │   └── Si esYape: Customer + Charge (sin subscription)               │
+│  │                                                                      │
+│  ├── 6. CREAR NUEVO PROVEEDOR PLAN                                     │
+│  │   ├── Estado = PENDING (suscripción) o ACTIVE (pago único)          │
+│  │   ├── CulqiSubscriptionId = nueva suscripción (si aplica)           │
+│  │   ├── CulqiSubscriptionIdAnterior = referencia anterior             │
+│  │   └── NO cancelar suscripción anterior aún (cancelación diferida)   │
+│  │                                                                      │
+│  └── Retornar resultado                                                 │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
          │
@@ -432,11 +441,28 @@ Proveedor con plan vencido (estado GRACE) paga directamente desde la página de 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  CULQI - Procesamiento                                                  │
 │                                                                         │
-│  1. Usa la tarjeta actualizada de la suscripción                        │
-│  2. Cobra al cliente                                                    │
-│  3. Envía webhook de resultado                                          │
-│  4. Estado cambia: GRACE → ACTIVE (si éxito)                           │
-│                    GRACE → GRACE otra vez (si falla)                    │
+│  1. Procesa el charge o suscripción                                     │
+│  2. Envía webhook charge.succeeded o charge.failed                      │
+└─────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  WEBHOOK - CulqiWebhookController.cs                                    │
+│                                                                         │
+│  charge.succeeded:                                                      │
+│  ├── Crear PagoPlan con charge ID real                                  │
+│  ├── Estado: GRACE → ACTIVE                                            │
+│  ├── Actualizar FechaFin y FechaProximoCobro                           │
+│  ├── Si tiene CulqiSubscriptionIdAnterior:                             │
+│  │   ├── CancelSubscriptionAsync(suscripción anterior)                 │
+│  │   └── Marcar plan anterior como CANCELLED                           │
+│  └── Notificar éxito al proveedor                                       │
+│                                                                         │
+│  charge.failed:                                                         │
+│  ├── Crear PagoPlan RECHAZADO                                          │
+│  ├── Estado: GRACE → GRACE (mantener, extender período)               │
+│  └── Notificar fallo al proveedor                                       │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -444,29 +470,25 @@ Proveedor con plan vencido (estado GRACE) paga directamente desde la página de 
 
 **Frontend** (`ver-plan.component.ts`):
 ```typescript
-async onPagarPlan(): Promise<void> {
-  await this.culqiService.loadScript();
-  
-  const token = await this.culqiService.openCheckout({
-    title: `Pagar plan - ${this.planActual.plan.nombre}`,
-    currency: 'PEN',
-    amount: this.getMontoPagar() * 100,
-    description: `Pago plan ${this.planActual.plan.nombre}`,
-    email: email
-  });
+onReintentarPago(culqiToken?: string, paymentType?: 'card' | 'yape' | 'order'): void {
+  if (!this.planActual) return;
 
-  this.onReintentarPago(token);
-}
+  const user = this.authService.loadUserProfile();
+  const email = user?.email ?? '';
 
-onReintentarPago(culqiToken?: string): void {
-  this.proveedorPlanService.retryPayment({
-    idProveedorPlan: this.planActual.idProveedorPlan,
+  const checkoutData: CheckoutPlanDto = {
+    idProveedor: this.planActual.idProveedor,
+    idPlane: this.planActual.idPlane,
+    idPlanTarifa: this.planActual.idPlanTarifa,
     culqiToken: culqiToken || null,
-    email: culqiToken ? email : null
-  }).subscribe({
+    paymentType: paymentType || 'card',
+    email: email
+  };
+
+  this.proveedorPlanService.checkout(checkoutData).subscribe({
     next: (response) => {
       if (response.isValid) {
-        this.openSuccessAlert('Pago registrado. Esperando confirmación...');
+        this.openSuccessAlert('Pago procesado. Tu plan se activará en unos segundos...');
         this.startPolling();
       }
     }
@@ -474,43 +496,17 @@ onReintentarPago(culqiToken?: string): void {
 }
 ```
 
-**Backend** (`RetryPaymentPlanCommandHandler.cs`):
-```csharp
-// Actualizar tarjeta
-var existingCard = await _culqiService.GetCardAsync(proveedor.CulqiCustomerId);
-var newCard = await _culqiService.CreateCardAsync(proveedor.CulqiCustomerId, dto.CulqiToken);
-
-if (existingCard != null)
-{
-    await _culqiService.DeleteCardAsync(existingCard.Id);
-}
-
-// Actualizar suscripción
-var updateRequest = new CulqiUpdateSubscriptionRequest
-{
-    CardId = newCard.Id
-};
-await _culqiService.UpdateSubscriptionAsync(proveedorPlan.CulqiSubscriptionId, updateRequest);
-
-// Registrar pago
-var pagoPlan = new PagoPlan
-{
-    Monto = monto,
-    CulqiChargeId = proveedorPlan.CulqiSubscriptionId
-};
-await _pagoPlanRepository.AddAsync(pagoPlan);
-```
-
 ---
 
-## FLUJO 3: Estado GRACE → Catálogo → Plan Actual
+## FLUJO 3: Estado GRACE → Catálogo → Plan Actual (v6.0)
 
 ### Descripción
-Proveedor con plan vencido (estado GRACE) va al catálogo y selecciona su mismo plan para pagarlo.
+Proveedor con plan vencido (estado GRACE) va al catálogo y selecciona su mismo plan para pagarlo. **El cobro es inmediato** a través de `CheckoutPlanCommandHandler`.
 
 ### Componentes Involucrados
 - **Frontend**: `planes-catalogo.component.ts`
-- **Backend**: `RetryPaymentPlanCommandHandler.cs`
+- **Backend**: `CheckoutPlanCommandHandler.cs` (mismo que Flujo 2)
+- **Webhook**: `CulqiWebhookController.cs`
 - **Servicio Culqi**: `CulqiService.cs`
 
 ### Diagrama de Flujo
@@ -543,29 +539,30 @@ Proveedor con plan vencido (estado GRACE) va al catálogo y selecciona su mismo 
 │  │     description: `Pago plan ${planActual.nombre}`,                  │
 │  │     email                                                           │
 │  │   })                                                                │
-│  │   → Retorna: token                                                  │
+│  │   → Retorna: { type: 'card' | 'order', id: string }                │
 │  │                                                                     │
-│  └── proveedorPlanService.retryPayment({                               │
-│        idProveedorPlan,                                                │
-│        culqiToken: token,                                              │
+│  └── proveedorPlanService.checkout({                                   │
+│        idProveedor,                                                    │
+│        idPlane: planActual.idPlane,                                    │
+│        idPlanTarifa: tarifa.idPlanTarifa,                              │
+│        culqiToken: result.id,                                          │
+│        paymentType: result.type,                                       │
 │        email                                                           │
 │      })                                                                │
-│      → POST /api/ProveedorPlan/retry-payment                           │
+│      → POST /api/ProveedorPlan/checkout                                │
 │      → Si éxito → startPolling()                                       │
 └─────────────────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  BACKEND - RetryPaymentPlanCommandHandler.cs                            │
+│  BACKEND - CheckoutPlanCommandHandler.cs (v6.0)                         │
 │  (MISMO CÓDIGO QUE FLUJO 2)                                            │
 │                                                                         │
-│  HandleCommand(request)                                                 │
-│  │                                                                      │
-│  ├── 1. VALIDACIONES                                                    │
-│  ├── 2. CALCULAR MONTO                                                  │
-│  ├── 3. ACTUALIZAR TARJEDA (si se envió token)                         │
-│  └── 4. REGISTRAR PAGO                                                  │
-│                                                                         │
+│  1. Validar tarifa y proveedor                                          │
+│  2. Determinar tipo de plan                                             │
+│  3. Procesar pago (Charge o Subscription)                               │
+│  4. Crear nuevo ProveedorPlan                                          │
+│  5. Webhook creará PagoPlan + activará plan                            │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -575,7 +572,7 @@ Proveedor con plan vencido (estado GRACE) va al catálogo y selecciona su mismo 
 |---------|---------|---------|
 | **Punto de entrada** | ver-plan.component | planes-catalogo.component |
 | **Método** | `onPagarPlan()` | `onPagarPlanActual()` |
-| **Backend** | `RetryPaymentPlanCommandHandler` | `RetryPaymentPlanCommandHandler` |
+| **Backend** | `CheckoutPlanCommandHandler` | `CheckoutPlanCommandHandler` |
 | **Lógica** | Idéntica | Idéntica |
 
 ### Lógica de Botones en Catálogo
@@ -610,12 +607,12 @@ getBotonTexto(plan: ListPlaneDto): string {
 
 ---
 
-## FLUJO 4: Estado ACTIVE → Cambio de Plan (Upgrade/Downgrade) - v5.0
+## FLUJO 4: Estado ACTIVE → Cambio de Plan (Upgrade/Downgrade) - v6.0
 
 ### Descripción
-Proveedor con plan activo cambia a un plan diferente (superior o inferior). **Ahora se procesa a través de `CheckoutPlanCommandHandler`** con cancelación diferida de la suscripción anterior.
+Proveedor con plan activo cambia a un plan diferente (superior o inferior). **Se procesa a través de `CheckoutPlanCommandHandler`** con cancelación diferida de la suscripción anterior.
 
-**Ventajas de la nueva implementación:**
+**Ventajas de la implementación:**
 - El plan anterior se mantiene ACTIVO hasta que el nuevo pago sea confirmado
 - Si el nuevo pago falla, el usuario conserva su servicio actual
 - La suscripción anterior solo se cancela después de confirmar el nuevo pago
@@ -628,7 +625,7 @@ Proveedor con plan activo cambia a un plan diferente (superior o inferior). **Ah
 
 ### Componentes Involucrados
 - **Frontend**: `planes-catalogo.component.ts`, `culqi.service.ts`
-- **Backend**: `CalculateProrationQueryHandler.cs` + **`CheckoutPlanCommandHandler.cs`** (NO ChangePlanCommandHandler)
+- **Backend**: `CalculateProrationQueryHandler.cs` + **`CheckoutPlanCommandHandler.cs`**
 - **Webhook**: `CulqiWebhookController.cs`
 - **Servicio Culqi**: `CulqiService.cs`
 
@@ -1567,12 +1564,12 @@ Task<CulqiChargeResponse> CreateChargeAsync(CulqiCreateChargeRequest request);
 
 | Endpoint | Método | Descripción | Handler |
 |----------|--------|-------------|---------|
-| `/api/ProveedorPlan/checkout` | POST | Checkout inicial | `CheckoutPlanCommandHandler` |
-| `/api/ProveedorPlan/retry-payment` | POST | Reintentar pago | `RetryPaymentPlanCommandHandler` |
+| `/api/ProveedorPlan/checkout` | POST | Checkout (nuevos planes, renovaciones, cambios) | `CheckoutPlanCommandHandler` |
 | `/api/ProveedorPlan/calculate-proration` | POST | Calcular prorrateo | `CalculateProrationQueryHandler` |
-| `/api/ProveedorPlan/change-plan` | POST | Cambiar plan | `ChangePlanCommandHandler` |
-| `/api/ProveedorPlan/cancel-auto-renew/{id}` | POST | Cancelar renovación | `CancelAutoRenewCommandHandler` |
+| `/api/veedorPlan/cancel-auto-renew/{id}` | POST | Cancelar renovación | `CancelAutoRenewCommandHandler` |
 | `/api/ProveedorPlan/current/{idProveedor}` | GET | Plan actual | `GetCurrentProveedorPlanQuery` |
+
+> **NOTA**: Los endpoints `/retry-payment` y `/change-plan` fueron eliminados. Todos los pagos se procesan a través de `/checkout`.
 
 ---
 
