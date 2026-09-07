@@ -15,7 +15,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<SearchResultDto<SearchProveedorPlanDto>>> Search(SearchParamsDto<SearchProveedorPlanFilterDto> searchParams);
 
         Task<ResponseDto<GetProveedorPlanCurrentDto>> GetCurrent(int idProveedor);
-        Task<ResponseDto> Checkout(CheckoutPlanDto checkoutDto);
+        Task<ResponseDto<int>> Checkout(CheckoutPlanDto checkoutDto);
         Task<ResponseDto> CancelAutoRenew(int idProveedorPlan);
         Task<ResponseDto<ChangePlanResponseDto>> ChangePlan(ChangePlanDto changePlanDto);
         Task<ResponseDto<CalculateProrationResponseDto>> CalculateProration(CalculateProrationDto calculateProrationDto);

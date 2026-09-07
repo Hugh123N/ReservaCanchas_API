@@ -15,7 +15,7 @@ using static Reserva.Common.Constants;
 
 namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
 {
-    public class CheckoutPlanCommandHandler : CommandHandlerBase<CheckoutPlanCommand>
+    public class CheckoutPlanCommandHandler : CommandHandlerBase<CheckoutPlanCommand, int>
     {
         private readonly IRepository<Entity.ProveedorPlan> _proveedorPlanRepository;
         private readonly IRepository<Entity.Plane> _planeRepository;
@@ -45,9 +45,9 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             _logger = logger;
         }
 
-        public override async Task<ResponseDto> HandleCommand(CheckoutPlanCommand request, CancellationToken cancellationToken)
+        public override async Task<ResponseDto<int>> HandleCommand(CheckoutPlanCommand request, CancellationToken cancellationToken)
         {
-            var response = new ResponseDto();
+            var response = new ResponseDto<int>();
             var dto = request.CheckoutDto;
 
             var tarifa = await _tarifaRepository.GetByAsync(x => x.IdPlanTarifa == dto.IdPlanTarifa, x => x.IdPlaneNavigation);
@@ -372,6 +372,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 mensajeExito = "Pago registrado. Tu plan está activo. Para activar la renovación automática, agrega una tarjeta desde tu perfil.";
             }
             
+            response.UpdateData(proveedorPlan.IdProveedorPlan);
             response.AddOkResult(mensajeExito);
             return response;
         }

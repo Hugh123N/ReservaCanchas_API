@@ -41,7 +41,7 @@ namespace Reserva.Api.Controllers.Dbo
             => await _ProveedorPlanApplication.GetCurrent(idProveedor);
 
         [HttpPost("checkout")]
-        public async Task<ResponseDto> Checkout([FromBody] CheckoutPlanDto checkoutDto)
+        public async Task<ResponseDto<int>> Checkout([FromBody] CheckoutPlanDto checkoutDto)
             => await _ProveedorPlanApplication.Checkout(checkoutDto);
 
         [HttpPost("cancel-auto-renew/{idProveedorPlan}")]

@@ -6,7 +6,23 @@ services:
       ASPNETCORE_URLS: "http://+:80"
       ASPNETCORE_ENVIRONMENT: "Production"
       DOTNET_RUNNING_IN_CONTAINER: "true"
-      ConexionString: "Server=canchas-bd-xpizkz;Port=3306;Database=ReservaCanchas;User=root;Password=ygyzzgizuifbpquk;AllowPublicKeyRetrieval=True;SslMode=None;ConnectionTimeout=30;"
+      ConexionString: "${ConexionString}"
+
+      SecurityOptions__SecurityKey: "${SecurityOptions__SecurityKey}"
+
+      Culqi__PublicKey: "${Culqi__PublicKey}"
+      Culqi__SecretKey: "${Culqi__SecretKey}"
+      Culqi__WebhookUrl: "${Culqi__WebhookUrl}"
+
+      CloudflareR2__AccountId: "${CloudflareR2__AccountId}"
+      CloudflareR2__AccessKeyId: "${CloudflareR2__AccessKeyId}"
+      CloudflareR2__SecretAccessKey: "${CloudflareR2__SecretAccessKey}"
+      CloudflareR2__PublicUrl: "${CloudflareR2__PublicUrl}"
+
+      OAuth__Google__ClientId: "${OAuth__Google__ClientId}"
+
+      OAuth__Facebook__AppId: "${OAuth__Facebook__AppId}"
+      OAuth__Facebook__AppSecret: "${OAuth__Facebook__AppSecret}"
       TZ: "America/Lima"
     expose:
       - "80"

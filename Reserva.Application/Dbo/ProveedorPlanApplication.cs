@@ -34,7 +34,7 @@ namespace Reserva.Application.Dbo
         public async Task<ResponseDto<GetProveedorPlanCurrentDto>> GetCurrent(int idProveedor)
             => await _mediator.Send(new GetCurrentProveedorPlanQuery(idProveedor));
 
-        public async Task<ResponseDto> Checkout(CheckoutPlanDto checkoutDto)
+        public async Task<ResponseDto<int>> Checkout(CheckoutPlanDto checkoutDto)
             => await _mediator.Send(new CheckoutPlanCommand(checkoutDto));
 
         public async Task<ResponseDto> CancelAutoRenew(int idProveedorPlan)
