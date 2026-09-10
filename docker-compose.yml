@@ -8,6 +8,8 @@ services:
       DOTNET_RUNNING_IN_CONTAINER: "true"
       ConexionString: "${ConexionString}"
 
+      EmailSettings__FromPassword: "${EmailSettings__FromPassword}"
+
       SecurityOptions__SecurityKey: "${SecurityOptions__SecurityKey}"
 
       Culqi__PublicKey: "${Culqi__PublicKey}"
