@@ -138,13 +138,13 @@ namespace Reserva.Api.Controllers.Dbo
                 p => p.IdUsuarioNavigation
             );
 
-            await HandlePlanPaymentSucceeded(proveedor, charge.Id, charge.ReferenceCode!, null);
+            await HandlePlanPaymentSucceeded(proveedor, charge, null);
             return;
         }
 
-        private async Task HandlePlanPaymentSucceeded(Entity.Proveedor? proveedor, string charId, string referenceCode, long? nextBillingDate)
+        private async Task HandlePlanPaymentSucceeded(Entity.Proveedor? proveedor, CulqiChargeWebhookDto charge, long? nextBillingDate)
         {
-            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}", proveedor.IdProveedor, charId);
+            _logger.LogInformation("Procesando pago de plan exitoso - ProveedorPlanId: {Id}, ChargeId: {ChargeId}", proveedor.IdProveedor, charge.Id);
 
             var estadoPagado = await _estadoPagoRepository.GetByAsNoTrackingAsync(e => e.Codigo == Constants.ESTADO_PAGO.Pagado);
 
@@ -163,12 +163,12 @@ namespace Reserva.Api.Controllers.Dbo
             var pagoPlan = new Entity.PagoPlan
             {
                 IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-                Monto = proveedorPlan.IdPlanTarifaNavigation?.Precio ?? 0,
+                Monto =charge.Amount/100m,
                 Moneda = Constants.CURRENCY.PEN,
                 IdMetodoPago = 1, // Tarjeta
                 IdEstadoPago = estadoPagado?.IdEstadoPago ?? 1,
-                CulqiChargeId = charId, 
-                CodigoOperacion = referenceCode,
+                CulqiChargeId = charge.Id, 
+                CodigoOperacion = charge.ReferenceCode,
                 FechaPago = DateTimeOffset.UtcNow,
                 Activo = true
             };
@@ -313,30 +313,6 @@ namespace Reserva.Api.Controllers.Dbo
         {
             _logger.LogInformation("Procesando pago de plan fallido - ProveedorPlanId: {Id}, Estado: {Estado}, ChargeId: {ChargeId}",
                 proveedorPlan.IdProveedorPlan, proveedorPlan.Estado, chargeId);
-
-            // Crear PagoPlan RECHAZADO (solo si hay chargeId válido)
-            //if (!string.IsNullOrEmpty(chargeId))
-            //{
-            //    var estadoRechazado = await _estadoPagoRepository.GetByAsNoTrackingAsync(
-            //        e => e.Codigo == Constants.ESTADO_PAGO.Rechazado
-            //    );
-
-            //    var pagoPlan = new Entity.PagoPlan
-            //    {
-            //        IdProveedorPlan = proveedorPlan.IdProveedorPlan,
-            //        Monto = proveedorPlan.IdPlanTarifaNavigation?.Precio ?? 0,
-            //        Moneda = Constants.CURRENCY.PEN,
-            //        IdMetodoPago = 1,
-            //        IdEstadoPago = estadoRechazado?.IdEstadoPago ?? 5,
-            //        CulqiChargeId = chargeId,
-            //        CodigoOperacion = errorCode,
-            //        FechaPago = DateTimeOffset.UtcNow,
-            //        Activo = true
-            //    };
-
-            //    await _pagoPlanRepository.AddAsync(pagoPlan);
-            //    await _pagoPlanRepository.SaveAsync();
-            //}
 
             // ═══ DIFERENCIAR POR ESTADO ACTUAL ═══
             switch (proveedorPlan.Estado)
@@ -535,16 +511,6 @@ namespace Reserva.Api.Controllers.Dbo
                         proveedorPlan.IdProveedorPlan);
                     break;
             }
-        }
-        
-        [HttpGet("webhook/test")]
-        public IActionResult TestWebhook()
-        {
-            return Ok(new
-            {
-                message = "Webhook de Culqi funcionando correctamente",
-                timestamp = DateTimeOffset.UtcNow
-            });
         }
     }
 }
