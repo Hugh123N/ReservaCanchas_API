@@ -3,9 +3,9 @@ namespace Reserva.Dto.Dbo.Calendario
     /// <summary>
     /// DTO que representa un cliente del sistema
     /// </summary>
-    public class ClienteDto
+    public class ClientDto
     {
-        public Guid IdCliente { get; set; }
+        public int IdCliente { get; set; }
 
         public string NombreCompleto { get; set; } = null!;
 

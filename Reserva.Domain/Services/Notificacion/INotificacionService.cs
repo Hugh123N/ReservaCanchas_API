@@ -10,17 +10,17 @@ namespace Reserva.Domain.Services.Notificacion
         /// <summary>
         /// Notifica al operador sobre una nueva reserva pendiente
         /// </summary>
-        Task NotificarNuevaReservaPendienteAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, List<Operador> operadores, string horariosFormateado);
+        Task NotificarNuevaReservaPendienteAsync(Entity.Reserva reserva, Cancha cancha, Cliente cliente, List<Operador> operadores, string horariosFormateado);
 
         /// <summary>
         /// Notifica al cliente que su reserva fue confirmada
         /// </summary>
-        Task NotificarReservaConfirmadaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, Entity.Pago pago, string horariosFormateado);
+        Task NotificarReservaConfirmadaAsync(Entity.Reserva reserva, Cancha cancha, Cliente cliente, Entity.Pago pago, string horariosFormateado);
 
         /// <summary>
         /// Notifica al operador sobre reservas próximas a expirar
         /// </summary>
-        Task NotificarReservaProximaExpirarAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, List<Operador> operadores);
+        Task NotificarReservaProximaExpirarAsync(Entity.Reserva reserva, Cancha cancha, Cliente cliente, List<Operador> operadores);
 
         /// <summary>
         /// Notifica al operador que una reserva expiró
@@ -30,12 +30,12 @@ namespace Reserva.Domain.Services.Notificacion
         /// <summary>
         /// Notifica al cliente que su reserva fue cancelada
         /// </summary>
-        Task NotificarReservaCanceladaAsync(Entity.Reserva reserva, AspNetUsers cliente, string motivo);
+        Task NotificarReservaCanceladaAsync(Entity.Reserva reserva, Cliente cliente, string motivo);
 
         /// <summary>
         /// Envia recordatorio al cliente 1 hora antes de su reserva confirmada
         /// </summary>
-        Task NotificarRecordatorioReservaAsync(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, string horariosFormateado);
+        Task NotificarRecordatorioReservaAsync(Entity.Reserva reserva, Cancha cancha, Cliente cliente, string horariosFormateado);
 
         Task NotificarVencimientoPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor);
         Task NotificarFalloPagoPlanAsync(ProveedorPlan proveedorPlan, Plane plan, string emailProveedor);

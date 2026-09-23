@@ -56,8 +56,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 if (!string.IsNullOrWhiteSpace(filters.SearchText))
                     filter = filter.And(x =>
                         x.CodigoReserva.Contains(filters.SearchText) ||
-                        x.IdClienteNavigation.FirstName.Contains(filters.SearchText) ||
-                        (x.IdClienteNavigation.PhoneNumber != null && x.IdClienteNavigation.PhoneNumber.Contains(filters.SearchText))
+                        x.IdClienteNavigation.Nombres.Contains(filters.SearchText) ||
+                        (x.IdClienteNavigation.Telefono != null && x.IdClienteNavigation.Telefono.Contains(filters.SearchText))
                     );
 
                 if (!string.IsNullOrWhiteSpace(filters.NombreCancha))
@@ -156,8 +156,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     DireccionCancha = r.IdCanchaNavigation.Direccion,
                     TelefonoCancha = r.IdCanchaNavigation.TelefonoCancha,
                     // Cliente
-                    NombreCliente = r.IdClienteNavigation?.FirstName + r.IdClienteNavigation?.FirstName,
-                    TelefonoCliente = r.IdClienteNavigation?.PhoneNumber,
+                    NombreCliente = r.IdClienteNavigation?.Nombres + r.IdClienteNavigation?.Apellidos,
+                    TelefonoCliente = r.IdClienteNavigation?.Telefono,
                     // Horarios
                     Horarios = horarios,
                     // Pago

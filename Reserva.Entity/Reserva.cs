@@ -9,7 +9,7 @@ public partial class Reserva
 
     public string CodigoReserva { get; set; } = null!;
 
-    public Guid IdCliente { get; set; }
+    public int IdCliente { get; set; }
 
     public int IdCancha { get; set; }
 
@@ -47,7 +47,7 @@ public partial class Reserva
 
     public virtual Cancha IdCanchaNavigation { get; set; } = null!;
 
-    public virtual AspNetUsers IdClienteNavigation { get; set; } = null!;
+    public virtual Cliente IdClienteNavigation { get; set; } = null!;
 
     public virtual EstadoReserva IdEstadoReservaNavigation { get; set; } = null!;
 

@@ -15,7 +15,7 @@ namespace Reserva.Application.Abstractions.Dbo
 
         Task<ResponseDto<ReservaOperadorResponseDto>> CrearReservaOperador(CrearReservaOperadorRequestDto request);
 
-        Task<ResponseDto<List<ClienteDto>>> BuscarCliente(string terminoBusqueda);
+        Task<ResponseDto<List<ClientDto>>> BuscarCliente(string terminoBusqueda);
 
         Task<ResponseDto<List<HorarioDisponibleDto>>> ObtenerHorasDisponibles(int idCancha, DateTimeOffset fecha);
 

@@ -41,7 +41,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
             var estadosPago = await _estadoPagoRepository.FindByAsNoTrackingAsync(x => x.Activo);
 
-            Expression<Func<Entity.Reserva, bool>> filter = x => x.IdCliente == request.IdUsuario && x.Activo;
+            Expression<Func<Entity.Reserva, bool>> filter = x => x.IdCliente == request.IdCliente && x.Activo;
 
             var filters = request.SearchParams?.Filter;
 

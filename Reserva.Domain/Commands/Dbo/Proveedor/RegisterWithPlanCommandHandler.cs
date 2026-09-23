@@ -54,7 +54,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                 Password = dto.Password,
                 ConfirmPassword = dto.ConfirmPassword,
                 Telefono = dto.Telefono,
-                Nombre = dto.Nombre,
+                Nombres = dto.Nombre,
                 Apellidos = dto.Apellidos
             };
 

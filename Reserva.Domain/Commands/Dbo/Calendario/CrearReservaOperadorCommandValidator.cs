@@ -10,14 +10,14 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
     /// </summary>
     public class CrearReservaOperadorCommandValidator : CommandValidatorBase<CrearReservaOperadorCommand>
     {
-        private readonly IRepository<Entity.AspNetUsers> _userRepository;
+        private readonly IRepository<Entity.Cliente> _clienteRepository;
         private readonly IRepository<Entity.Cancha> _canchaRepository;
 
         public CrearReservaOperadorCommandValidator(
-            IRepository<Entity.AspNetUsers> userRepository,
+            IRepository<Entity.Cliente> clienteRepository,
             IRepository<Entity.Cancha> canchaRepository)
         {
-            _userRepository = userRepository;
+            _clienteRepository = clienteRepository;
             _canchaRepository = canchaRepository;
 
             ConfigureRules();
@@ -61,8 +61,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                             .MustAsync(async (idCliente, cancellationToken) =>
                             {
                                 if (!idCliente.HasValue) return false;
-                                var user = await _userRepository.GetByAsync(
-                                    u => u.Id == idCliente.Value && u.Activo);
+                                var user = await _clienteRepository.GetByAsync(
+                                    u => u.IdCliente == idCliente.Value && u.Activo);
                                 return user != null;
                             })
                             .WithMessage("El cliente seleccionado no existe");
@@ -89,8 +89,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                             .MustAsync(async (telefono, cancellationToken) =>
                             {
                                 if (string.IsNullOrEmpty(telefono)) return true;
-                                var user = await _userRepository.GetByAsync(
-                                    u => u.PhoneNumber == telefono && u.Activo);
+                                var user = await _clienteRepository.GetByAsync(
+                                    u => u.Telefono == telefono && u.Activo);
                                 return user == null;
                             })
                             .WithMessage("El teléfono ya está registrado");
@@ -102,7 +102,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                             .MustAsync(async (email, cancellationToken) =>
                             {
                                 if (string.IsNullOrEmpty(email)) return true;
-                                var user = await _userRepository.GetByAsync(
+                                var user = await _clienteRepository.GetByAsync(
                                     u => u.Email == email && u.Activo);
                                 return user == null;
                             })

@@ -9,12 +9,12 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
     /// </summary>
     public class SearchReservasClienteQuery : SearchQueryBase<SearchReservaClienteFilterDto, ReservaClienteDto>
     {
-        public Guid IdUsuario { get; set; }
+        public int IdCliente { get; set; }
 
-        public SearchReservasClienteQuery(Guid idUsuario, SearchParamsDto<SearchReservaClienteFilterDto> searchParams)
+        public SearchReservasClienteQuery(int idCliente, SearchParamsDto<SearchReservaClienteFilterDto> searchParams)
             : base(searchParams)
         {
-            IdUsuario = idUsuario;
+            IdCliente = idCliente;
         }
     }
 }

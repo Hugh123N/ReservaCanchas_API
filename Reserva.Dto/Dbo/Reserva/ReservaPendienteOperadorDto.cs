@@ -59,7 +59,7 @@ namespace Reserva.Dto.Dbo.Reserva
         /// <summary>
         /// ID del cliente
         /// </summary>
-        public Guid IdCliente { get; set; }
+        public int IdCliente { get; set; }
 
         /// <summary>
         /// Nombre completo del cliente

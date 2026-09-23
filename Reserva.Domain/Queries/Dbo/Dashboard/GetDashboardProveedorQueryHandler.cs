@@ -216,8 +216,8 @@ namespace Reserva.Domain.Queries.Dbo.Dashboard
             {
                 IdReserva         = r.IdReserva,
                 CodigoReserva     = r.CodigoReserva,
-                NombreCliente     = $"{r.IdClienteNavigation.FirstName} {r.IdClienteNavigation.LastName}",
-                TelefonoCliente   = r.IdClienteNavigation.PhoneNumber,
+                NombreCliente     = $"{r.IdClienteNavigation.Nombres} {r.IdClienteNavigation.Apellidos}",
+                TelefonoCliente   = r.IdClienteNavigation.Telefono,
                 NombreCancha      = canchasNombreDict.TryGetValue(r.IdCancha, out var nombre) ? nombre : string.Empty,
                 FechaReserva      = r.FechaReserva,
                 Monto             = r.MontoTotal,

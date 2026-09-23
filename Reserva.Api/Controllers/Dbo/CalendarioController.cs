@@ -41,7 +41,7 @@ namespace Reserva.Api.Controllers.Dbo
         /// Busca clientes por nombre, apellido o teléfono
         /// </summary>
         [HttpGet("buscar-cliente")]
-        public async Task<ResponseDto<List<ClienteDto>>> BuscarCliente([FromQuery] string termino)
+        public async Task<ResponseDto<List<ClientDto>>> BuscarCliente([FromQuery] string termino)
         {
             return await _calendarioApplication.BuscarCliente(termino);
         }

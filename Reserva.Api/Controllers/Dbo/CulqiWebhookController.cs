@@ -169,8 +169,7 @@ namespace Reserva.Api.Controllers.Dbo
                 IdEstadoPago = estadoPagado?.IdEstadoPago ?? 1,
                 CulqiChargeId = charge.Id, 
                 CodigoOperacion = charge.ReferenceCode,
-                FechaPago = DateTimeOffset.UtcNow,
-                Activo = true
+                FechaPago = DateTimeOffset.UtcNow
             };
 
             await _pagoPlanRepository.AddAsync(pagoPlan);

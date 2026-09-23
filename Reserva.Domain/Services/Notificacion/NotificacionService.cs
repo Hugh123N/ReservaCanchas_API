@@ -31,7 +31,7 @@ namespace Reserva.Domain.Services.Notificacion
         public async Task NotificarNuevaReservaPendienteAsync(
             Entity.Reserva reserva,
             Cancha cancha,
-            AspNetUsers cliente,
+            Cliente cliente,
             List<Operador> operadores,
             string horariosFormateado)
         {
@@ -40,8 +40,8 @@ namespace Reserva.Domain.Services.Notificacion
                 var htmlBody = ConstruirEmailNuevaReservaPendiente(reserva, cancha, cliente, horariosFormateado);
 
                 var emailsOperadores = operadores
-                    .Where(o => o.IdUsuarioNavigation?.Email != null)
-                    .Select(o => o.IdUsuarioNavigation.Email!)
+                    .Where(o => o.Email != null)
+                    .Select(o => o.Email!)
                     .ToList();
 
                 if (emailsOperadores.Any())
@@ -76,7 +76,7 @@ namespace Reserva.Domain.Services.Notificacion
         public async Task NotificarReservaConfirmadaAsync(
             Entity.Reserva reserva,
             Cancha cancha,
-            AspNetUsers cliente,
+            Cliente cliente,
             Entity.Pago pago,
             string horariosFormateado)
         {
@@ -116,7 +116,7 @@ namespace Reserva.Domain.Services.Notificacion
         public async Task NotificarReservaProximaExpirarAsync(
             Entity.Reserva reserva,
             Cancha cancha,
-            AspNetUsers cliente,
+            Cliente cliente,
             List<Operador> operadores)
         {
             try
@@ -128,8 +128,8 @@ namespace Reserva.Domain.Services.Notificacion
                 var htmlBody = ConstruirEmailReservaProximaExpirar(reserva, cancha, cliente, horasRestantes);
 
                 var emailsOperadores = operadores
-                    .Where(o => o.IdUsuarioNavigation?.Email != null)
-                    .Select(o => o.IdUsuarioNavigation.Email!)
+                    .Where(o => o.Email != null)
+                    .Select(o => o.Email!)
                     .ToList();
 
                 if (emailsOperadores.Any())
@@ -168,8 +168,8 @@ namespace Reserva.Domain.Services.Notificacion
                 var htmlBody = ConstruirEmailReservaExpirada(reserva, cancha);
 
                 var emailsOperadores = operadores
-                    .Where(o => o.IdUsuarioNavigation?.Email != null)
-                    .Select(o => o.IdUsuarioNavigation.Email!)
+                    .Where(o => o.Email != null)
+                    .Select(o => o.Email!)
                     .ToList();
 
                 if (emailsOperadores.Any())
@@ -200,7 +200,7 @@ namespace Reserva.Domain.Services.Notificacion
 
         public async Task NotificarReservaCanceladaAsync(
             Entity.Reserva reserva,
-            AspNetUsers cliente,
+            Cliente cliente,
             string motivo)
         {
             try
@@ -235,7 +235,7 @@ namespace Reserva.Domain.Services.Notificacion
 
         #region Construcción de Plantillas HTML
 
-        private string ConstruirEmailNuevaReservaPendiente(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, string horariosFormateado)
+        private string ConstruirEmailNuevaReservaPendiente(Entity.Reserva reserva, Cancha cancha, Cliente cliente, string horariosFormateado)
         {
             var horasRestantes = reserva.FechaExpiracionPreReserva.HasValue
                 ? (reserva.FechaExpiracionPreReserva.Value - DateTimeOffset.UtcNow).TotalHours
@@ -275,9 +275,9 @@ namespace Reserva.Domain.Services.Notificacion
 
             <div class=""info-box"">
                 <h3>Datos del Cliente</h3>
-                <p><strong>Nombre:</strong> {cliente.FirstName} {cliente.LastName}</p>
+                <p><strong>Nombre:</strong> {cliente.Nombres} {cliente.Apellidos}</p>
                 <p><strong>Email:</strong> {cliente.Email}</p>
-                <p><strong>Teléfono:</strong> {cliente.PhoneNumber ?? "No proporcionado"}</p>
+                <p><strong>Teléfono:</strong> {cliente.Telefono ?? "No proporcionado"}</p>
             </div>
 
             <div class=""alert-box"">
@@ -360,7 +360,7 @@ namespace Reserva.Domain.Services.Notificacion
 </html>";
         }
 
-        private string ConstruirEmailReservaProximaExpirar(Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente, double horasRestantes)
+        private string ConstruirEmailReservaProximaExpirar(Entity.Reserva reserva, Cancha cancha, Cliente cliente, double horasRestantes)
         {
             return $@"
 <!DOCTYPE html>
@@ -384,8 +384,8 @@ namespace Reserva.Domain.Services.Notificacion
                 <h3>Acción Urgente Requerida</h3>
                 <p><strong>Código:</strong> {reserva.CodigoReserva}</p>
                 <p><strong>Cancha:</strong> {cancha.Nombre}</p>
-                <p><strong>Cliente:</strong> {cliente.FirstName} {cliente.LastName}</p>
-                <p><strong>Teléfono:</strong> {cliente.PhoneNumber}</p>
+                <p><strong>Cliente:</strong> {cliente.Nombres} {cliente.Apellidos}</p>
+                <p><strong>Teléfono:</strong> {cliente.Telefono}</p>
                 <p><strong>Tiempo restante:</strong> {horasRestantes:F1} horas</p>
                 <p><strong>Expira:</strong> {reserva.FechaExpiracionPreReserva:dd/MM/yyyy HH:mm}</p>
 
@@ -454,13 +454,13 @@ namespace Reserva.Domain.Services.Notificacion
 
         #region WhatsApp (Stub - Por implementar)
 
-        private async Task EnviarWhatsAppOperadoresAsync(List<Operador> operadores, Entity.Reserva reserva, Cancha cancha, AspNetUsers cliente)
+        private async Task EnviarWhatsAppOperadoresAsync(List<Operador> operadores, Entity.Reserva reserva, Cancha cancha, Cliente cliente)
         {
             try
             {
                 var telefonosOperadores = operadores
-                    .Where(o => !string.IsNullOrWhiteSpace(o.IdUsuarioNavigation?.PhoneNumber))
-                    .Select(o => o.IdUsuarioNavigation!.PhoneNumber!)
+                    .Where(o => !string.IsNullOrWhiteSpace(o.Telefono))
+                    .Select(o => o.Telefono!)
                     .ToList();
 
                 if (!telefonosOperadores.Any())
@@ -475,8 +475,8 @@ namespace Reserva.Domain.Services.Notificacion
                              $"Fecha: {reserva.FechaReserva:dd/MM/yyyy}\n" +
                              $"Monto: S/ {reserva.MontoTotal:F2}\n\n" +
                              $"*Cliente:*\n" +
-                             $"Nombre: {cliente.FirstName} {cliente.LastName}\n" +
-                             $"Teléfono: {cliente.PhoneNumber}\n" +
+                             $"Nombre: {cliente.Nombres} {cliente.Apellidos}\n" +
+                             $"Teléfono: {cliente.Telefono}\n" +
                              $"Email: {cliente.Email}\n\n" +
                              $"Expira: {reserva.FechaExpiracionPreReserva:dd/MM/yyyy HH:mm}\n\n" +
                              $"Por favor, contacta al cliente para coordinar el pago.";
@@ -495,11 +495,11 @@ namespace Reserva.Domain.Services.Notificacion
             }
         }
 
-        private async Task EnviarWhatsAppClienteAsync(AspNetUsers cliente, Entity.Reserva reserva, Cancha cancha, Entity.Pago pago)
+        private async Task EnviarWhatsAppClienteAsync(Cliente cliente, Entity.Reserva reserva, Cancha cancha, Entity.Pago pago)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(cliente.PhoneNumber))
+                if (string.IsNullOrWhiteSpace(cliente.Telefono))
                 {
                     _logger.LogWarning("Cliente {Email} no tiene teléfono registrado", cliente.Email);
                     return;
@@ -510,7 +510,7 @@ namespace Reserva.Domain.Services.Notificacion
                                 "PENDIENTE";
 
                 var mensaje = $"*Reserva Confirmada*\n\n" +
-                             $"¡Hola {cliente.FirstName}! Tu reserva ha sido confirmada.\n\n" +
+                             $"¡Hola {cliente.Nombres}! Tu reserva ha sido confirmada.\n\n" +
                              $"Código: *{reserva.CodigoReserva}*\n" +
                              $"Cancha: {cancha.Nombre}\n" +
                              $"Dirección: {cancha.Direccion}\n" +
@@ -526,7 +526,7 @@ namespace Reserva.Domain.Services.Notificacion
                 mensaje += $"\n\n📞 Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
                           $"¡Nos vemos en la cancha!";
 
-                var enviado = await _whatsAppService.SendTextMessageAsync(cliente.PhoneNumber, mensaje);
+                var enviado = await _whatsAppService.SendTextMessageAsync(cliente.Telefono, mensaje);
 
                 if (enviado)
                 {
@@ -549,7 +549,7 @@ namespace Reserva.Domain.Services.Notificacion
         public async Task NotificarRecordatorioReservaAsync(
             Entity.Reserva reserva,
             Cancha cancha,
-            AspNetUsers cliente,
+            Cliente cliente,
             string horariosFormateado)
         {
             try
@@ -578,10 +578,10 @@ namespace Reserva.Domain.Services.Notificacion
                 }
 
                 // WhatsApp
-                if (!string.IsNullOrWhiteSpace(cliente.PhoneNumber))
+                if (!string.IsNullOrWhiteSpace(cliente.Telefono))
                 {
                     var mensaje = $"*Recordatorio de Reserva*\n\n" +
-                                 $"¡Hola {cliente.FirstName}! Tu reserva es en *1 HORA*\n\n" +
+                                 $"¡Hola {cliente.Nombres}! Tu reserva es en *1 HORA*\n\n" +
                                  $"Código: *{reserva.CodigoReserva}*\n" +
                                  $"Cancha: {cancha.Nombre}\n" +
                                  $"Dirección: {cancha.Direccion}\n" +
@@ -590,7 +590,7 @@ namespace Reserva.Domain.Services.Notificacion
                                  $"Teléfono cancha: {cancha.TelefonoCancha ?? "No disponible"}\n\n" +
                                  $"¡Nos vemos en la cancha!";
 
-                    await _whatsAppService.SendTextMessageAsync(cliente.PhoneNumber, mensaje);
+                    await _whatsAppService.SendTextMessageAsync(cliente.Telefono, mensaje);
                 }
 
                 _logger.LogInformation("Recordatorio enviado para reserva {CodigoReserva}", reserva.CodigoReserva);

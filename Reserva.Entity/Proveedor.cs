@@ -7,6 +7,14 @@ public partial class Proveedor
 {
     public int IdProveedor { get; set; }
 
+    public string Nombres { get; set; } = null!;
+
+    public string Apellidos { get; set; } = null!;
+
+    public string? Telefono { get; set; }
+
+    public string? Email { get; set; }
+
     public Guid IdUsuario { get; set; }
 
     public string? RazonSocial { get; set; }
@@ -16,8 +24,6 @@ public partial class Proveedor
     public int IdTipoProveedor { get; set; }
 
     public int IdEstadoProveedor { get; set; }
-
-    public string? Telefono { get; set; }
 
     public string? Facebook { get; set; }
 

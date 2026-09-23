@@ -8,24 +8,24 @@ using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Queries.Dbo.Calendario
 {
-    public class BuscarClienteQueryHandler : QueryHandlerBase<BuscarClienteQuery, List<ClienteDto>>
+    public class BuscarClienteQueryHandler : QueryHandlerBase<BuscarClienteQuery, List<ClientDto>>
     {
-        private readonly IRepository<AspNetUsers> _userRepository;
+        private readonly IRepository<Cliente> _clienteRepository;
 
         public BuscarClienteQueryHandler(
             IMapper mapper,
             IMediator mediator,
-            IRepository<AspNetUsers> userRepository
+            IRepository<Cliente> userRepository
         ) : base(mapper, mediator)
         {
-            _userRepository = userRepository;
+            _clienteRepository = userRepository;
         }
 
-        protected override async Task<ResponseDto<List<ClienteDto>>> HandleQuery(
+        protected override async Task<ResponseDto<List<ClientDto>>> HandleQuery(
             BuscarClienteQuery request,
             CancellationToken cancellationToken)
         {
-            var response = new ResponseDto<List<ClienteDto>>();
+            var response = new ResponseDto<List<ClientDto>>();
 
             var termino = request.TerminoBusqueda.Trim().ToLower();
 
@@ -36,11 +36,11 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             }
 
             // Buscar por nombre, apellido o teléfono
-            var clientes = await _userRepository.FindByAsync(
+            var clientes = await _clienteRepository.FindByAsNoTrackingAsync(
                 u => u.Activo &&
-                     (u.FirstName.ToLower().Contains(termino) ||
-                      u.LastName.ToLower().Contains(termino) ||
-                      u.PhoneNumber.Contains(termino))
+                     (u.Nombres.ToLower().Contains(termino) ||
+                      u.Apellidos.ToLower().Contains(termino) ||
+                      u.Telefono.Contains(termino))
             );
 
             if (!clientes.Any())
@@ -50,13 +50,13 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
             }
 
             // Mapear a DTOs
-            var clientesDto = clientes.Select(c => new ClienteDto
+            var clientesDto = clientes.Select(c => new ClientDto
             {
-                IdCliente = c.Id,
-                NombreCompleto = $"{c.FirstName} {c.LastName}".Trim(),
-                FirstName = c.FirstName,
-                LastName = c.LastName,
-                Telefono = c.PhoneNumber,
+                IdCliente = c.IdCliente,
+                NombreCompleto = $"{c.Nombres} {c.Apellidos}".Trim(),
+                FirstName = c.Nombres,
+                LastName = c.Apellidos,
+                Telefono = c.Telefono,
                 Email = c.Email,
                 Activo = c.Activo
             }).ToList();

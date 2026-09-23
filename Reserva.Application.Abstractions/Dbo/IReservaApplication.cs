@@ -37,7 +37,7 @@ namespace Reserva.Application.Abstractions.Dbo
         /// <summary>
         /// Busca reservas del cliente con paginación y filtros
         /// </summary>
-        Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(Guid idUsuario, SearchParamsDto<SearchReservaClienteFilterDto> searchParams);
+        Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(int idCliente, SearchParamsDto<SearchReservaClienteFilterDto> searchParams);
     }
 }
 

@@ -1,10 +1,7 @@
 using AutoMapper;
 using Reserva.Domain.Queries.Base;
-using Reserva.Domain.Queries.Dbo.HorarioCancha;
 using Reserva.Dto.Base;
-using Reserva.Dto.Dbo.Cancha;
 using Reserva.Dto.Dbo.Operador;
-using Reserva.Dto.Dbo.TipoDeporte;
 using Reserva.Entity.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
@@ -66,17 +63,16 @@ namespace Reserva.Domain.Queries.Dbo.Operador
                 request.SearchParams?.Page?.PageSize ?? 10,
                 sorts,
                 filter,
-                x => x.IdUsuarioNavigation,
                 x => x.OperadorCancha.Where(oc => oc.Activo)
             );
 
-            var OperadorDtos = Operadors.Items.Where(x => x.IdUsuarioNavigation != null)
+            var OperadorDtos = Operadors.Items
                 .Select(operador => new SearchOperadorDto { 
                     IdOperador = operador.IdOperador,
-                    Nombre = operador.IdUsuarioNavigation!.FirstName,
-                    Apellidos = operador.IdUsuarioNavigation!.LastName,
-                    Email = operador.IdUsuarioNavigation!.Email!,
-                    Telefono = operador.IdUsuarioNavigation!.PhoneNumber!,
+                    Nombres = operador.Nombres,
+                    Apellidos = operador.Apellidos,
+                    Email = operador.Email!,
+                    Telefono = operador.Telefono!,
                     FechaCreacion = operador.CreateDate
                 }).ToList();
 

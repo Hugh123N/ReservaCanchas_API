@@ -38,7 +38,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
                 UserName = request.UpdateDto.Email,
                 Email = request.UpdateDto.Email,
                 PhoneNumber = request.UpdateDto.Telefono,
-                FirstName = request.UpdateDto.Nombre,
+                FirstName = request.UpdateDto.Nombres,
                 LastName = request.UpdateDto.Apellidos
             };
 
@@ -48,6 +48,8 @@ namespace Reserva.Domain.Commands.Dbo.Operador
                 response.Messages = result.Messages;
                 return response;
             }
+
+            _mapper?.Map(request.UpdateDto, operador);
 
             if (request.UpdateDto.CanchaIds != null)
             {

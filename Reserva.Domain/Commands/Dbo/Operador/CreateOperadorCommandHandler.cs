@@ -17,7 +17,6 @@ namespace Reserva.Domain.Commands.Dbo.Operador
     public class CreateOperadorCommandHandler : CommandHandlerBase<CreateOperadorCommand, GetOperadorDto>
     {
         private readonly IRepository<Entity.Operador> _OperadorRepository;
-        private readonly IRepository<Entity.OperadorCancha> _OperadorCanchaRepository;
         private readonly IPlanLimitValidationService _planLimitService;
 
         public CreateOperadorCommandHandler(
@@ -26,12 +25,10 @@ namespace Reserva.Domain.Commands.Dbo.Operador
             IMediator mediator,
             CreateOperadorCommandValidator validator,
             IRepository<Entity.Operador> OperadorRepository,
-            IRepository<Entity.OperadorCancha> OperadorCanchaRepository,
             IPlanLimitValidationService planLimitService
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _OperadorRepository = OperadorRepository;
-            _OperadorCanchaRepository = OperadorCanchaRepository;
             _planLimitService = planLimitService;
         }
 
@@ -54,7 +51,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
                 UserName = request.CreateDto.Email,
                 Email = request.CreateDto.Email,
                 PhoneNumber = request.CreateDto.Telefono,
-                FirstName = request.CreateDto.Nombre,
+                FirstName = request.CreateDto.Nombres,
                 LastName = request.CreateDto.Apellidos,
                 Host = request.CreateDto.Host,
                 RoleIds = new List<Guid> { Guid.Parse(Constants.RoleIds.Operador) }
@@ -76,17 +73,14 @@ namespace Reserva.Domain.Commands.Dbo.Operador
                 }).ToList();
             }
 
-            var Operador = new Entity.Operador
-            {
-                IdUsuario= resultUser.Data!.Id,
-                IdProveedor = request.CreateDto.IdProveedor,
-                OperadorCancha = operadorCanchas
-            };
+            var operador = _mapper.Map<Entity.Operador>(request.CreateDto);
 
-            await _OperadorRepository.AddAsync(Operador);
-            await _OperadorRepository.SaveAsync();
+            operador.IdUsuario = resultUser.Data!.Id;
+            operador.OperadorCancha = operadorCanchas;
 
-            var OperadorDto = _mapper?.Map<GetOperadorDto>(Operador);
+            await _OperadorRepository.AddAsync(operador);
+
+            var OperadorDto = _mapper?.Map<GetOperadorDto>(operador);
             if (OperadorDto != null) response.UpdateData(OperadorDto);
 
             response.AddOkResult(Resources.Common.CreateSuccessMessage);

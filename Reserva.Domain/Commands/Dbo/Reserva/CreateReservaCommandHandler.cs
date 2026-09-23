@@ -183,21 +183,17 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var reservaDto = _mapper?.Map<GetReservaDto>(nuevaReserva);
             var pagoDto = _mapper?.Map<GetPagoDto>(nuevoPago);
 
-            var operadores = await _OperadorRepository.FindByAsNoTrackingAsync(x => x.OperadorCancha.Any(c => c.IdCancha == cancha.IdCancha),
-                x => x.IdUsuarioNavigation
-            );
+            var operadores = await _OperadorRepository.FindByAsNoTrackingAsync(x => x.OperadorCancha.Any(c => c.IdCancha == cancha.IdCancha));
 
-            var nombresOperadores = string.Join(", ",
-                operadores.Select(o => o.IdUsuarioNavigation.FirstName + " " + o.IdUsuarioNavigation.LastName)
-            );
+            var nombresOperadores = string.Join(", ", operadores.Select(o => o.Nombres + " " + o.Apellidos));
 
             var reservaConPagoDto = new ReservaConPagoDto
             {
                 Reserva = reservaDto!,
                 Pago = pagoDto!,
 
-                TelefonoCancha = cancha.TelefonoCancha ?? cancha.IdProveedorNavigation.IdUsuarioNavigation.PhoneNumber,
-                NombreOperador = !string.IsNullOrEmpty(nombresOperadores) ? nombresOperadores : cancha.IdProveedorNavigation.IdUsuarioNavigation.FirstName,
+                TelefonoCancha = cancha.TelefonoCancha ?? cancha.IdProveedorNavigation.Telefono,
+                NombreOperador = !string.IsNullOrEmpty(nombresOperadores) ? nombresOperadores : cancha.IdProveedorNavigation.Nombres,
 
                 MetodoPago = metodoPago.Nombre,
                 MontoFormateado = nuevoPago.Monto.ToString("F2"),
@@ -221,12 +217,13 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     .Select(r => r.IdClienteNavigation)
                     .FirstOrDefaultAsync();
 
-                if(!operadores.Any())
+                if(!operadores.Any()) // si no hay operadores asignados toma datos del proveedor
                     operadores = new List<Entity.Operador>
                     {
                         new Entity.Operador
                         {
-                            IdUsuarioNavigation = cancha.IdProveedorNavigation.IdUsuarioNavigation,
+                            Email = cancha.IdProveedorNavigation.Email,
+                            Telefono = cancha.IdProveedorNavigation.Telefono
                         }
                     };
 

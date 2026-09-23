@@ -198,8 +198,8 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
                 Cliente = new ClienteSlotDto
                 {
                     IdCliente = reserva.IdCliente.ToString(),
-                    Nombre = $"{reserva.IdClienteNavigation.FirstName} {reserva.IdClienteNavigation.LastName}".Trim(),
-                    Telefono = reserva.IdClienteNavigation.PhoneNumber ?? "",
+                    Nombre = $"{reserva.IdClienteNavigation.Nombres} {reserva.IdClienteNavigation.Apellidos}".Trim(),
+                    Telefono = reserva.IdClienteNavigation.Telefono ?? "",
                     Email = reserva.IdClienteNavigation.Email ?? ""
                 },
             };

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace Reserva.Dto.Dbo.Operador;
+namespace Reserva.Dto.Dbo.Cliente;
 
-public class OperadorDto
+public class ClienteDto
 {
     public string Nombres { get; set; } = null!;
 
@@ -13,8 +13,6 @@ public class OperadorDto
 
     public string? Email { get; set; }
 
-    public Guid IdUsuario { get; set; }
-
-    public int IdProveedor { get; set; }
+    public string? UserId { get; set; }
 
 }

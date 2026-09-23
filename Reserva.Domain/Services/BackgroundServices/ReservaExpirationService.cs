@@ -107,9 +107,7 @@ namespace Reserva.Domain.Services.BackgroundServices
 
                     // Obtener operadores de la cancha
                     var operadores = await operadorRepository.FindByAsNoTrackingAsync(
-                        o => o.OperadorCancha.Any(oc => oc.IdCancha == reserva.IdCancha),
-                        o => o.IdUsuarioNavigation
-                    );
+                        o => o.OperadorCancha.Any(oc => oc.IdCancha == reserva.IdCancha));
 
                     // Enviar notificación a los operadores
                     if (operadores.Any())
@@ -176,9 +174,7 @@ namespace Reserva.Domain.Services.BackgroundServices
                 try
                 {
                     var operadores = await operadorRepository.FindByAsNoTrackingAsync(
-                        o => o.OperadorCancha.Any(oc => oc.IdCancha == reserva.IdCancha),
-                        o => o.IdUsuarioNavigation
-                    );
+                        o => o.OperadorCancha.Any(oc => oc.IdCancha == reserva.IdCancha));
 
                     if (operadores.Any())
                     {

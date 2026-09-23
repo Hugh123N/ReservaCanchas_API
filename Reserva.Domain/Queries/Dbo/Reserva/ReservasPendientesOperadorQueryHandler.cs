@@ -95,9 +95,9 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                         : 0,
                     NombreCancha = r.IdCanchaNavigation.Nombre,
                     IdCliente = r.IdCliente,
-                    NombreCliente = r.IdClienteNavigation.UserName,
+                    NombreCliente = r.IdClienteNavigation.Nombres,
                     EmailCliente = r.IdClienteNavigation.Email,
-                    TelefonoCliente = r.IdClienteNavigation.PhoneNumber,
+                    TelefonoCliente = r.IdClienteNavigation.Telefono,
                     NivelUrgencia = CalcularNivelUrgencia(r.FechaExpiracionPreReserva)
                 });
             }

@@ -6,7 +6,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
     /// <summary>
     /// Query para buscar clientes por nombre o teléfono
     /// </summary>
-    public class BuscarClienteQuery : QueryBase<List<ClienteDto>>
+    public class BuscarClienteQuery : QueryBase<List<ClientDto>>
     {
         /// <summary>
         /// Término de búsqueda (puede ser nombre, apellido o teléfono)

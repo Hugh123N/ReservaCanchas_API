@@ -63,8 +63,8 @@ namespace Reserva.Api.Controllers.Dbo
         /// <summary>
         /// Endpoint para que el cliente busque sus reservas con paginación y filtros
         /// </summary>
-        [HttpPost("mis-reservas/{idUsuario}")]
-        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(Guid idUsuario,SearchParamsDto<SearchReservaClienteFilterDto> searchParams)
-            => await _ReservaApplication.SearchReservasCliente(idUsuario, searchParams);
+        [HttpPost("mis-reservas/{idCliente}")]
+        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> SearchReservasCliente(int idCliente,SearchParamsDto<SearchReservaClienteFilterDto> searchParams)
+            => await _ReservaApplication.SearchReservasCliente(idCliente, searchParams);
     }
 }

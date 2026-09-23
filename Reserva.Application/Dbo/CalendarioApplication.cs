@@ -53,7 +53,7 @@ namespace Reserva.Application.Dbo
             return await _mediator.Send(command);
         }
 
-        public async Task<ResponseDto<List<ClienteDto>>> BuscarCliente(string terminoBusqueda)
+        public async Task<ResponseDto<List<ClientDto>>> BuscarCliente(string terminoBusqueda)
         {
             var query = new BuscarClienteQuery
             {

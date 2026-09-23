@@ -76,8 +76,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             reservaDto.DireccionCancha = reserva.IdCanchaNavigation?.Direccion ?? string.Empty;
             reservaDto.TelefonoCancha = reserva.IdCanchaNavigation?.TelefonoCancha;
 
-            reservaDto.NombreCliente = reserva.IdClienteNavigation?.FirstName + " " + reserva.IdClienteNavigation?.LastName ?? string.Empty;
-            reservaDto.NumeroCliente = reserva.IdClienteNavigation?.PhoneNumber;
+            reservaDto.NombreCliente = reserva.IdClienteNavigation?.Nombres + " " + reserva.IdClienteNavigation?.Apellidos ?? string.Empty;
+            reservaDto.NumeroCliente = reserva.IdClienteNavigation?.Telefono;
             reservaDto.EmailCliente = reserva.IdClienteNavigation?.Email;
 
             reservaDto.NombreOperadorConfirmo = reserva.IdOperadorConfirmoNavigation?.IdUsuarioNavigation != null

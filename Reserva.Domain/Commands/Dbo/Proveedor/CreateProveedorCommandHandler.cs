@@ -52,7 +52,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                     Password = proveedorDto.Password,
                     ConfirmPassword = proveedorDto.ConfirmPassword,
                     PhoneNumber = proveedorDto.Telefono,
-                    FirstName = proveedorDto.Nombre,
+                    FirstName = proveedorDto.Nombres,
                     LastName = proveedorDto.Apellidos,
                     RoleIds = new List<Guid>{Guid.Parse(Constants.RoleIds.Proveedor)}
                 };
@@ -69,7 +69,6 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                 Proveedor.IdUsuario = responseUser.Data.Id;
 
                 await _ProveedorRepository.AddAsync(Proveedor);
-                await _ProveedorRepository.SaveAsync();
             }
 
             var ProveedorDto = _mapper?.Map<GetProveedorDto>(Proveedor);

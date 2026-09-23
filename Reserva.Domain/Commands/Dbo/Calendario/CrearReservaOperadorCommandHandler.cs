@@ -1,32 +1,26 @@
 using AutoMapper;
-using Azure;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
-using Reserva.Domain.Commands.Dbo.Usuario;
+using Reserva.Domain.Commands.Dbo.Cliente;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Calendario;
-using Reserva.Dto.Dbo.Usuario;
+using Reserva.Dto.Dbo.Cliente;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Security;
 using Reserva.Repository.Utils;
-using System.Threading;
 
 namespace Reserva.Domain.Commands.Dbo.Calendario
 {
     public class CrearReservaOperadorCommandHandler : CommandHandlerBase<CrearReservaOperadorCommand, ReservaOperadorResponseDto>
     {
-        private readonly IRepository<Entity.AspNetUsers> _userRepository;
+        private readonly IRepository<Entity.Cliente> _clienteRepository;
         private readonly IRepository<Entity.Reserva> _reservaRepository;
         private readonly IRepository<Entity.DetalleReserva> _detalleReservaRepository;
-        private readonly IRepository<Entity.Pago> _pagoRepository;
         private readonly IRepository<Entity.HorarioCancha> _horarioCanchaRepository;
         private readonly IRepository<Entity.Cancha> _canchaRepository;
-        private readonly IRepository<Entity.Hora> _horaRepository;
         private readonly IRepository<Entity.EstadoReserva> _estadoReservaRepository;
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
         private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
@@ -39,13 +33,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             IMapper mapper,
             IMediator mediator,
             CrearReservaOperadorCommandValidator validator,
-            IRepository<Entity.AspNetUsers> userRepository,
+            IRepository<Entity.Cliente> clienteRepository,
             IRepository<Entity.Reserva> reservaRepository,
             IRepository<Entity.DetalleReserva> detalleReservaRepository,
-            IRepository<Entity.Pago> pagoRepository,
             IRepository<Entity.HorarioCancha> horarioCanchaRepository,
             IRepository<Entity.Cancha> canchaRepository,
-            IRepository<Entity.Hora> horaRepository,
             IRepository<Entity.EstadoReserva> estadoReservaRepository,
             IRepository<Entity.EstadoPago> estadoPagoRepository,
             IRepository<Entity.MetodoPago> metodoPagoRepository,
@@ -54,13 +46,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             IRepository<Entity.Operador> operadorRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
-            _userRepository = userRepository;
+            _clienteRepository = clienteRepository;
             _reservaRepository = reservaRepository;
             _detalleReservaRepository = detalleReservaRepository;
-            _pagoRepository = pagoRepository;
             _horarioCanchaRepository = horarioCanchaRepository;
             _canchaRepository = canchaRepository;
-            _horaRepository = horaRepository;
             _estadoReservaRepository = estadoReservaRepository;
             _estadoPagoRepository = estadoPagoRepository;
             _metodoPagoRepository = metodoPagoRepository;
@@ -162,7 +152,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 var reserva = new Entity.Reserva
                 {
                     CodigoReserva = codigoReserva,
-                    IdCliente = cliente.Id,
+                    IdCliente = cliente.IdCliente,
                     IdCancha = dto.IdCancha,
                     IdTipoDeporte = dto.IdTipoDeporte,
                     FechaReserva = fechaReservaCompleta,
@@ -197,8 +187,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     EstadoReserva = codigoEstadoReserva,
                     IdPago = pago.IdPago,
                     EstadoPago = pago.IdEstadoPagoNavigation?.Codigo ?? "",
-                    NombreCliente = $"{cliente.FirstName} {cliente.LastName}",
-                    TelefonoCliente = cliente.PhoneNumber,
+                    NombreCliente = $"{cliente.Nombres} {cliente.Apellidos}",
+                    TelefonoCliente = cliente.Telefono,
                     NombreCancha = cancha.Nombre,
                     Observaciones = reserva.Observaciones
                 };
@@ -214,41 +204,29 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             return response;
         }
 
-        private async Task<Entity.AspNetUsers?> ObtenerOCrearCliente(ClienteReservaDto clienteDto, CancellationToken cancellationToken)
+        private async Task<GetClienteDto?> ObtenerOCrearCliente(ClienteReservaDto clienteDto, CancellationToken cancellationToken)
         {
             if (clienteDto.IdCliente.HasValue)
             {
-                return await _userRepository.GetByAsync(
-                    x => x.Id == clienteDto.IdCliente.Value && x.Activo);
+                var cliente = await _clienteRepository.GetByAsync(x => x.IdCliente == clienteDto.IdCliente && x.Activo);
+                var ClienteDto = _mapper?.Map<GetClienteDto>(cliente);
+                return ClienteDto;
             }
 
             if (clienteDto.EsNuevoCliente)
             {
-                var createUserDto = new CreateUsuarioDto
+                
+                var requestClientCreate = new CreateClienteDto
                 {
-                    UserName = clienteDto.Email ?? clienteDto.Telefono ?? $"cliente{Guid.NewGuid()}",
-                    FirstName = clienteDto.Nombre,
-                    LastName = clienteDto.Apellidos,
-                    PhoneNumber = clienteDto.Telefono,
+                    Nombres = clienteDto.Nombre,
+                    Apellidos = clienteDto.Apellidos,
+                    Telefono = clienteDto.Telefono,
                     Email = clienteDto.Email
                 };
 
-                var resultUser = await _mediator!.Send(new CreateUsuarioCommand(createUserDto), cancellationToken);
-                if (!resultUser.IsValid)
-                {
-                    throw new Exception($"Error al crear cliente: {resultUser.Messages}");
-                }
+                var responseCLint = await _mediator.Send(new CreateClienteCommand(requestClientCreate));
 
-                var clienteCreado = new Entity.AspNetUsers
-                {
-                    Id = resultUser.Data!.Id,
-                    FirstName = resultUser.Data.FirstName,
-                    LastName = resultUser.Data.LastName,
-                    PhoneNumber = resultUser.Data.PhoneNumber,
-                    Email = resultUser.Data.Email
-                };
-
-                return clienteCreado;
+                return responseCLint.Data;
             }
 
             return null;

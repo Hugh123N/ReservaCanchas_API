@@ -1,7 +1,8 @@
 using AutoMapper;
-using Reserva.Dto.Base;
 using Reserva.Domain.Queries.Base;
+using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Operador;
+using Reserva.Dto.Dbo.Servicio;
 using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Queries.Dbo.Operador
@@ -26,21 +27,17 @@ namespace Reserva.Domain.Queries.Dbo.Operador
                 x => x.IdUsuarioNavigation,
                 x => x.OperadorCancha.Where(x => x.Activo));
 
-            var OperadorDto = new GetOperadorDto
-            {
-                IdUsuario = Operador.IdUsuario,
-                IdProveedor = Operador.IdProveedor,
-                Nombre = Operador?.IdUsuarioNavigation?.FirstName ?? string.Empty,
-                Apellidos = Operador?.IdUsuarioNavigation?.LastName ?? string.Empty,
-                Email = Operador?.IdUsuarioNavigation?.Email ?? string.Empty,
-                Telefono = Operador?.IdUsuarioNavigation?.PhoneNumber ?? string.Empty,
-                Imagen = Operador?.IdUsuarioNavigation?.Imagen ?? string.Empty, 
-                FechaCreacion = Operador.CreateDate,
-                FechaActualizacion = Operador.UpdateDate,
-                CanchaIds = Operador.OperadorCancha.Select(oc => oc.IdCancha).ToList()
-            };
+            var operadorDto = _mapper?.Map<GetOperadorDto>(Operador);
 
-            response.UpdateData(OperadorDto);
+            if (Operador != null && operadorDto != null)
+            {
+                operadorDto.Imagen = Operador?.IdUsuarioNavigation?.Imagen ?? string.Empty;
+                operadorDto.FechaCreacion = Operador.CreateDate;
+                operadorDto.FechaActualizacion = Operador.UpdateDate;
+                operadorDto.CanchaIds = Operador.OperadorCancha.Select(oc => oc.IdCancha).ToList();
+
+                response.UpdateData(operadorDto);
+            }
 
             return await Task.FromResult(response);
         }

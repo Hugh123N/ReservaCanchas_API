@@ -7,6 +7,14 @@ public partial class Operador
 {
     public int IdOperador { get; set; }
 
+    public string Nombres { get; set; } = null!;
+
+    public string Apellidos { get; set; } = null!;
+
+    public string? Telefono { get; set; }
+
+    public string? Email { get; set; }
+
     public Guid IdUsuario { get; set; }
 
     public int IdProveedor { get; set; }
