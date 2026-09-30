@@ -26,10 +26,10 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("register/proveedor")]
         public async Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto)
             => await _UsuarioApplication.CreateProveedor(createDto);
-        [HttpPut("{userId}/upgrade-to-proveedor")]
+        [HttpPut("{userId}/change-role")]
         [Security.Authorize]
-        public async Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, [FromBody] UpgradeToProveedorDto upgradeDto)
-            => await _UsuarioApplication.UpgradeToProveedor(userId, upgradeDto);
+        public async Task<ResponseDto<LoginResultDto>> ChangeRole(Guid userId, [FromBody] ChangeRoleDto changeRoleDto)
+            => await _UsuarioApplication.ChangeRole(userId, changeRoleDto);
         [HttpPut]
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
             => await _UsuarioApplication.Update(updateDto);
@@ -70,6 +70,10 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("reset-password")]
         public async Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto)
             => await _UsuarioApplication.ResetPassword(resetPasswordDto);
+        [AllowAnonymous]
+        [HttpGet("check-email/{email}")]
+        public async Task<ResponseDto<CheckEmailResultDto>> CheckEmail(string email)
+            => await _UsuarioApplication.CheckEmail(email);
         [HttpPut("telefono")]
         public async Task<ResponseDto> UpdateTelefono(UpdateTelefonoDto updateTelefonoDto)
             => await _UsuarioApplication.UpdateTelefono(updateTelefonoDto.IdUsuario, updateTelefonoDto.Telefono);

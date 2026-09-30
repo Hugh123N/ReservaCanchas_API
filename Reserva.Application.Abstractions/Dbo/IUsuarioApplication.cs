@@ -19,10 +19,11 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<AccessTokenDto>> RenewSession();
         Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto);
         Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto);
-        Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, UpgradeToProveedorDto upgradeDto);
+        Task<ResponseDto<LoginResultDto>> ChangeRole(Guid userId, ChangeRoleDto changeRoleDto);
         Task<ResponseDto> ForgotPassword(string email, string host);
         Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto);
         Task<ResponseDto> UpdateTelefono(string idUsuario, string telefono);
+        Task<ResponseDto<CheckEmailResultDto>> CheckEmail(string email);
     }
 }
 

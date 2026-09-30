@@ -22,8 +22,8 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new CreateUsuarioCommand(createDto));
         public async  Task<ResponseDto<GetUsuarioDto>>CreateProveedor(CreateUsuarioProveedorDto createDto)
             => await _mediator.Send(new CreateUsuarioProveedorCommand(createDto));
-        public async Task<ResponseDto<GetUsuarioDto>> UpgradeToProveedor(Guid userId, UpgradeToProveedorDto upgradeDto)
-            => await _mediator.Send(new UpgradeToProveedorCommand(userId, upgradeDto));
+        public async Task<ResponseDto<LoginResultDto>> ChangeRole(Guid userId, ChangeRoleDto changeRoleDto)
+            => await _mediator.Send(new ChangeRoleCommand(userId, changeRoleDto));
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
             => await _mediator.Send(new UpdateUsuarioCommand(updateDto));
         public async Task<ResponseDto> Delete(Guid id)
@@ -50,5 +50,7 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new ResetPasswordCommand(resetPasswordDto));
         public async Task<ResponseDto> UpdateTelefono(string idUsuario, string telefono)
             => await _mediator.Send(new UpdateTelefonoCommand(idUsuario, telefono));
+        public async Task<ResponseDto<CheckEmailResultDto>> CheckEmail(string email)
+            => await _mediator.Send(new GetUserByEmailQuery(email));
     }
 }

@@ -62,6 +62,8 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Operador> Operador { get; set; }
 
+    public virtual DbSet<Cliente> Cliente { get; set; }
+
     public virtual DbSet<OperadorCancha> OperadorCancha { get; set; }
 
     public virtual DbSet<Pago> Pago { get; set; }
@@ -97,6 +99,8 @@ public partial class ReservaCanchasContext : DbContext
     public virtual DbSet<Ubigeo> Ubigeo { get; set; }
 
     public virtual DbSet<UsoPlan> UsoPlan { get; set; }
+
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1590,6 +1594,48 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("provincia");
+        });
+
+        modelBuilder.Entity<Cliente>(entity =>
+        {
+            entity.HasKey(e => e.IdCliente).HasName("PK__Cliente__3214EC07");
+
+            entity.Property(e => e.IdCliente).HasColumnName("idCliente");
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
+            entity.Property(e => e.CreateDate)
+                .HasDefaultValueSql("(sysdatetimeoffset())")
+                .HasColumnName("createDate");
+            entity.Property(e => e.Nombres)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("nombres");
+            entity.Property(e => e.Apellidos)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("apellidos");
+            entity.Property(e => e.Telefono)
+                .HasMaxLength(15)
+                .IsUnicode(false)
+                .HasColumnName("telefono");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("email");
+            entity.Property(e => e.UserId)
+                .HasMaxLength(36)
+                .IsUnicode(false)
+                .HasColumnName("userId");
+            entity.Property(e => e.UserNameCreate)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("userNameCreate");
+            entity.Property(e => e.UserNameUpdate)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("userNameUpdate");
+            entity.Property(e => e.UpdateDate).HasColumnName("updateDate");
         });
 
         modelBuilder.Entity<UsoPlan>(entity =>
