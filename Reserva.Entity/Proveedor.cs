@@ -15,7 +15,7 @@ public partial class Proveedor
 
     public string? Email { get; set; }
 
-    public Guid IdUsuario { get; set; }
+    public string IdUsuario { get; set; } = null!;
 
     public string? RazonSocial { get; set; }
 
@@ -48,8 +48,6 @@ public partial class Proveedor
     public virtual EstadoProveedor IdEstadoProveedorNavigation { get; set; } = null!;
 
     public virtual TipoProveedor IdTipoProveedorNavigation { get; set; } = null!;
-
-    public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
 
     public virtual ICollection<Operador> Operador { get; set; } = new List<Operador>();
 }

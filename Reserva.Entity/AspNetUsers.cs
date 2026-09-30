@@ -59,11 +59,5 @@ public partial class AspNetUsers
 
     public virtual EstadoUsuario IdEstadoUsuarioNavigation { get; set; } = null!;
 
-    public virtual ICollection<Operador> Operador { get; set; } = new List<Operador>();
-
-    public virtual ICollection<Proveedor> Proveedor { get; set; } = new List<Proveedor>();
-
-    public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
-
     public virtual ICollection<AspNetRoles> Role { get; set; } = new List<AspNetRoles>();
 }

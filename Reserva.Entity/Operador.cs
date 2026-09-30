@@ -15,7 +15,7 @@ public partial class Operador
 
     public string? Email { get; set; }
 
-    public Guid IdUsuario { get; set; }
+    public string IdUsuario { get; set; } = null!;
 
     public int IdProveedor { get; set; }
 
@@ -30,8 +30,6 @@ public partial class Operador
     public bool Activo { get; set; }
 
     public virtual Proveedor IdProveedorNavigation { get; set; } = null!;
-
-    public virtual AspNetUsers IdUsuarioNavigation { get; set; } = null!;
 
     public virtual ICollection<OperadorCancha> OperadorCancha { get; set; } = new List<OperadorCancha>();
 

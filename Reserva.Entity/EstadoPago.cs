@@ -16,6 +16,4 @@ public partial class EstadoPago
     public bool Activo { get; set; }
 
     public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
-
-    public virtual ICollection<PagoPlan> PagoPlan { get; set; } = new List<PagoPlan>();
 }

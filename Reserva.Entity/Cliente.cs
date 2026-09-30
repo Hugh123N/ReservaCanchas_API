@@ -27,6 +27,5 @@ public partial class Cliente
 
     public bool Activo { get; set; }
 
-    public ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
-
+    public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
 }
