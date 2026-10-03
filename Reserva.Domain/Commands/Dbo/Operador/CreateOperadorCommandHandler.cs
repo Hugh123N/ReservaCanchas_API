@@ -75,7 +75,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
 
             var operador = _mapper.Map<Entity.Operador>(request.CreateDto);
 
-            operador.IdUsuario = resultUser.Data!.Id;
+            operador.IdUsuario = resultUser.Data!.Id.ToString();
             operador.OperadorCancha = operadorCanchas;
 
             await _OperadorRepository.AddAsync(operador);

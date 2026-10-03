@@ -130,8 +130,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             if (!esPagoUnico)
             {
                 proveedor = await _proveedorRepository.GetByAsync(
-                    x => x.IdProveedor == proveedorPlan.IdProveedor,
-                    x => x.IdUsuarioNavigation);
+                    x => x.IdProveedor == proveedorPlan.IdProveedor);
 
                 if (proveedor == null || string.IsNullOrEmpty(proveedor.CulqiCustomerId))
                 {
@@ -142,8 +141,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
             else
             {
                 proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                    x => x.IdProveedor == proveedorPlan.IdProveedor,
-                    x => x.IdUsuarioNavigation);
+                    x => x.IdProveedor == proveedorPlan.IdProveedor);
             }
 
             // Manejar prorrateo según método de pago

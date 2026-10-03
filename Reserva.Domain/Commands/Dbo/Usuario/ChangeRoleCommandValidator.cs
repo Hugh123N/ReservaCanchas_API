@@ -94,12 +94,12 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             
             if (targetRole.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase))
             {
-                var proveedor = await _proveedorRepository.GetByAsync(p => p.IdUsuario == userId);
+                var proveedor = await _proveedorRepository.GetByAsync(p => p.IdUsuario == userId.ToString());
                 return proveedor == null;
             }
             else if (targetRole.Equals(Constants.Role.Operador, StringComparison.OrdinalIgnoreCase))
             {
-                var operador = await _operadorRepository.GetByAsync(p => p.IdUsuario == userId);
+                var operador = await _operadorRepository.GetByAsync(p => p.IdUsuario == userId.ToString());
                 return operador == null;
             }
             

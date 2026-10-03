@@ -134,8 +134,7 @@ namespace Reserva.Api.Controllers.Dbo
 
             var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
                 p => proveedorId.HasValue ? p.IdProveedor == proveedorId.Value
-                    : p.CulqiCustomerId == idCustomer,
-                p => p.IdUsuarioNavigation
+                    : p.CulqiCustomerId == idCustomer
             );
 
             await HandlePlanPaymentSucceeded(proveedor, charge, null);
@@ -234,7 +233,7 @@ namespace Reserva.Api.Controllers.Dbo
             await _proveedorPlanRepository.SaveAsync();
 
             // Notificar al proveedor
-            var emailExitoso = proveedor?.IdUsuarioNavigation?.Email;
+            var emailExitoso = proveedor?.Email;
             if (!string.IsNullOrEmpty(emailExitoso))
             {
                 await _notificacionService.NotificarRenovacionExitosaPlanAsync(
@@ -265,8 +264,7 @@ namespace Reserva.Api.Controllers.Dbo
                 if (charge != null && !string.IsNullOrEmpty(charge.Email))
                 {
                     proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(
-                        x => x.IdUsuarioNavigation != null && x.IdUsuarioNavigation.Email == charge.Email,
-                        x => x.IdUsuarioNavigation
+                        x => x.Email == charge.Email
                     );
                 }
             }
@@ -397,7 +395,7 @@ namespace Reserva.Api.Controllers.Dbo
             await _proveedorPlanRepository.SaveAsync();
 
             // Notificar fallo
-            var emailFallo = proveedor?.IdUsuarioNavigation?.Email;
+            var emailFallo = proveedor?.Email;
             if (!string.IsNullOrEmpty(emailFallo))
             {
                 await _notificacionService.NotificarFalloPagoPlanAsync(

@@ -141,13 +141,13 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 if (dto.TipoReserva == TipoReservaOperador.Inmediata && idUserCurrent != Guid.Empty)
                 {
                     var operador = await _operadorRepository.GetByAsync(
-                        x => x.IdUsuario == idUserCurrent && x.Activo);
+                        x => x.IdUsuario == idUserCurrent.ToString() && x.Activo);
                     idOperador = operador?.IdOperador;
                 }
 
                 int duracionPreReservaHoras = cancha!.IdProveedorNavigation.ConfiguracionProveedor?.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
 
-                var pago = await CrearRegistroPago(dto.Pago.MontoTotal, dto.Pago, dto.TipoReserva, idUserCurrent ?? new Guid());
+                var pago = await CrearRegistroPago(dto.Pago.MontoTotal, dto.Pago, dto.TipoReserva, idOperador);
 
                 var reserva = new Entity.Reserva
                 {
@@ -322,7 +322,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
         private async Task<Entity.Pago> CrearRegistroPago(decimal montoTotal,PagoReservaOperadorDto pagoDto,
             TipoReservaOperador tipoReserva,
-            Guid idUsuarioOperador)
+            int? idOperador)
         {
             decimal montoPagado = tipoReserva == TipoReservaOperador.Inmediata
                 ? (pagoDto.MontoPagado ?? 0)
@@ -346,13 +346,6 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
             var estadoPago = await _estadoPagoRepository.GetByAsync(x => x.Codigo == codigoEstadoPago && x.Activo);
             var metodoPago = await _metodoPagoRepository.GetByAsync(x => x.Codigo == pagoDto.CodigoMetodoPago && x.Activo);
-
-            int? idOperador = null;
-            if (idUsuarioOperador != Guid.Empty)
-            {
-                var operador = await _operadorRepository.GetByAsync(x => x.IdUsuario == idUsuarioOperador && x.Activo);
-                idOperador = operador?.IdOperador;
-            }
 
             var pago = new Entity.Pago
             {

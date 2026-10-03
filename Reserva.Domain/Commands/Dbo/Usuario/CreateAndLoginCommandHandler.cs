@@ -120,7 +120,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
                 var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
-                    p => p.IdUsuario == nuevoUsuario.Id && p.Activo
+                    p => p.IdUsuario == nuevoUsuario.Id.ToString() && p.Activo
                 );
 
                 if (proveedor != null)
@@ -131,7 +131,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             else if (roles.Any(r => r.Equals(Constants.Role.Operador, StringComparison.OrdinalIgnoreCase)))
             {
                 var operador = await _OperadorRepository.GetByAsNoTrackingAsync(
-                    o => o.IdUsuario == nuevoUsuario.Id && o.Activo
+                    o => o.IdUsuario == nuevoUsuario.Id.ToString() && o.Activo
                 );
 
                 if (operador != null)

@@ -93,7 +93,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             var proveedoresDict = proveedores.ToDictionary(x => x.IdProveedor);
 
             var idsUsuario = proveedores.Select(x => x.IdUsuario).Distinct().ToList();
-            var usuarios = await userRepo.FindByAsync(x => idsUsuario.Contains(x.Id));
+            var usuarios = await userRepo.FindByAsync(x => idsUsuario.Contains(x.Id.ToString()));
             var usuariosDict = usuarios.ToDictionary(x => x.Id);
 
             var notificacionesACrear = new List<CreateNotificacionDto>();
@@ -101,7 +101,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             foreach (var pp in planesPorVencer)
             {
                 if (!proveedoresDict.TryGetValue(pp.IdProveedor, out var proveedor)) continue;
-                if (!usuariosDict.TryGetValue(proveedor.IdUsuario, out var usuario)) continue;
+                if (!usuariosDict.TryGetValue(Guid.Parse(proveedor.IdUsuario), out var usuario)) continue;
                 if (string.IsNullOrEmpty(usuario.Email)) continue;
 
                 // Match masivo: si el ID está en la lista de faltantes
@@ -167,7 +167,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             var proveedoresDict = proveedores.ToDictionary(x => x.IdProveedor);
 
             var idsUsuario = proveedores.Select(x => x.IdUsuario).Distinct().ToList();
-            var usuarios = await userRepo.FindByAsync(x => idsUsuario.Contains(x.Id));
+            var usuarios = await userRepo.FindByAsync(x => idsUsuario.Contains(x.Id.ToString()));
             var usuariosDict = usuarios.ToDictionary(x => x.Id);
 
             var notificacionesACrear = new List<CreateNotificacionDto>();
@@ -175,7 +175,7 @@ namespace Reserva.Domain.Services.BackgroundServices
             foreach (var pp in planesGrace)
             {
                 if (!proveedoresDict.TryGetValue(pp.IdProveedor, out var proveedor)) continue;
-                if (!usuariosDict.TryGetValue(proveedor.IdUsuario, out var usuario)) continue;
+                if (!usuariosDict.TryGetValue(Guid.Parse(proveedor.IdUsuario), out var usuario)) continue;
                 if (string.IsNullOrEmpty(usuario.Email)) continue;
 
                 // Match masivo: si el ID está en la lista de faltantes

@@ -34,7 +34,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
 
             var userUpdateDto = new UpdateUsuarioDto
             {
-                Id = operador.IdUsuario,
+                Id = Guid.Parse(operador.IdUsuario),
                 UserName = request.UpdateDto.Email,
                 Email = request.UpdateDto.Email,
                 PhoneNumber = request.UpdateDto.Telefono,

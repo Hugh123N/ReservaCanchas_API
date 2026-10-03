@@ -57,7 +57,7 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                 return response;
             }
 
-            var proveedor = await _proveedorRepository.GetByAsync(x => x.IdProveedor == dto.IdProveedor, x => x.IdUsuarioNavigation);
+            var proveedor = await _proveedorRepository.GetByAsync(x => x.IdProveedor == dto.IdProveedor);
             if (proveedor == null)
             {
                 response.AddErrorResult("Proveedor no encontrado");
@@ -146,8 +146,8 @@ namespace Reserva.Domain.Commands.Dbo.ProveedorPlan
                         {
                             Email = dto.Email,
                             Code = $"prov_{proveedor.IdProveedor}",
-                            FirstName = proveedor.IdUsuarioNavigation?.FirstName,
-                            LastName = proveedor.IdUsuarioNavigation?.LastName,
+                            FirstName = proveedor.Nombres,
+                            LastName = proveedor.Apellidos,
                             Address = "Av. Proceres - Lima",
                             AddressCity = "Lima",
                             CountryCode = "PE",

@@ -38,13 +38,13 @@ namespace Reserva.Domain.Queries.Dbo.Operador
                 filter = filter.And(x => x.IdProveedor == filters.IdProveedor.Value);
 
             if (!string.IsNullOrEmpty(filters.Nombre))
-                filter = filter.And(x => x.IdUsuarioNavigation.FirstName!.Contains(filters.Nombre) || x.IdUsuarioNavigation.LastName.Contains(filters.Nombre));
+                filter = filter.And(x => x.Nombres!.Contains(filters.Nombre) || x.Apellidos.Contains(filters.Nombre));
             
             if (!string.IsNullOrEmpty(filters.Email))
-                filter = filter.And(x => x.IdUsuarioNavigation!.Email!.Contains(filters.Email));
+                filter = filter.And(x => x.Email!.Contains(filters.Email));
 
             if (!string.IsNullOrEmpty(filters.Telefono))
-                filter = filter.And(x => x.IdUsuarioNavigation!.PhoneNumber!.Contains(filters.Telefono));
+                filter = filter.And(x => x.Telefono.Contains(filters.Telefono));
             
 
             var sorts = new List<SortExpression<Entity.Operador>>();

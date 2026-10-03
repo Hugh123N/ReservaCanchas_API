@@ -74,7 +74,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 c => c.IdCancha == request.CreateDto.IdCancha,
                 c => c.IdProveedorNavigation!,
                 c => c.IdProveedorNavigation.ConfiguracionProveedor!,
-                c => c.IdProveedorNavigation!.IdUsuarioNavigation,
                 c => c.OperadorCancha);
 
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);

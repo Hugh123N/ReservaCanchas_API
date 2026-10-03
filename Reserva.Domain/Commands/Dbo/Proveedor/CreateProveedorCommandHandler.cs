@@ -66,7 +66,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
 
                 Proveedor.IdTipoProveedor = tipoProveedor!.IdTipoProveedor;
                 Proveedor.IdEstadoProveedor = estadoProveedor!.IdEstadoProveedor;
-                Proveedor.IdUsuario = responseUser.Data.Id;
+                Proveedor.IdUsuario = responseUser.Data.Id.ToString();
 
                 await _ProveedorRepository.AddAsync(Proveedor);
             }

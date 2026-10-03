@@ -5,7 +5,7 @@ namespace Reserva.Dto.Dbo.Proveedor
 {
     public class ProveedorDto
     {
-        public Guid? IdUsuario { get; set; }
+        public string? IdUsuario { get; set; }
         public string Nombres { get; set; } = null!;
 
         public string Apellidos { get; set; } = null!;

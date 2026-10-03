@@ -101,7 +101,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                     return response;
                 }
 
-                proveedor.IdUsuario = applicationUser.Id;
+                proveedor.IdUsuario = applicationUser.Id.ToString();
                 proveedor.IdEstadoProveedor = 1; // Pendiente
 
                 await _proveedorRepository.AddAsync(proveedor);
@@ -139,7 +139,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                     Apellidos = applicationUser.LastName ?? "",
                     Telefono = applicationUser.PhoneNumber,
                     Email = applicationUser.Email,
-                    IdUsuario = applicationUser.Id
+                    IdUsuario = applicationUser.Id.ToString()
                 };
 
                 await _operadorRepository.AddAsync(operador);
@@ -152,7 +152,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 
             if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
-                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(p => p.IdUsuario == applicationUser.Id && p.Activo);
+                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(p => p.IdUsuario == applicationUser.Id.ToString() && p.Activo);
                 if (proveedor != null)
                 {
                     idUsuarioNegocio = proveedor.IdProveedor;
@@ -160,7 +160,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             }
             else if (roles.Any(r => r.Equals(Constants.Role.Operador, StringComparison.OrdinalIgnoreCase)))
             {
-                var operador = await _operadorRepository.GetByAsNoTrackingAsync(o => o.IdUsuario == applicationUser.Id && o.Activo);
+                var operador = await _operadorRepository.GetByAsNoTrackingAsync(o => o.IdUsuario == applicationUser.Id.ToString() && o.Activo);
                 if (operador != null)
                 {
                     idUsuarioNegocio = operador.IdOperador;

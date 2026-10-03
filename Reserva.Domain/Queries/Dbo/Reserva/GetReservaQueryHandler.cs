@@ -40,7 +40,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 r => r.IdTipoDeporteNavigation!,
                 r => r.IdClienteNavigation!,
                 r => r.IdEstadoReservaNavigation!,
-                r => r.IdOperadorConfirmoNavigation!.IdUsuarioNavigation,
+                r => r.IdOperadorConfirmoNavigation!,
                 r => r.IdCanchaNavigation!
             );
 
@@ -80,8 +80,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             reservaDto.NumeroCliente = reserva.IdClienteNavigation?.Telefono;
             reservaDto.EmailCliente = reserva.IdClienteNavigation?.Email;
 
-            reservaDto.NombreOperadorConfirmo = reserva.IdOperadorConfirmoNavigation?.IdUsuarioNavigation != null
-                ? reserva.IdOperadorConfirmoNavigation.IdUsuarioNavigation.FirstName + " " + reserva.IdOperadorConfirmoNavigation.IdUsuarioNavigation.LastName
+            reservaDto.NombreOperadorConfirmo = reserva.IdOperadorConfirmoNavigation != null
+                ? reserva.IdOperadorConfirmoNavigation.Nombres + " " + reserva.IdOperadorConfirmoNavigation.Apellidos
                 : null; // TODO: en caso no tengo operador y solo eata encargado el proveedor deberia pasar el proveedor
 
             reservaDto.NombreDeporte = reserva.IdTipoDeporteNavigation?.Nombre; //TODO: SE PUEDE RESERVAR VARIOS DEPORTES EN UNA SOLO RESERVA

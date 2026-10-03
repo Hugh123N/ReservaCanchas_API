@@ -68,7 +68,7 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Proveedor> Proveedor { get; set; }
 
-    public virtual DbSet<Reserva> Reserva { get; set; }
+    public virtual DbSet<Entity.Reserva> Reserva { get; set; }
 
     public virtual DbSet<Servicio> Servicio { get; set; }
 
@@ -1082,7 +1082,7 @@ public partial class ReservaCanchasContext : DbContext
                 .HasConstraintName("FK__Proveedor__idTip__7A672E12");
         });
 
-        modelBuilder.Entity<Reserva>(entity =>
+        modelBuilder.Entity<Entity.Reserva>(entity =>
         {
             entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C8A7AB2051");
 

@@ -13,7 +13,7 @@ public class OperadorDto
 
     public string? Email { get; set; }
 
-    public Guid IdUsuario { get; set; }
+    public string? IdUsuario { get; set; }
 
     public int IdProveedor { get; set; }
 

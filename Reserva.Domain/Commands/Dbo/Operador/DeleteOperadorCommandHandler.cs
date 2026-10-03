@@ -28,7 +28,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
             var response = new ResponseDto();
             var Operador = await _OperadorRepository.GetByAsync(x => x.IdOperador == request.Id);
 
-            var result = await _mediator!.Send(new DeleteUsuarioCommand(Operador!.IdUsuario), cancellationToken);
+            var result = await _mediator!.Send(new DeleteUsuarioCommand(Guid.Parse(Operador!.IdUsuario)), cancellationToken);
 
             if (result != null) {
                 if (!result.IsValid)

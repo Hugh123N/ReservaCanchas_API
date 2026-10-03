@@ -147,7 +147,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 var idUserCurrent = _userIdentity.GetCurrentUserId();
                 if (idUserCurrent != null && idUserCurrent != Guid.Empty )
                 {
-                    var operador = await _operadorRepository.GetByAsync(x => x.IdUsuario == idUserCurrent && x.Activo);
+                    var operador = await _operadorRepository.GetByAsync(x => x.IdUsuario == idUserCurrent.ToString() && x.Activo);
 
                     reserva.IdOperadorConfirmo = operador?.IdOperador;
                     reserva.FechaConfirmacion = DateTimeOffset.UtcNow;

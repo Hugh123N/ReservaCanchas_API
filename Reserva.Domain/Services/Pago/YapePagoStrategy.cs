@@ -41,9 +41,9 @@ namespace Reserva.Domain.Services.Pago
 
         private string ObtenerTelefonoProveedor(Cancha cancha)
         {
-            if (cancha.IdProveedorNavigation?.IdUsuarioNavigation?.PhoneNumber != null)
+            if (cancha.IdProveedorNavigation?.Telefono != null)
             {
-                return cancha.IdProveedorNavigation.IdUsuarioNavigation.PhoneNumber;
+                return cancha.IdProveedorNavigation.Telefono;
             }
 
             // Si no hay teléfono, usar el configurado en appsettings
