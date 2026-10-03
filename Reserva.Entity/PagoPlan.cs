@@ -29,9 +29,5 @@ public partial class PagoPlan
 
     public virtual ICollection<ComprobantePagoPlan> ComprobantePagoPlan { get; set; } = new List<ComprobantePagoPlan>();
 
-    public virtual EstadoPago IdEstadoPagoNavigation { get; set; } = null!;
-
-    public virtual MetodoPago IdMetodoPagoNavigation { get; set; } = null!;
-
     public virtual ProveedorPlan IdProveedorPlanNavigation { get; set; } = null!;
 }

@@ -25,9 +25,9 @@ public partial class ProveedorPlan
 
     public bool EsActual { get; set; }
 
-    public string? CulqiSubscriptionId { get; set; }
-
     public string? CulqiSubscriptionIdAnterior { get; set; }
+
+    public string? CulqiSubscriptionId { get; set; }
 
     public string? CulqiCustomerId { get; set; }
 
@@ -36,7 +36,7 @@ public partial class ProveedorPlan
     public DateTimeOffset? FechaCancelacion { get; set; }
 
     public string? MotivoCancelacion { get; set; }
-   
+
     public bool CancelAtPeriodEnd { get; set; }
 
     public bool EsPruebaGratis { get; set; }
