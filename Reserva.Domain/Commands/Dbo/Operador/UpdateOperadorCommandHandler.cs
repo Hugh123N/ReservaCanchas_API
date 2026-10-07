@@ -76,7 +76,6 @@ namespace Reserva.Domain.Commands.Dbo.Operador
             }
 
             await _OperadorRepository.UpdateAsync(operador);
-            await _OperadorRepository.SaveAsync();
 
             var OperadorDto = _mapper?.Map<GetOperadorDto>(operador);
             if (OperadorDto != null) response.UpdateData(OperadorDto);

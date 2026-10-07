@@ -27,7 +27,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
         {
             var response = new ResponseDto<List<ClientDto>>();
 
-            var termino = request.TerminoBusqueda.Trim().ToLower();
+            var termino = request.TerminoBusqueda;
 
             if (string.IsNullOrEmpty(termino))
             {
@@ -37,11 +37,7 @@ namespace Reserva.Domain.Queries.Dbo.Calendario
 
             // Buscar por nombre, apellido o teléfono
             var clientes = await _clienteRepository.FindByAsNoTrackingAsync(
-                u => u.Activo &&
-                     (u.Nombres.ToLower().Contains(termino) ||
-                      u.Apellidos.ToLower().Contains(termino) ||
-                      u.Telefono.Contains(termino))
-            );
+                u => u.Activo && u.Telefono.Contains(termino));
 
             if (!clientes.Any())
             {

@@ -5,7 +5,7 @@ namespace Reserva.Dto.Dbo.Reserva
 {
     public class ReservaDto
     {
-        public Guid IdCliente { get; set; }
+        public int IdCliente { get; set; }
         public int IdCancha { get; set; }
         public int IdTipoDeporte { get; set; }
         public DateTimeOffset FechaReserva { get; set; }

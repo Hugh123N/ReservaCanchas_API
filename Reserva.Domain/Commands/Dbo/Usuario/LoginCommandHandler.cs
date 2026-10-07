@@ -68,9 +68,8 @@ namespace Reserva.Domain.Commands.User
 
             if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
-                var iduser = user.Id.ToString();
                 var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
-                    p => p.IdUsuario == iduser && p.Activo
+                    p => p.IdUsuario == user.Id.ToString() && p.Activo
                 );
 
                 if (proveedor != null)
