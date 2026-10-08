@@ -32,14 +32,27 @@ namespace Reserva.Domain.Commands.Dbo.Operador
             var operador = await _OperadorRepository.GetByAsync(x => x.IdOperador == request.UpdateDto.IdOperador && x.Activo,
                 x => x.OperadorCancha);
 
+            if (operador == null)
+            {
+                response.AddErrorResult(Resources.Common.UpdateRecordNotFound);
+                return response;
+            }
+
+            if (!Guid.TryParse(operador.IdUsuario, out var idUsuario))
+            {
+                response.AddErrorResult("El operador no tiene un usuario asociado");
+                return response;
+            }
+
             var userUpdateDto = new UpdateUsuarioDto
             {
-                Id = Guid.Parse(operador.IdUsuario),
+                Id = idUsuario,
                 UserName = request.UpdateDto.Email,
                 Email = request.UpdateDto.Email,
                 PhoneNumber = request.UpdateDto.Telefono,
                 FirstName = request.UpdateDto.Nombres,
-                LastName = request.UpdateDto.Apellidos
+                LastName = request.UpdateDto.Apellidos,
+                Imagen = request.UpdateDto.Imagen
             };
 
             var result = await _mediator!.Send(new UpdateUsuarioCommand(userUpdateDto), cancellationToken);

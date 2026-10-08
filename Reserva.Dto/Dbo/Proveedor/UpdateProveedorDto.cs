@@ -7,5 +7,7 @@ namespace Reserva.Dto.Dbo.Proveedor
         public string? Telefono { get; set; }
         public string? Facebook { get; set; }
         public string? Instagram { get; set; }
+        // Vive en AspNetUsers, no en la entidad Proveedor
+        public string? Imagen { get; set; }
     }
 }

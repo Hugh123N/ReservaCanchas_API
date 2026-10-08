@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using Google.Apis.Logging;
 using MediatR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MimeKit;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Services.Notificacion;
 using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
@@ -13,16 +16,19 @@ namespace Reserva.Domain.Commands.Email
     public class SendEmailCommandHandler : CommandHandlerBase<SendEmailCommand>
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<NotificacionService> _logger;
 
         public SendEmailCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             SendEmailCommandValidator validator,
-            IConfiguration configuration
+            IConfiguration configuration,
+            ILogger<NotificacionService> logger
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public override async Task<ResponseDto> HandleCommand(SendEmailCommand request, CancellationToken cancellationToken)
@@ -34,6 +40,7 @@ namespace Reserva.Domain.Commands.Email
             string fromName = emailSettings["FromName"]!;
             string fromEmail = emailSettings["FromEmail"]!;
             string fromPassword = emailSettings["FromPassword"]!;
+            string smtpLogin = emailSettings["SmtpLogin"]!;
             string smtpServer = emailSettings["SmtpServer"]!;
             int smtpPort = int.Parse(emailSettings["SmtpPort"]!);
 
@@ -66,12 +73,17 @@ namespace Reserva.Domain.Commands.Email
 
             message.Subject = subject;
             message.Body = new TextPart("html") { Text = body };
-
-            using var smtp = new MailKit.Net.Smtp.SmtpClient();
-            await smtp.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync(fromEmail, fromPassword);
-            await smtp.SendAsync(message);
-            await smtp.DisconnectAsync(true);
+            try
+            {
+                using var smtp = new MailKit.Net.Smtp.SmtpClient();
+                await smtp.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(smtpLogin, fromPassword);
+                await smtp.SendAsync(message);
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex) {
+                _logger.LogError(ex, "Error al enviar el correo: ");
+            } 
 
             response.AddOkResult(
                 string.IsNullOrWhiteSpace(request.EmailDto.SuccesMessage)
