@@ -234,6 +234,16 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
         private async Task<(bool, string)> ValidarDisponibilidadHorarios(int idCancha,List<BloqueHorarioDto> horarios, DateTimeOffset fechaReserva)
         {
+            // Validar solapamiento entre bloques de la MISMA petición (el frontend lo previene, aquí es la barrera de integridad)
+            var slotsSeleccionados = horarios
+                .SelectMany(b => Enumerable.Range(b.IdHorarioCanchaInicio, b.IdHorarioCanchaFin - b.IdHorarioCanchaInicio + 1))
+                .ToList();
+
+            if (slotsSeleccionados.Count != slotsSeleccionados.Distinct().Count())
+            {
+                return (false, "Los horarios seleccionados se superponen entre bloques");
+            }
+
             var canchaVal = await _canchaRepository.GetByAsync(x => x.IdCancha == idCancha && x.Activo);
             var zonaHorariaVal = TimezoneUtils.ObtenerZonaHoraria(canchaVal!.ZonaHoraria);
 
