@@ -74,13 +74,6 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             }
 
             var rolesToAdd = new List<string> { normalizedTargetRole };
-            
-            // Si se hace Proveedor, también agregar Cliente y Operador (como en el flujo original)
-            if (targetRole.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase))
-            {
-                rolesToAdd.Add(Constants.Role.Cliente.ToUpper());
-                rolesToAdd.Add(Constants.Role.Operador.ToUpper());
-            }
 
             // Agregar roles (el UnitOfWork maneja transacción automáticamente)
             var addRoleResult = await _userManager.AddToRolesAsync(applicationUser, rolesToAdd);
