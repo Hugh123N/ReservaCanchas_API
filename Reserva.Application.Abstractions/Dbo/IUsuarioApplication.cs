@@ -24,6 +24,8 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto);
         Task<ResponseDto> UpdateTelefono(string idUsuario, string telefono);
         Task<ResponseDto<CheckEmailResultDto>> CheckEmail(string email);
+        Task<ResponseDto> ChangeEmailRequest(ChangeEmailRequestDto changeEmailDto);
+        Task<ResponseDto> ChangeEmailConfirm(Guid userId, string email, string token);
     }
 }
 

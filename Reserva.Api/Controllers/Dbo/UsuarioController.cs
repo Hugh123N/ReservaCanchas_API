@@ -77,6 +77,13 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPut("telefono")]
         public async Task<ResponseDto> UpdateTelefono(UpdateTelefonoDto updateTelefonoDto)
             => await _UsuarioApplication.UpdateTelefono(updateTelefonoDto.IdUsuario, updateTelefonoDto.Telefono);
+        [HttpPost("change-email/request")]
+        public async Task<ResponseDto> ChangeEmailRequest(ChangeEmailRequestDto changeEmailDto)
+            => await _UsuarioApplication.ChangeEmailRequest(changeEmailDto);
+        [AllowAnonymous]
+        [HttpGet("change-email/confirm")]
+        public async Task<ResponseDto> ChangeEmailConfirm([FromQuery] Guid userId, [FromQuery] string email, [FromQuery] string token)
+            => await _UsuarioApplication.ChangeEmailConfirm(userId, email, token);
 
     }
 }

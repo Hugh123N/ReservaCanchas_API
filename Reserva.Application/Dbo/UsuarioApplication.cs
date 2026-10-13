@@ -52,5 +52,9 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new UpdateTelefonoCommand(idUsuario, telefono));
         public async Task<ResponseDto<CheckEmailResultDto>> CheckEmail(string email)
             => await _mediator.Send(new GetUserByEmailQuery(email));
+        public async Task<ResponseDto> ChangeEmailRequest(ChangeEmailRequestDto changeEmailDto)
+            => await _mediator.Send(new ChangeEmailRequestCommand(changeEmailDto.NewEmail, changeEmailDto.Host));
+        public async Task<ResponseDto> ChangeEmailConfirm(Guid userId, string email, string token)
+            => await _mediator.Send(new ChangeEmailConfirmCommand(userId, email, token));
     }
 }
