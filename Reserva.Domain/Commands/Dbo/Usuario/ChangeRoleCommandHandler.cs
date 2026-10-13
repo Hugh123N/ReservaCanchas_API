@@ -1,56 +1,39 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Dbo.ProveedorPlan;
 using Reserva.Domain.Commands.Token;
-using Reserva.Domain.Commands.User;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.ProveedorPlan;
-using Reserva.Dto.Dbo.Usuario;
 using Reserva.Dto.User;
 using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Data;
 using Reserva.Repository.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Reserva.Domain.Commands.Dbo.Usuario
 {
     public class ChangeRoleCommandHandler : CommandHandlerBase<ChangeRoleCommand, LoginResultDto>
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IRepository<ApplicationRole> _rolRepository;
         private readonly IRepository<Entity.Proveedor> _proveedorRepository;
         private readonly IRepository<Entity.Operador> _operadorRepository;
-        private readonly IRepository<Entity.EstadoProveedor> _estadoProveedorRepository;
-        private readonly ReservaCanchasContext _dbContext;
 
         public ChangeRoleCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             UserManager<ApplicationUser> userManager,
-            IRepository<ApplicationRole> rolRepository,
             IRepository<Entity.Proveedor> proveedorRepository,
-            IRepository<Entity.Operador> operadorRepository,
-            IRepository<Entity.EstadoProveedor> estadoProveedorRepository,
-            ReservaCanchasContext dbContext
+            IRepository<Entity.Operador> operadorRepository
         ) : base(unitOfWork, mapper, mediator)
         {
             _userManager = userManager;
-            _rolRepository = rolRepository;
             _proveedorRepository = proveedorRepository;
             _operadorRepository = operadorRepository;
-            _estadoProveedorRepository = estadoProveedorRepository;
-            _dbContext = dbContext;
         }
 
         public override async Task<ResponseDto<LoginResultDto>> HandleCommand(ChangeRoleCommand request, CancellationToken cancellationToken)
@@ -96,9 +79,12 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 
                 proveedor.IdUsuario = applicationUser.Id.ToString();
                 proveedor.IdEstadoProveedor = 1; // Pendiente
+                proveedor.Nombres = applicationUser.FirstName;
+                proveedor.Apellidos = applicationUser.LastName;
+                proveedor.Telefono = applicationUser.PhoneNumber;
+                proveedor.Email = applicationUser.Email;
 
                 await _proveedorRepository.AddAsync(proveedor);
-                // NO llamar SaveAsync() - UnitOfWork hace commit automático
 
                 // Crear ProveedorPlan (plan gratuito de prueba por 30 días)
                 var now = DateTimeOffset.UtcNow;
@@ -136,7 +122,6 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 };
 
                 await _operadorRepository.AddAsync(operador);
-                // NO llamar SaveAsync() - UnitOfWork hace commit automático
             }
 
             // Login - generar token con el nuevo rol
