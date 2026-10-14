@@ -37,6 +37,7 @@ namespace Reserva.Domain.Queries.Dbo.Operador
                 var user = await _UsuarioManager.FindByIdAsync(Operador.IdUsuario);
 
                 operadorDto.Imagen = user?.Imagen ?? string.Empty;
+                operadorDto.UserName = user?.UserName;
                 operadorDto.FechaCreacion = Operador.CreateDate;
                 operadorDto.FechaActualizacion = Operador.UpdateDate;
                 operadorDto.CanchaIds = Operador.OperadorCancha.Select(oc => oc.IdCancha).ToList();

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Dto.Base;
@@ -22,10 +22,6 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpPost("register/cliente")]
         public async Task<ResponseDto<GetUsuarioDto>> Create(CreateUsuarioDto createDto)
             => await _UsuarioApplication.Create(createDto);
-        [AllowAnonymous]
-        [HttpPost("register/proveedor")]
-        public async Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto)
-            => await _UsuarioApplication.CreateProveedor(createDto);
         [HttpPut("{userId}/change-role")]
         [Security.Authorize]
         public async Task<ResponseDto<LoginResultDto>> ChangeRole(Guid userId, [FromBody] ChangeRoleDto changeRoleDto)

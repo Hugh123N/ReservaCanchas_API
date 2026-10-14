@@ -46,7 +46,7 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
             var userUpdateDto = new UpdateUsuarioDto
             {
                 Id = idUsuario,
-                UserName = request.UpdateDto.Email,
+                UserName = request.UpdateDto.UserName,
                 Email = request.UpdateDto.Email,
                 PhoneNumber = request.UpdateDto.Telefono,
                 FirstName = request.UpdateDto.Nombres,

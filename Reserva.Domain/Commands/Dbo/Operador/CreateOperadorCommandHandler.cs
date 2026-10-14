@@ -48,7 +48,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
 
             var createUserDto = new CreateUsuarioDto
             { 
-                UserName = request.CreateDto.Email,
+                UserName = request.CreateDto.UserName,
                 Email = request.CreateDto.Email,
                 PhoneNumber = request.CreateDto.Telefono,
                 FirstName = request.CreateDto.Nombres,

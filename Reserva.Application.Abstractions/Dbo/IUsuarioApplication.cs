@@ -1,4 +1,4 @@
-using Reserva.Dto.Base;
+﻿using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Token;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Dto.User;
@@ -18,7 +18,6 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<LoginResultDto>> Login(LoginDto loginDto);
         Task<ResponseDto<AccessTokenDto>> RenewSession();
         Task<ResponseDto<LoginResultDto>> CreateAndLogin(CreateAndLoginDto createDto);
-        Task<ResponseDto<GetUsuarioDto>> CreateProveedor(CreateUsuarioProveedorDto createDto);
         Task<ResponseDto<LoginResultDto>> ChangeRole(Guid userId, ChangeRoleDto changeRoleDto);
         Task<ResponseDto> ForgotPassword(string email, string host);
         Task<ResponseDto> ResetPassword(ResetPasswordDto resetPasswordDto);

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Application.Base;
 using Reserva.Domain.Commands.Dbo.Usuario;
@@ -20,8 +20,6 @@ namespace Reserva.Application.Dbo
 
         public async Task<ResponseDto<GetUsuarioDto>> Create(CreateUsuarioDto createDto)
             => await _mediator.Send(new CreateUsuarioCommand(createDto));
-        public async  Task<ResponseDto<GetUsuarioDto>>CreateProveedor(CreateUsuarioProveedorDto createDto)
-            => await _mediator.Send(new CreateUsuarioProveedorCommand(createDto));
         public async Task<ResponseDto<LoginResultDto>> ChangeRole(Guid userId, ChangeRoleDto changeRoleDto)
             => await _mediator.Send(new ChangeRoleCommand(userId, changeRoleDto));
         public async Task<ResponseDto<GetUsuarioDto>> Update(UpdateUsuarioDto updateDto)
