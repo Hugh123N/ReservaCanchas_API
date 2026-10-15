@@ -6,9 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Commands.Dbo.Cliente;
 using Reserva.Domain.Commands.LoginExternalProvider;
 using Reserva.Domain.Commands.Token;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.Cliente;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Dto.User;
 using Reserva.Entity;
@@ -24,40 +26,37 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
 {
     internal class CreateAndLoginCommandHandler : CommandHandlerBase<CreateAndLoginCommand, LoginResultDto>
     {
-        private readonly IRepository<Entity.AspNetUsers> _UsuarioRepository;
         private readonly UserManager<Entity.ApplicationUser> _UserManager;
         private readonly SignInManager<Entity.ApplicationUser> _SignInManager;
-        private readonly IRepository<AspNetRoles> _RolRepository;
         private readonly IConfiguration _configuration;
         private readonly IRepository<Entity.ApplicationUser> _applicationUserRepository;
         private readonly IRepository<Entity.EstadoUsuario> _EstadoUsuarioRepository;
         private readonly IRepository<Entity.Operador> _OperadorRepository;
         private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Cliente> _ClienteRepository;
 
         public CreateAndLoginCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
-            IRepository<Entity.AspNetUsers> UsuarioRepository,
             UserManager<Entity.ApplicationUser> userManager,
             IRepository<Entity.ApplicationUser> ApplicationUserRepository,
-            IRepository<Entity.AspNetRoles> RolRepository,
             IRepository<Entity.EstadoUsuario> EstadoUsuarioRepository,
             SignInManager<Entity.ApplicationUser> SignInManager,
             IConfiguration configuration,
             IRepository<Entity.Operador> OperadorRepository,
-            IRepository<Entity.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository,
+            IRepository<Entity.Cliente> ClienteRepository
         ) : base(unitOfWork, mapper, mediator)
         {
-            _UsuarioRepository = UsuarioRepository;
             _UserManager = userManager;
             _configuration = configuration;
-            _RolRepository = RolRepository;
             _applicationUserRepository = ApplicationUserRepository;
             _EstadoUsuarioRepository = EstadoUsuarioRepository;
             _SignInManager = SignInManager;
             _OperadorRepository = OperadorRepository;
             _ProveedorRepository = ProveedorRepository;
+            _ClienteRepository = ClienteRepository;
         }
 
 
@@ -117,7 +116,39 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             int? idUsuarioNegocio = null;
             var roles = await _UserManager.GetRolesAsync(nuevoUsuario);
 
-            if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
+            // Misma resolución de LoginCommandHandler: si el flujo es de cliente se registra (si falta)
+            // el vínculo Cliente <-> usuario Identity para poder emitir el claim UserIdNegocio del token
+            if (request.CreateDto.ApplicationCode.Equals("Cliente"))
+            {
+                var userId = nuevoUsuario.Id.ToString();
+                var cliente = await _ClienteRepository.GetByAsNoTrackingAsync(x => x.UserId == userId);
+
+                if (cliente == null)
+                {
+                    var createClienteDto = new CreateClienteDto
+                    {
+                        Nombres = nuevoUsuario.FirstName ?? string.Empty,
+                        Apellidos = nuevoUsuario.LastName ?? string.Empty,
+                        Telefono = nuevoUsuario.PhoneNumber,
+                        Email = nuevoUsuario.Email,
+                        UserId = userId
+                    };
+
+                    var resultCliente = await _mediator!.Send(new CreateClienteCommand(createClienteDto), cancellationToken);
+                    if (!resultCliente.IsValid)
+                    {
+                        response.Messages = resultCliente.Messages;
+                        return response;
+                    }
+
+                    idUsuarioNegocio = resultCliente.Data?.IdCliente;
+                }
+                else
+                {
+                    idUsuarioNegocio = cliente.IdCliente;
+                }
+            }
+            else if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
                 var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
                     p => p.IdUsuario == nuevoUsuario.Id.ToString() && p.Activo

@@ -20,6 +20,7 @@ namespace Reserva.Domain.Commands.User
         private readonly SignInManager<Entity.ApplicationUser> _signInManager;
         private readonly IRepository<Entity.Operador> _OperadorRepository;
         private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly IRepository<Entity.Cliente> _ClienteRepository;
 
         public LoginCommandHandler(
             IUnitOfWork unitOfWork,
@@ -30,7 +31,8 @@ namespace Reserva.Domain.Commands.User
             UserManager<Entity.ApplicationUser> userManager,
             SignInManager<Entity.ApplicationUser> signInManager,
             IRepository<Entity.Operador> OperadorRepository,
-            IRepository<Entity.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository,
+            IRepository<Entity.Cliente> ClienteRepository
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _configuration = configuration;
@@ -38,6 +40,7 @@ namespace Reserva.Domain.Commands.User
             _userManager = userManager;
             _OperadorRepository = OperadorRepository;
             _ProveedorRepository = ProveedorRepository;
+            _ClienteRepository = ClienteRepository;
         }
 
 
@@ -66,7 +69,14 @@ namespace Reserva.Domain.Commands.User
             int? idUsuarioNegocio = null;
             var roles = await _userManager.GetRolesAsync(user);
 
-            if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
+            if (request.LoginDto.ApplicationCode.Equals("Cliente")) {
+                var cliente = await _ClienteRepository.GetByAsNoTrackingAsync(x => x.UserId!.Equals(user.Id.ToString()));
+                if (cliente != null)
+                {
+                    idUsuarioNegocio = cliente.IdCliente;
+                }
+            }
+            else if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
                 var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
                     p => p.IdUsuario == user.Id.ToString() && p.Activo

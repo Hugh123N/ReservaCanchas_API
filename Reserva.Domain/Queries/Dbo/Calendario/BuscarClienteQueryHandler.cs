@@ -3,19 +3,18 @@ using MediatR;
 using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Calendario;
-using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Queries.Dbo.Calendario
 {
     public class BuscarClienteQueryHandler : QueryHandlerBase<BuscarClienteQuery, List<ClientDto>>
     {
-        private readonly IRepository<Cliente> _clienteRepository;
+        private readonly IRepository<Entity.Cliente> _clienteRepository;
 
         public BuscarClienteQueryHandler(
             IMapper mapper,
             IMediator mediator,
-            IRepository<Cliente> userRepository
+            IRepository<Entity.Cliente> userRepository
         ) : base(mapper, mediator)
         {
             _clienteRepository = userRepository;

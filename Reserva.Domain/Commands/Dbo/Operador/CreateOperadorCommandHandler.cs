@@ -3,9 +3,11 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Commands.Dbo.Cliente;
 using Reserva.Domain.Commands.Dbo.Usuario;
 using Reserva.Domain.Services;
 using Reserva.Dto.Base;
+using Reserva.Dto.Dbo.Cliente;
 using Reserva.Dto.Dbo.Operador;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Entity;
@@ -64,6 +66,24 @@ namespace Reserva.Domain.Commands.Dbo.Operador
                 return response;
             }
 
+            var idUsuario = resultUser.Data!.Id.ToString();
+
+            // El operador también queda registrado como cliente asociado al mismo usuario
+            var resultCliente = await _mediator!.Send(new CreateClienteCommand(new CreateClienteDto
+            {
+                Nombres = request.CreateDto.Nombres,
+                Apellidos = request.CreateDto.Apellidos,
+                Telefono = request.CreateDto.Telefono,
+                Email = request.CreateDto.Email,
+                UserId = idUsuario
+            }), cancellationToken);
+
+            if (!resultCliente.IsValid)
+            {
+                response.Messages = resultCliente.Messages;
+                return response;
+            }
+
             var operadorCanchas = new List<Entity.OperadorCancha>();
             if (request.CreateDto.CanchaIds != null)
             {
@@ -75,7 +95,7 @@ namespace Reserva.Domain.Commands.Dbo.Operador
 
             var operador = _mapper.Map<Entity.Operador>(request.CreateDto);
 
-            operador.IdUsuario = resultUser.Data!.Id.ToString();
+            operador.IdUsuario = idUsuario;
             operador.OperadorCancha = operadorCanchas;
 
             await _OperadorRepository.AddAsync(operador);

@@ -3,10 +3,12 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Reserva.Common;
 using Reserva.Domain.Commands.Base;
+using Reserva.Domain.Commands.Dbo.Cliente;
 using Reserva.Dto.Dbo.Proveedor;
 using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Dto.Dbo.Cliente;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Domain.Commands.Dbo.Usuario;
 
@@ -64,9 +66,27 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                     return response;
                 }
 
+                var idUsuario = responseUser.Data.Id.ToString();
+
+                // El proveedor también queda registrado como cliente asociado al mismo usuario
+                var responseCliente = await _mediator!.Send(new CreateClienteCommand(new CreateClienteDto
+                {
+                    Nombres = proveedorDto.Nombres,
+                    Apellidos = proveedorDto.Apellidos,
+                    Telefono = proveedorDto.Telefono,
+                    Email = proveedorDto.Email,
+                    UserId = idUsuario
+                }), cancellationToken);
+
+                if (!responseCliente.IsValid)
+                {
+                    response.Messages = responseCliente.Messages;
+                    return response;
+                }
+
                 Proveedor.IdTipoProveedor = tipoProveedor!.IdTipoProveedor;
                 Proveedor.IdEstadoProveedor = estadoProveedor!.IdEstadoProveedor;
-                Proveedor.IdUsuario = responseUser.Data.Id.ToString();
+                Proveedor.IdUsuario = idUsuario;
 
                 await _ProveedorRepository.AddAsync(Proveedor);
             }
