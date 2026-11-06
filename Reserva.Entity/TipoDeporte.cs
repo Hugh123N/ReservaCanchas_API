@@ -9,6 +9,8 @@ public partial class TipoDeporte
 
     public string Codigo { get; set; } = null!;
 
+    public string? CodigoCategoria { get; set; }
+
     public string Nombre { get; set; } = null!;
 
     public string? Descripcion { get; set; }

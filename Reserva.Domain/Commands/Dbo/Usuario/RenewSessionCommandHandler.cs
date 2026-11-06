@@ -1,17 +1,13 @@
 ﻿using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Token;
+using Reserva.Domain.Queries.Dbo.Usuario;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Token;
-using Reserva.Dto.User;
-using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Security;
-using System.Runtime.Intrinsics.X86;
 
 namespace Reserva.Domain.Commands.User
 {
@@ -36,18 +32,41 @@ namespace Reserva.Domain.Commands.User
         public override async Task<ResponseDto<AccessTokenDto>> HandleCommand(RenewSessionCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<AccessTokenDto>();
-            var userId = _userIdentity.GetCurrentUserId().ToString();
-            var applicationCode = "CODE";//_userIdentity.GetApplicationCode();
+            var userId = _userIdentity.GetCurrentUserId();
+            if (!userId.HasValue)
+            {
+                response.AddErrorResult("La sesión no es válida. Inicia sesión nuevamente.");
+                return response;
+            }
 
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return response;
+            var user = await _userManager.FindByIdAsync(userId.Value.ToString());
+            if (user == null || await _userManager.IsLockedOutAsync(user))
+            {
+                response.AddErrorResult("No se pudo renovar la sesión del usuario.");
+                return response;
+            }
 
-            var accessToken = await _mediator?.Send(new GenerateTokenCommand(applicationCode, user, null), cancellationToken)!;
+            var applicationCode = _userIdentity.GetCurrentUserClaims()
+                .FirstOrDefault(claim => claim.Type == "ApplicationCode")?.Value?.Trim() ?? string.Empty;
+            var roles = await _userManager.GetRolesAsync(user);
+            var negocio = await _mediator!.Send(new GetUsuarioNegocioQuery(user.Id, applicationCode, roles), cancellationToken);
+            if (!negocio.IsValid)
+            {
+                response.AttachResults(negocio);
+                return response;
+            }
 
-            if (accessToken.Data != null)
-                response.UpdateData(accessToken.Data);
+            var accessToken = await _mediator!.Send(
+                new GenerateTokenCommand(applicationCode, user, negocio.Data), cancellationToken);
 
-            return response;
+            if (!accessToken.IsValid || string.IsNullOrWhiteSpace(accessToken.Data?.access_token))
+            {
+                response.AttachResults(accessToken);
+                response.AddErrorResult("No se pudo generar el token de renovación.");
+                return response;
+            }
+
+            return accessToken;
         }
     }
 }

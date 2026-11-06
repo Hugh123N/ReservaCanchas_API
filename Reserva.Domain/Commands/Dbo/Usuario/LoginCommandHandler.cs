@@ -2,14 +2,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using Reserva.Common;
 using Reserva.Domain.Commands.Base;
 using Reserva.Domain.Commands.Token;
+using Reserva.Domain.Queries.Dbo.Usuario;
 using Reserva.Dto.Base;
 using Reserva.Dto.User;
-using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
-using System.Runtime.Intrinsics.X86;
 
 namespace Reserva.Domain.Commands.User
 {
@@ -18,9 +16,6 @@ namespace Reserva.Domain.Commands.User
         private readonly IConfiguration _configuration;
         private readonly UserManager<Entity.ApplicationUser> _userManager;
         private readonly SignInManager<Entity.ApplicationUser> _signInManager;
-        private readonly IRepository<Entity.Operador> _OperadorRepository;
-        private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
-        private readonly IRepository<Entity.Cliente> _ClienteRepository;
 
         public LoginCommandHandler(
             IUnitOfWork unitOfWork,
@@ -29,18 +24,12 @@ namespace Reserva.Domain.Commands.User
             LoginCommandValidator validator,
             IConfiguration configuration,
             UserManager<Entity.ApplicationUser> userManager,
-            SignInManager<Entity.ApplicationUser> signInManager,
-            IRepository<Entity.Operador> OperadorRepository,
-            IRepository<Entity.Proveedor> ProveedorRepository,
-            IRepository<Entity.Cliente> ClienteRepository
+            SignInManager<Entity.ApplicationUser> signInManager
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _configuration = configuration;
             _signInManager = signInManager;
             _userManager = userManager;
-            _OperadorRepository = OperadorRepository;
-            _ProveedorRepository = ProveedorRepository;
-            _ClienteRepository = ClienteRepository;
         }
 
 
@@ -52,6 +41,12 @@ namespace Reserva.Domain.Commands.User
 
             var user = await _userManager.FindByNameAsync(login.UserName)
                ?? await _userManager.FindByEmailAsync(login.UserName);
+
+            if (user == null)
+            {
+                response.AddErrorResult("No se pudo iniciar sesión.");
+                return response;
+            }
 
             var result = await _signInManager.PasswordSignInAsync(user.UserName, request.LoginDto.Password, request.LoginDto.RememberMe, lockoutOnFailure: lockoutOnFailure);
 
@@ -66,43 +61,20 @@ namespace Reserva.Domain.Commands.User
                 return response;
             }
 
-            int? idUsuarioNegocio = null;
             var roles = await _userManager.GetRolesAsync(user);
-
-            if (request.LoginDto.ApplicationCode.Equals("Cliente")) {
-                var cliente = await _ClienteRepository.GetByAsNoTrackingAsync(x => x.UserId!.Equals(user.Id.ToString()));
-                if (cliente != null)
-                {
-                    idUsuarioNegocio = cliente.IdCliente;
-                }
-            }
-            else if (roles.Any(r => r.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
+            var applicationCode = login.ApplicationCode?.Trim() ?? string.Empty;
+            var negocio = await _mediator!.Send(new GetUsuarioNegocioQuery(user.Id, applicationCode, roles), cancellationToken);
+            if (!negocio.IsValid)
             {
-                var proveedor = await _ProveedorRepository.GetByAsNoTrackingAsync(
-                    p => p.IdUsuario == user.Id.ToString() && p.Activo
-                );
-
-                if (proveedor != null)
-                {
-                    idUsuarioNegocio = proveedor.IdProveedor;
-                }
-            }
-            else if (roles.Any(r => r.Equals(Constants.Role.Operador, StringComparison.OrdinalIgnoreCase)))
-            {
-                var operador = await _OperadorRepository.GetByAsNoTrackingAsync(
-                    o => o.IdUsuario == user.Id.ToString() && o.Activo
-                );
-
-                if (operador != null)
-                {
-                    idUsuarioNegocio = operador.IdOperador;
-                }
+                response.AttachResults(negocio);
+                return response;
             }
 
-            var accessToken = await _mediator.Send(new GenerateTokenCommand(request.LoginDto.ApplicationCode, user, idUsuarioNegocio), cancellationToken)!;
+            var accessToken = await _mediator.Send(new GenerateTokenCommand(applicationCode, user, negocio.Data), cancellationToken);
 
-            if (accessToken?.Data == null)
+            if (!accessToken.IsValid || accessToken.Data == null)
             {
+                response.AttachResults(accessToken);
                 response.AddErrorResult("Error al generar token.");
                 return response;
             }

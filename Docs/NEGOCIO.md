@@ -95,7 +95,8 @@ El token JWT contiene los siguientes claims personalizados:
 
 ```
 UserId          → ID del usuario (GUID de AspNetUsers)
-UserIdNegocio   → ID de negocio: IdProveedor si es Proveedor, IdOperador si es Operador
+ApplicationCode → Contexto de aplicación: "Cliente" para público; vacío por defecto para gestión
+UserIdNegocio   → IdCliente en público; IdProveedor o IdOperador en gestión según prioridad de roles
 UserName        → Email del usuario
 DisplayName     → Nombre completo
 Telefono        → Telefono del usuario
@@ -187,19 +188,36 @@ idEstadoUsuario INT               -- Activo(01) | Inactivo(02) | Suspendido(03)
 
 ```
 1. POST /api/Usuario/login
-   Body: { applicationCode: "Proveedor"|"Operador", userName, password, rememberMe }
+   Body: { applicationCode: "Cliente"|"", userName, password, rememberMe }
 
 2. Backend valida credenciales con ASP.NET Identity
 
-3. Si valido, genera JWT con claims:
-   UserId, UserIdNegocio, UserName, DisplayName, Telefono, Roles
+3. LoginCommandHandler utiliza GetUsuarioNegocioQuery para resolver el perfil:
+   - ApplicationCode = "Cliente": Cliente.UserId → IdCliente, independientemente de los roles de gestión
+   - Otro código o vacío + rol Proveedor: Proveedor.IdUsuario y Activo → IdProveedor
+   - Sin rol Proveedor + rol Operador: Operador.IdUsuario y Activo → IdOperador
+   - Si tiene Proveedor y Operador, prevalece Proveedor
+   - Si falta el perfil requerido, devuelve error; no emite un JWT con identificador vacío/0
 
-4. Frontend guarda token en localStorage
+4. Si valido, genera JWT con claims:
+   UserId, ApplicationCode, UserIdNegocio, UserName, DisplayName, Telefono, Roles
 
-5. TokenInterceptor inyecta "Authorization: Bearer {token}" en cada request
+5. Frontend guarda token en localStorage
 
-6. Si token expira en <= 5 min → keepAlive() → renew-session
+6. TokenInterceptor inyecta "Authorization: Bearer {token}" en cada request
+
+7. Si token expira en <= 5 min, muestra aviso; "Mantener sesión" → keepAlive() → renew-session
 ```
+
+### Renovación de sesión
+
+`RenewSessionCommandHandler` obtiene `UserId` y `ApplicationCode` del principal autenticado, carga los roles actuales con Identity y utiliza la misma `GetUsuarioNegocioQuery` del login. Vuelve a consultar el registro de negocio antes de generar el JWT, en lugar de copiar un identificador vacío o desactualizado del token anterior.
+
+- El JWT renovado conserva el contexto de aplicación y el identificador resuelto para el usuario.
+- Las comparaciones de código y roles no distinguen mayúsculas; el código se normaliza eliminando espacios externos.
+- Un usuario inexistente/bloqueado o un perfil requerido ausente devuelve error sin generar un token.
+- Los roles que no requieren perfil de cliente/proveedor/operador conservan el identificador opcional.
+- Tokens antiguos sin `ApplicationCode` utilizan el contexto de gestión por defecto. Tras desplegar este cambio, iniciar sesión nuevamente en el público permite emitir un token con el contexto `Cliente` explícito, especialmente para cuentas con varios roles.
 
 ### Login con OAuth (Google)
 
