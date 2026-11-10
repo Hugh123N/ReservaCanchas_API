@@ -73,6 +73,8 @@ namespace Reserva.Domain.Commands.Dbo.Operador
             {
                 Nombres = request.CreateDto.Nombres,
                 Apellidos = request.CreateDto.Apellidos,
+                TipoDoc = request.CreateDto.TipoDoc,
+                NroDoc = request.CreateDto.NroDoc,
                 Telefono = request.CreateDto.Telefono,
                 Email = request.CreateDto.Email,
                 UserId = idUsuario

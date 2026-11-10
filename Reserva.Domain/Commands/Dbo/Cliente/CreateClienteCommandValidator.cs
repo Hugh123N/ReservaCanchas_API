@@ -8,7 +8,8 @@ namespace Reserva.Domain.Commands.Dbo.Cliente
         {
             RequiredInformation(x => x.CreateDto).DependentRules(() =>
             {
-                
+                RequiredString(x => x.CreateDto.TipoDoc, "TipoDoc", null, 20);
+                MaximumLength(x => x.CreateDto.NroDoc, "NroDoc", 20);
             });
         }
     }

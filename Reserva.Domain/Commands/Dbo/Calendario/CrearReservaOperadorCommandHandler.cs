@@ -74,12 +74,15 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             {
                 var dto = request.RequestDto;
 
-                var cliente = await ObtenerOCrearCliente(dto.Cliente, cancellationToken);
-                if (cliente == null)
+                var resultadoCliente = await ObtenerOCrearCliente(dto.Cliente, cancellationToken);
+                if (!resultadoCliente.IsValid || resultadoCliente.Data == null)
                 {
-                    response.AddErrorResult("No se pudo obtener o crear el cliente");
+                    response.AttachResults(resultadoCliente);
+                    if (resultadoCliente.IsValid)
+                        response.AddErrorResult("No se pudo obtener o crear el cliente");
                     return response;
                 }
+                var cliente = resultadoCliente.Data;
 
                 var canchaParaTz = await _canchaRepository.GetByAsync(x => x.IdCancha == dto.IdCancha && x.Activo);
                 var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(canchaParaTz!.ZonaHoraria);
@@ -204,32 +207,43 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             return response;
         }
 
-        private async Task<GetClienteDto?> ObtenerOCrearCliente(ClienteReservaDto clienteDto, CancellationToken cancellationToken)
+        private async Task<ResponseDto<GetClienteDto>> ObtenerOCrearCliente(ClienteReservaDto clienteDto, CancellationToken cancellationToken)
         {
-            if (clienteDto.IdCliente.HasValue)
+            var response = new ResponseDto<GetClienteDto>();
+            var cliente = await _clienteRepository.GetByAsync(item =>
+                item.Activo && item.TipoDoc == "DNI" && item.NroDoc == clienteDto.NroDoc);
+
+            if (clienteDto.IdCliente.HasValue && cliente?.IdCliente != clienteDto.IdCliente.Value)
             {
-                var cliente = await _clienteRepository.GetByAsync(x => x.IdCliente == clienteDto.IdCliente && x.Activo);
-                var ClienteDto = _mapper?.Map<GetClienteDto>(cliente);
-                return ClienteDto;
+                response.AddErrorResult("El cliente seleccionado no corresponde al DNI indicado.");
+                return response;
             }
 
-            if (clienteDto.EsNuevoCliente)
+            // La búsqueda y la confirmación son peticiones distintas: reutilizar el DNI si ya se registró.
+            if (cliente != null)
             {
-                
-                var requestClientCreate = new CreateClienteDto
-                {
-                    Nombres = clienteDto.Nombre,
-                    Apellidos = clienteDto.Apellidos,
-                    Telefono = clienteDto.Telefono,
-                    Email = clienteDto.Email
-                };
-
-                var responseCLint = await _mediator.Send(new CreateClienteCommand(requestClientCreate));
-
-                return responseCLint.Data;
+                cliente.Telefono = clienteDto.Telefono;
+                await _clienteRepository.UpdateAsync(cliente);
+                response.UpdateData(_mapper!.Map<GetClienteDto>(cliente));
+                return response;
             }
 
-            return null;
+            if (!clienteDto.EsNuevoCliente)
+            {
+                response.AddErrorResult("El cliente seleccionado ya no está disponible. Consulta nuevamente su DNI.");
+                return response;
+            }
+
+            var createDto = new CreateClienteDto
+            {
+                Nombres = clienteDto.Nombre!,
+                Apellidos = clienteDto.Apellidos!,
+                TipoDoc = "DNI",
+                NroDoc = clienteDto.NroDoc,
+                Telefono = clienteDto.Telefono,
+                Email = clienteDto.Email
+            };
+            return await _mediator!.Send(new CreateClienteCommand(createDto), cancellationToken);
         }
 
         private async Task<(bool, string)> ValidarDisponibilidadHorarios(int idCancha,List<BloqueHorarioDto> horarios, DateTimeOffset fechaReserva)

@@ -21,6 +21,9 @@ namespace Reserva.Domain.Commands.Dbo.Cliente
 
             RequiredInformation(x => x.UpdateDto).DependentRules(() =>
             {
+                RequiredString(x => x.UpdateDto.TipoDoc, "TipoDoc", null, 20);
+                MaximumLength(x => x.UpdateDto.NroDoc, "NroDoc", 20);
+
                 RequiredField(x => x.UpdateDto.IdCliente, "IdCliente")
                     .DependentRules(() =>
                     {

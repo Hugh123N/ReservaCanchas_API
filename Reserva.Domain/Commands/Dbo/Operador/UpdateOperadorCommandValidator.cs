@@ -14,6 +14,9 @@ namespace Reserva.Domain.Commands.Dbo.Operador
 
             RequiredInformation(x => x.UpdateDto).DependentRules(() =>
             {
+                RequiredString(x => x.UpdateDto.TipoDoc, "TipoDoc", null, 20);
+                MaximumLength(x => x.UpdateDto.NroDoc, "NroDoc", 20);
+
                 RequiredField(x => x.UpdateDto.IdOperador, Resources.Dbo.Operador.IdOperador)
                     .DependentRules(() =>
                     {

@@ -73,6 +73,8 @@ namespace Reserva.Domain.Commands.Dbo.Proveedor
                 {
                     Nombres = proveedorDto.Nombres,
                     Apellidos = proveedorDto.Apellidos,
+                    TipoDoc = proveedorDto.TipoDoc,
+                    NroDoc = proveedorDto.NroDoc,
                     Telefono = proveedorDto.Telefono,
                     Email = proveedorDto.Email,
                     UserId = idUsuario

@@ -385,6 +385,17 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Cliente>(entity =>
         {
+            entity.Property(e => e.TipoDoc)
+                .IsRequired()
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("DNI")
+                .HasColumnName("tipoDoc");
+            entity.Property(e => e.NroDoc)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("nroDoc");
+
             entity.HasKey(e => e.IdCliente).HasName("PK__Cliente__885457EE5FE52732");
 
             entity.Property(e => e.IdCliente).HasColumnName("idCliente");
@@ -915,6 +926,17 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Operador>(entity =>
         {
+            entity.Property(e => e.TipoDoc)
+                .IsRequired()
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("DNI")
+                .HasColumnName("tipoDoc");
+            entity.Property(e => e.NroDoc)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("nroDoc");
+
             entity.HasKey(e => e.IdOperador).HasName("PK__Operador__D9DC4D4ECB0773DE");
 
             entity.Property(e => e.IdOperador).HasColumnName("idOperador");
@@ -1232,6 +1254,17 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Proveedor>(entity =>
         {
+            entity.Property(e => e.TipoDoc)
+                .IsRequired()
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("DNI")
+                .HasColumnName("tipoDoc");
+            entity.Property(e => e.NroDoc)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("nroDoc");
+
             entity.HasKey(e => e.IdProveedor).HasName("PK__Proveedo__A3FA8E6B4EEF2341");
 
             entity.HasIndex(e => e.IdEstadoProveedor, "idx_estado");

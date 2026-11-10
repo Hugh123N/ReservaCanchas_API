@@ -8,6 +8,8 @@ namespace Reserva.Dto.Dbo.Proveedor
         public string? IdUsuario { get; set; }
         public string Nombres { get; set; } = null!;
         public string Apellidos { get; set; } = null!;
+        public string TipoDoc { get; set; } = "DNI";
+        public string? NroDoc { get; set; }
         public string? Telefono { get; set; }
         public string? Email { get; set; }
         public string? UserName { get; set; }

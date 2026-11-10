@@ -4,13 +4,13 @@ using Reserva.Dto.Dbo.Calendario;
 namespace Reserva.Domain.Queries.Dbo.Calendario
 {
     /// <summary>
-    /// Query para buscar clientes por nombre o teléfono
+    /// Consulta un cliente por DNI y completa sus datos con PersonLookup cuando aún no está registrado.
     /// </summary>
-    public class BuscarClienteQuery : QueryBase<List<ClientDto>>
+    public class BuscarClienteQuery : QueryBase<ClientDto>
     {
         /// <summary>
-        /// Término de búsqueda (puede ser nombre, apellido o teléfono)
+        /// DNI de ocho dígitos.
         /// </summary>
-        public string TerminoBusqueda { get; set; } = string.Empty;
+        public string Dni { get; set; } = string.Empty;
     }
 }

@@ -38,12 +38,12 @@ namespace Reserva.Api.Controllers.Dbo
             => await _calendarioApplication.CrearReservaOperador(request);
         
         /// <summary>
-        /// Busca clientes por nombre, apellido o teléfono
+        /// Busca por DNI en Cliente y consulta PersonLookup cuando aún no está registrado.
         /// </summary>
         [HttpGet("buscar-cliente")]
-        public async Task<ResponseDto<List<ClientDto>>> BuscarCliente([FromQuery] string termino)
+        public async Task<ResponseDto<ClientDto>> BuscarCliente([FromQuery] string dni, CancellationToken cancellationToken)
         {
-            return await _calendarioApplication.BuscarCliente(termino);
+            return await _calendarioApplication.BuscarCliente(dni, cancellationToken);
         }
 
         /// <summary>
@@ -69,4 +69,3 @@ namespace Reserva.Api.Controllers.Dbo
         }
     }
 }
-            

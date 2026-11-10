@@ -6,6 +6,8 @@ namespace Reserva.Dto.Dbo.Calendario
         public int? IdCliente { get; set; }
         public string? Nombre { get; set; }
         public string? Apellidos { get; set; }
+        public string TipoDoc { get; set; } = "DNI";
+        public string? NroDoc { get; set; }
         public string Telefono { get; set; } = null!;
         public string? Email { get; set; }
         public bool EsNuevoCliente { get; set; }

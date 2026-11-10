@@ -51,6 +51,28 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
                 When(x => x.RequestDto.Cliente != null, () =>
                 {
+                    RuleFor(x => x.RequestDto.Cliente.TipoDoc)
+                        .Equal("DNI")
+                        .WithMessage("La reserva debe identificar al cliente mediante DNI.");
+
+                    RuleFor(x => x.RequestDto.Cliente.NroDoc)
+                        .NotEmpty()
+                        .Matches(@"^[0-9]{8}$")
+                        .WithMessage("El DNI debe contener exactamente 8 dígitos numéricos.");
+
+                    RuleFor(x => x.RequestDto.Cliente.Telefono)
+                        .Cascade(CascadeMode.Stop)
+                        .NotEmpty().WithMessage("El teléfono del cliente es obligatorio")
+                        .Matches(@"^[0-9]{8,15}$").WithMessage("El teléfono debe contener entre 8 y 15 dígitos")
+                        .MustAsync(async (command, telefono, cancellationToken) =>
+                        {
+                            var otroCliente = await _clienteRepository.GetByAsync(item =>
+                                item.Activo && item.Telefono == telefono &&
+                                (item.TipoDoc != "DNI" || item.NroDoc != command.RequestDto.Cliente.NroDoc));
+                            return otroCliente == null;
+                        })
+                        .WithMessage("El teléfono ya está registrado para otro cliente");
+
                     // Si es cliente existente
                     When(x => !x.RequestDto.Cliente.EsNuevoCliente, () =>
                     {
@@ -58,42 +80,32 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                             .NotNull()
                             .NotEmpty()
                             .WithMessage("Debe proporcionar el ID del cliente")
-                            .MustAsync(async (idCliente, cancellationToken) =>
+                            .MustAsync(async (command, idCliente, cancellationToken) =>
                             {
                                 if (!idCliente.HasValue) return false;
                                 var user = await _clienteRepository.GetByAsync(
-                                    u => u.IdCliente == idCliente.Value && u.Activo);
+                                    u => u.IdCliente == idCliente.Value && u.Activo &&
+                                         u.TipoDoc == "DNI" && u.NroDoc == command.RequestDto.Cliente.NroDoc);
                                 return user != null;
                             })
-                            .WithMessage("El cliente seleccionado no existe");
+                            .WithMessage("El cliente seleccionado no existe o no corresponde al DNI indicado");
                     });
 
                     // Si es cliente nuevo
                     When(x => x.RequestDto.Cliente.EsNuevoCliente, () =>
                     {
+                        RuleFor(x => x.RequestDto.Cliente.IdCliente)
+                            .Null().WithMessage("Un cliente nuevo no debe incluir un ID de cliente.");
+
                         RuleFor(x => x.RequestDto.Cliente.Nombre)
                             .NotEmpty()
                             .WithMessage("El nombre del cliente es obligatorio")
-                            .MinimumLength(3)
-                            .WithMessage("El nombre debe tener al menos 3 caracteres");
+                            .MaximumLength(100);
 
                         RuleFor(x => x.RequestDto.Cliente.Apellidos)
                             .NotEmpty()
-                            .WithMessage("El Appellido del cliente es obligatorio");
-
-                        RuleFor(x => x.RequestDto.Cliente.Telefono)
-                            .NotEmpty()
-                            .WithMessage("El teléfono del cliente es obligatorio")
-                            .Matches(@"^\d{7,15}$")
-                            .WithMessage("El formato del teléfono no es válido")
-                            .MustAsync(async (telefono, cancellationToken) =>
-                            {
-                                if (string.IsNullOrEmpty(telefono)) return true;
-                                var user = await _clienteRepository.GetByAsync(
-                                    u => u.Telefono == telefono && u.Activo);
-                                return user == null;
-                            })
-                            .WithMessage("El teléfono ya está registrado");
+                            .WithMessage("Los apellidos del cliente son obligatorios")
+                            .MaximumLength(100);
 
                         RuleFor(x => x.RequestDto.Cliente.Email)
                             .EmailAddress()

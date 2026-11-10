@@ -21,6 +21,7 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IRepository<Entity.Proveedor> _proveedorRepository;
         private readonly IRepository<Entity.Operador> _operadorRepository;
+        private readonly IRepository<Entity.Cliente> _clienteRepository;
 
         public ChangeRoleCommandHandler(
             IUnitOfWork unitOfWork,
@@ -28,12 +29,14 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
             IMediator mediator,
             UserManager<ApplicationUser> userManager,
             IRepository<Entity.Proveedor> proveedorRepository,
-            IRepository<Entity.Operador> operadorRepository
+            IRepository<Entity.Operador> operadorRepository,
+            IRepository<Entity.Cliente> clienteRepository
         ) : base(unitOfWork, mapper, mediator)
         {
             _userManager = userManager;
             _proveedorRepository = proveedorRepository;
             _operadorRepository = operadorRepository;
+            _clienteRepository = clienteRepository;
         }
 
         public override async Task<ResponseDto<LoginResultDto>> HandleCommand(ChangeRoleCommand request, CancellationToken cancellationToken)
@@ -66,6 +69,9 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 return response;
             }
 
+            var cliente = await _clienteRepository.GetByAsNoTrackingAsync(item =>
+                item.Activo && item.UserId == applicationUser.Id.ToString());
+
             // Crear entidad según el rol
             if (targetRole.Equals(Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase))
             {
@@ -81,6 +87,8 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 proveedor.IdEstadoProveedor = 1; // Pendiente
                 proveedor.Nombres = applicationUser.FirstName;
                 proveedor.Apellidos = applicationUser.LastName;
+                proveedor.TipoDoc = cliente?.TipoDoc ?? "DNI";
+                proveedor.NroDoc = cliente?.NroDoc;
                 proveedor.Telefono = applicationUser.PhoneNumber;
                 proveedor.Email = applicationUser.Email;
 
@@ -116,6 +124,8 @@ namespace Reserva.Domain.Commands.Dbo.Usuario
                 {
                     Nombres = applicationUser.FirstName ?? "",
                     Apellidos = applicationUser.LastName ?? "",
+                    TipoDoc = cliente?.TipoDoc ?? "DNI",
+                    NroDoc = cliente?.NroDoc,
                     Telefono = applicationUser.PhoneNumber,
                     Email = applicationUser.Email,
                     IdUsuario = applicationUser.Id.ToString()

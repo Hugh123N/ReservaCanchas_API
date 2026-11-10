@@ -58,6 +58,7 @@ builder.Services.UseRepositories(
 
 // Domain Services
 builder.Services.UseDomainServices();
+builder.Services.AddPersonLookup(configuration);
 
 // Culqi Service para integración de pagos
 builder.Services.AddHttpClient<Reserva.Domain.Services.Culqi.CulqiService>();

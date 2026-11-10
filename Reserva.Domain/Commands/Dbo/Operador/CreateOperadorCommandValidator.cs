@@ -9,6 +9,9 @@ namespace Reserva.Domain.Commands.Dbo.Operador
         {
             RequiredInformation(x => x.CreateDto).DependentRules(() =>
             {
+                RequiredString(x => x.CreateDto.TipoDoc, "TipoDoc", null, 20);
+                MaximumLength(x => x.CreateDto.NroDoc, "NroDoc", 20);
+
                 RuleFor(x => x.CreateDto.UserName)
                     .NotEmpty().WithMessage("El nombre de usuario es requerido.")
                     .MinimumLength(3).WithMessage("El nombre de usuario debe tener al menos 3 caracteres.")

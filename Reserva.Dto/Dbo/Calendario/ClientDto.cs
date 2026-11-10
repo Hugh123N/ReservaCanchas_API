@@ -5,13 +5,19 @@ namespace Reserva.Dto.Dbo.Calendario
     /// </summary>
     public class ClientDto
     {
-        public int IdCliente { get; set; }
+        public int? IdCliente { get; set; }
+
+        public bool EsNuevoCliente { get; set; }
 
         public string NombreCompleto { get; set; } = null!;
 
         public string FirstName { get; set; } = null!;
 
         public string LastName { get; set; } = null!;
+
+        public string TipoDoc { get; set; } = "DNI";
+
+        public string? NroDoc { get; set; }
 
         public string? Telefono { get; set; }
 

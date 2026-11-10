@@ -29,6 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reserva.Repository", "Reser
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reserva.Repository.Abstractions", "Reserva.Repository.Abstractions\Reserva.Repository.Abstractions.csproj", "{B180C929-70D6-4FFA-B08F-D02B72DCBBDA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{170B1222-E16D-4B49-9F06-0CF996F19441}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reserva.Domain.Tests", "Reserva.Domain.Tests\Reserva.Domain.Tests.csproj", "{941C3E5A-9CB6-42D3-BE86-491F98F5B57E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +75,10 @@ Global
 		{B180C929-70D6-4FFA-B08F-D02B72DCBBDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B180C929-70D6-4FFA-B08F-D02B72DCBBDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B180C929-70D6-4FFA-B08F-D02B72DCBBDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{941C3E5A-9CB6-42D3-BE86-491F98F5B57E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{941C3E5A-9CB6-42D3-BE86-491F98F5B57E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{941C3E5A-9CB6-42D3-BE86-491F98F5B57E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{941C3E5A-9CB6-42D3-BE86-491F98F5B57E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +93,7 @@ Global
 		{484C0208-8885-458E-96BF-1F4F01560004} = {29894C01-0874-4953-BDC8-E4B975BC23A7}
 		{381A3C04-918A-43A2-96F6-58F454A046F9} = {EBBAD976-EE78-4A4E-A323-56965B27C457}
 		{B180C929-70D6-4FFA-B08F-D02B72DCBBDA} = {EBBAD976-EE78-4A4E-A323-56965B27C457}
+		{941C3E5A-9CB6-42D3-BE86-491F98F5B57E} = {170B1222-E16D-4B49-9F06-0CF996F19441}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {56A8999A-B4E5-4677-ACC2-191E9D9B2B04}

@@ -11,6 +11,10 @@ public partial class Cliente
 
     public string Apellidos { get; set; } = null!;
 
+    public string TipoDoc { get; set; } = "DNI";
+
+    public string? NroDoc { get; set; }
+
     public string? Telefono { get; set; }
 
     public string? Email { get; set; }

@@ -9,6 +9,8 @@ namespace Reserva.Dto.Dbo.Proveedor
         // Datos del Proveedor/Usuario
         public string Nombre { get; set; } = null!;
         public string Apellidos { get; set; } = null!;
+        public string TipoDoc { get; set; } = "DNI";
+        public string? NroDoc { get; set; }
         public string Email { get; set; } = null!;
         public string UserName { get; set; } = null!;
         public string Password { get; set; } = null!;

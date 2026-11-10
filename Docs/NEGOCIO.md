@@ -1145,10 +1145,12 @@ OPERADOR
 │
 ├─3. Hace click en slot DISPONIBLE
 │
-├─4. Modal: busca cliente
-│     GET /api/Calendario/buscar-cliente?termino=Juan
-│     → Autocomplete por nombre, apellido o telefono
-│     → Si no existe: crea nuevo con nombre y telefono
+├─4. Modal: consulta el DNI del cliente
+│     GET /api/Calendario/buscar-cliente?dni=00000001
+│     → Primero consulta Cliente por tipo DNI y numero exacto
+│     → Si no existe: PersonLookup devuelve sus datos personales
+│     → Muestra nombres, apellidos y DNI como texto
+│     → Telefono editable y obligatorio para ambos casos
 │
 ├─5. Selecciona duracion (1 o 2 horas), metodo de pago, adelanto
 │
@@ -1157,6 +1159,7 @@ OPERADOR
 │
 ├─7. Crea la reserva
 │     POST /api/Calendario/crear-reserva-operador
+│     → Registra el cliente nuevo o reutiliza el existente y actualiza su telefono
 │     Tipos:
 │       Inmediata → Reserva queda CONFIRMADA directo
 │       PreReserva → Reserva queda PENDIENTE

@@ -71,6 +71,8 @@ namespace Reserva.Domain.Queries.Dbo.Operador
                     IdOperador = operador.IdOperador,
                     Nombres = operador.Nombres,
                     Apellidos = operador.Apellidos,
+                    TipoDoc = operador.TipoDoc,
+                    NroDoc = operador.NroDoc,
                     Email = operador.Email!,
                     Telefono = operador.Telefono!,
                     FechaCreacion = operador.CreateDate

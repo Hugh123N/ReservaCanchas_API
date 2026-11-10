@@ -51,6 +51,8 @@ namespace Reserva.Domain.Commands.Dbo.Cliente
             {
                 Nombres = request.CreateDto.FirstName,
                 Apellidos = request.CreateDto.LastName,
+                TipoDoc = request.CreateDto.TipoDoc,
+                NroDoc = request.CreateDto.NroDoc,
                 Telefono = request.CreateDto.PhoneNumber,
                 Email = request.CreateDto.Email,
                 UserId = resultUser.Data!.Id.ToString()

@@ -53,14 +53,14 @@ namespace Reserva.Application.Dbo
             return await _mediator.Send(command);
         }
 
-        public async Task<ResponseDto<List<ClientDto>>> BuscarCliente(string terminoBusqueda)
+        public async Task<ResponseDto<ClientDto>> BuscarCliente(string dni, CancellationToken cancellationToken = default)
         {
             var query = new BuscarClienteQuery
             {
-                TerminoBusqueda = terminoBusqueda
+                Dni = dni
             };
 
-            return await _mediator.Send(query);
+            return await _mediator.Send(query, cancellationToken);
         }
 
         public async Task<ResponseDto<List<HorarioDisponibleDto>>> ObtenerHorasDisponibles(int idCancha, DateTimeOffset fecha)
