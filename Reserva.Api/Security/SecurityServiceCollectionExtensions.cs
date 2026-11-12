@@ -90,6 +90,7 @@ namespace Reserva.Api.Security
                         ValidIssuer = validIssuer,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey!)),
                         ValidateLifetime = true, // Validar que el token no haya expirado
+                        RoleClaimType = "Roles",
                         ClockSkew = TimeSpan.Zero // Eliminar los 5 minutos de tolerancia por defecto
                     };
                 });

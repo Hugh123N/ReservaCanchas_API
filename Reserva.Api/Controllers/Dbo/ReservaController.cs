@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Dto.Dbo.Reserva;
+using Reserva.Common;
 
 namespace Reserva.Api.Controllers.Dbo
 {
@@ -18,9 +19,11 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<ReservaConPagoDto>> Create(CreateReservaDto createDto)
             => await _ReservaApplication.Create(createDto);
         [HttpPut]
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
         public async Task<ResponseDto<GetReservaDto>> Update(UpdateReservaDto updateDto)
             => await _ReservaApplication.Update(updateDto);
         [HttpDelete("{id}")]
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
         public async Task<ResponseDto> Delete(int id)
             => await _ReservaApplication.Delete(id);
         [HttpGet("{id}")]
@@ -43,6 +46,7 @@ namespace Reserva.Api.Controllers.Dbo
         /// Endpoint para que el operador confirme una reserva pendiente y registre el pago
         /// </summary>
         [HttpPost("confirmar-reserva-operador")]
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
         public async Task<ResponseDto<GetReservaDto>> ConfirmarReservaOperador([FromBody] ConfirmarReservaOperadorDto confirmarDto)
             => await _ReservaApplication.ConfirmarReservaOperador(confirmarDto);
 
@@ -50,6 +54,7 @@ namespace Reserva.Api.Controllers.Dbo
         /// Endpoint para que el operador libere/cancele una reserva pendiente
         /// </summary>
         [HttpPost("liberar-reserva-operador")]
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
         public async Task<ResponseDto<GetReservaDto>> LiberarReservaOperador([FromBody] LiberarReservaOperadorDto liberarDto)
             => await _ReservaApplication.LiberarReservaOperador(liberarDto);
 

@@ -56,6 +56,12 @@ namespace Reserva.Domain.Commands.Dbo.Pago
                 return response;
             }
 
+            if (pago.IdReserva.HasValue)
+            {
+                response.AddErrorResult("Para reservas usa Registrar cobro, que conserva el historial y evita duplicados.");
+                return response;
+            }
+
             // 2. Validar que el método de pago sea EFECTIVO
             if (pago.IdMetodoPagoNavigation?.Codigo != Constants.METODO_PAGO.Efectivo)
             {

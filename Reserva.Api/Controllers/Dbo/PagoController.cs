@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Reserva.Common;
 using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Dto.Dbo.Pago;
@@ -9,6 +10,19 @@ namespace Reserva.Api.Controllers.Dbo
     [Route("api/Pago")]
     public class PagoController : IPagoApplication
     {
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
+        [HttpGet("{id:int}/movimientos")]
+        public Task<ResponseDto<GetHistorialPagoDto>> Historial(int id) => _PagoApplication.Historial(id);
+
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
+        [HttpPost("registrar-cobro")]
+        public Task<ResponseDto<GetHistorialPagoDto>> RegistrarCobro([FromBody] RegistrarMovimientoPagoDto dto)
+            => _PagoApplication.RegistrarCobro(dto);
+
+        [Security.Authorize(Roles = Constants.Role.Proveedor)]
+        [HttpPost("corregir-registro")]
+        public Task<ResponseDto<GetHistorialPagoDto>> CorregirRegistro([FromBody] RegistrarMovimientoPagoDto dto)
+            => _PagoApplication.CorregirRegistro(dto);
         private readonly IPagoApplication _PagoApplication;
 
         public PagoController(IPagoApplication PagoApplication)

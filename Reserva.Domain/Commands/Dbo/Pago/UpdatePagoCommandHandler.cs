@@ -28,6 +28,11 @@ namespace Reserva.Domain.Commands.Dbo.Pago
 
             if (Pago != null)
             {
+                if (Pago.IdReserva.HasValue || request.UpdateDto.IdReserva.HasValue)
+                {
+                    response.AddErrorResult("Los pagos de reservas se modifican mediante Registrar cobro o Corregir registro.");
+                    return response;
+                }
                 _mapper?.Map(request.UpdateDto, Pago);
                 await _PagoRepository.UpdateAsync(Pago);
                 await _PagoRepository.SaveAsync();

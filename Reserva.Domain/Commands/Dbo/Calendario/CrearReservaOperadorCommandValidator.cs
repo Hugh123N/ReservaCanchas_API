@@ -159,6 +159,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                         .GreaterThan(0)
                         .WithMessage("El monto total debe ser mayor a cero");
 
+                    RuleFor(x => x.RequestDto.Pago.MontoPagado)
+                        .Must((command, monto) => !monto.HasValue || (monto >= 0 && monto <= command.RequestDto.Pago.MontoTotal &&
+                            decimal.Round(monto.Value, 2) == monto.Value))
+                        .WithMessage("El monto recibido debe estar entre cero y el total, con máximo dos decimales.");
+
                     // Si es reserva inmediata, validar monto pagado
                     When(x => x.RequestDto.TipoReserva == TipoReservaOperador.Inmediata, () =>
                     {

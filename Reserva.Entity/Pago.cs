@@ -21,6 +21,10 @@ public partial class Pago
 
     public decimal MontoPendiente { get; set; }
 
+    public int Revision { get; set; }
+
+    public virtual ICollection<MovimientoPago> MovimientoPago { get; set; } = new List<MovimientoPago>();
+
     public decimal? MontoReembolso { get; set; }
 
     public int IdMetodoPago { get; set; }

@@ -2,9 +2,7 @@ using AutoMapper;
 using Reserva.Dto.Base;
 using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Dbo.Reserva;
-using Reserva.Dto.Dbo.DetalleReserva;
-using Reserva.Dto.Dbo.Pago;
-using Reserva.Dto.Dbo.ConfiguracionProveedor;
+using Reserva.Domain.Helpers;
 using Reserva.Repository.Abstractions.Base;
 
 namespace Reserva.Domain.Queries.Dbo.Reserva
@@ -65,33 +63,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             var configuracionProveedor = await _configuracionProveedorRepository.GetByAsNoTrackingAsync(
                 c => c.IdProveedor == reserva.IdCanchaNavigation!.IdProveedor && c.Activo);
 
-            var horariosDto = _mapper?.Map<List<GetDetalleReservaDto>>(detalles) ?? new List<GetDetalleReservaDto>();
-            var pagoDto = _mapper?.Map<GetPagoDto>(pagoActivo);
-            var configuracionDto = _mapper?.Map<GetConfiguracionProveedorDto>(configuracionProveedor);
-            var reservaDto = _mapper?.Map<GetReservaDto>(reserva);
-
-            reservaDto.CodigoReserva = reserva.CodigoReserva;
-
-            reservaDto.NombreCancha = reserva.IdCanchaNavigation?.Nombre ?? string.Empty;
-            reservaDto.DireccionCancha = reserva.IdCanchaNavigation?.Direccion ?? string.Empty;
-            reservaDto.TelefonoCancha = reserva.IdCanchaNavigation?.TelefonoCancha;
-
-            reservaDto.NombreCliente = reserva.IdClienteNavigation?.Nombres + " " + reserva.IdClienteNavigation?.Apellidos ?? string.Empty;
-            reservaDto.NumeroCliente = reserva.IdClienteNavigation?.Telefono;
-            reservaDto.EmailCliente = reserva.IdClienteNavigation?.Email;
-
-            reservaDto.NombreOperadorConfirmo = reserva.IdOperadorConfirmoNavigation != null
-                ? reserva.IdOperadorConfirmoNavigation.Nombres + " " + reserva.IdOperadorConfirmoNavigation.Apellidos
-                : null; // TODO: en caso no tengo operador y solo eata encargado el proveedor deberia pasar el proveedor
-
-            reservaDto.NombreDeporte = reserva.IdTipoDeporteNavigation?.Nombre; //TODO: SE PUEDE RESERVAR VARIOS DEPORTES EN UNA SOLO RESERVA
-            reservaDto.UserCreateReserva = reserva.UserNameCreate;
-            reservaDto.FechaCreacion = reserva.CreateDate;
-            reservaDto.FechaModificacion = reserva.UpdateDate;
-
-            reservaDto.ConfiguracionProveedor = configuracionDto;
-            reservaDto.Horarios = horariosDto;
-            reservaDto.PagoReserva = pagoDto;
+            var reservaDto = ReservaDetalleDtoMapper.Map(_mapper!, reserva, detalles, pagoActivo, configuracionProveedor);
 
             response.UpdateData(reservaDto);
             response.AddOkResult("Reserva obtenida exitosamente.");

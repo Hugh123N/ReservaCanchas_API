@@ -66,6 +66,12 @@ namespace Reserva.Domain.Commands.Dbo.Pago
                 return response;
             }
 
+            if (pago.IdReserva.HasValue)
+            {
+                response.AddErrorResult("Para reservas registra el dinero recibido mediante Registrar cobro.");
+                return response;
+            }
+
             //Validar que el pago no ha expirado
             int minutosExpiracion = _configuration.GetValue<int>("Pago:MinutosExpiracion", 15);
             var fechaExpiracion = pago.CreateDate.AddMinutes(minutosExpiracion);

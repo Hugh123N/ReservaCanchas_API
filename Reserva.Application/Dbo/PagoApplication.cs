@@ -10,6 +10,12 @@ namespace Reserva.Application.Dbo
 {
     public class PagoApplication : ApplicationBase, IPagoApplication
     {
+        public Task<ResponseDto<GetHistorialPagoDto>> Historial(int id)
+            => _mediator.Send(new GetHistorialPagoQuery(id));
+        public Task<ResponseDto<GetHistorialPagoDto>> RegistrarCobro(RegistrarMovimientoPagoDto dto)
+            => _mediator.Send(new RegistrarMovimientoPagoCommand(dto, false));
+        public Task<ResponseDto<GetHistorialPagoDto>> CorregirRegistro(RegistrarMovimientoPagoDto dto)
+            => _mediator.Send(new RegistrarMovimientoPagoCommand(dto, true));
         public PagoApplication(IMediator mediator) : base(mediator)
         {
 

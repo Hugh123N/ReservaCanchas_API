@@ -1,0 +1,216 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using Reserva.Common;
+using Reserva.Domain.Commands.Dbo.Pago;
+using Reserva.Domain.Services.Pago;
+using Reserva.Dto.Dbo.Pago;
+using Reserva.Entity;
+using Reserva.Repository.Abstractions.Base;
+using Reserva.Repository.Data;
+using Reserva.Repository.Security;
+using Xunit;
+
+namespace Reserva.Domain.Tests.Pago;
+
+public class MovimientoPagoTests
+{
+    [Fact]
+    public async Task Cobro_IncrementaSinSobrescribirYConservaSaldoPrevio()
+    {
+        var s = new Scenario();
+        var response = await s.Service.RegistrarAsync(s.Request(20), false);
+        Assert.True(response.IsValid);
+        Assert.Equal(70, s.Payment.MontoAdelanto);
+        Assert.Equal(30, s.Payment.MontoPendiente);
+        Assert.Equal(1, s.Payment.Revision);
+        Assert.Equal(new[] { "SALDO_INICIAL", "COBRO" }, s.Movements.Select(m => m.Tipo));
+        Assert.Equal(50, s.Movements[0].MontoResultante);
+        Assert.Equal(20, s.Movements[1].Importe);
+    }
+
+    [Theory]
+    [InlineData(40)]
+    [InlineData(60)]
+    [InlineData(0)]
+    public async Task Proveedor_CorrigeAcumuladoConDiferenciaSinEliminarOriginal(decimal correcto)
+    {
+        var s = new Scenario();
+        var response = await s.Service.RegistrarAsync(s.Request(correcto, "Error al digitar el adelanto"), true);
+        Assert.True(response.IsValid);
+        Assert.Equal(correcto, s.Payment.MontoAdelanto);
+        Assert.Equal(100 - correcto, s.Payment.MontoPendiente);
+        Assert.Equal("CORRECCION", s.Movements[1].Tipo);
+        Assert.Equal(correcto - 50, s.Movements[1].Importe);
+        Assert.Equal(50, s.Movements[1].MontoAnterior);
+    }
+
+    [Fact]
+    public async Task Operador_PuedeCobrarPeroNoCorregir()
+    {
+        var s = new Scenario(operador: true);
+        Assert.False((await s.Service.RegistrarAsync(s.Request(40, "Error de registro"), true)).IsValid);
+        Assert.True((await s.Service.RegistrarAsync(s.Request(10), false)).IsValid);
+        Assert.Equal(60, s.Payment.MontoAdelanto);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task OtroNegocioOSinCanchaAsignada_NoPuedeConsultarNiCobrar(bool operador)
+    {
+        var s = new Scenario(operador);
+        if (operador) s.Assignments.Clear();
+        else s.Identity.Setup(i => i.GetCurrentUserIdNegocio()).Returns(999);
+        Assert.False((await s.Service.ObtenerAsync(1)).IsValid);
+        Assert.False((await s.Service.RegistrarAsync(s.Request(10), false)).IsValid);
+        Assert.Empty(s.Movements);
+    }
+
+    [Fact]
+    public async Task ReintentarMismaOperacion_NoDuplicaCobro()
+    {
+        var s = new Scenario();
+        var dto = s.Request(20);
+        Assert.True((await s.Service.RegistrarAsync(dto, false)).IsValid);
+        Assert.True((await s.Service.RegistrarAsync(dto, false)).IsValid);
+        Assert.Equal(70, s.Payment.MontoAdelanto);
+        Assert.Equal(2, s.Movements.Count);
+        dto.Monto = 10;
+        Assert.False((await s.Service.RegistrarAsync(dto, false)).IsValid);
+    }
+
+    [Fact]
+    public async Task OperacionConVersionAnterior_NoSobrescribeOtroCobro()
+    {
+        var s = new Scenario();
+        var primero = s.Request(20);
+        var segundo = s.Request(10);
+        Assert.True((await s.Service.RegistrarAsync(primero, false)).IsValid);
+        Assert.False((await s.Service.RegistrarAsync(segundo, false)).IsValid);
+        Assert.Equal(70, s.Payment.MontoAdelanto);
+    }
+
+    [Theory]
+    [InlineData(51, false)]
+    [InlineData(101, true)]
+    [InlineData(-1, true)]
+    [InlineData(50, true)]
+    public async Task RechazaSobrepagoOResultadoInvalido(decimal monto, bool correccion)
+    {
+        var s = new Scenario();
+        Assert.False((await s.Service.RegistrarAsync(s.Request(monto, correccion ? "Error de registro" : null), correccion)).IsValid);
+        Assert.Empty(s.Movements);
+        Assert.Equal(50, s.Payment.MontoAdelanto);
+    }
+
+    [Theory]
+    [InlineData(Constants.ESTADO_RESERVA.Cancelado)]
+    [InlineData(Constants.ESTADO_RESERVA.Expirado)]
+    public async Task ReservaNoVigente_NoRecibeCobros(string estado)
+    {
+        var s = new Scenario();
+        s.Reservation.IdEstadoReservaNavigation.Codigo = estado;
+        Assert.False((await s.Service.RegistrarAsync(s.Request(10), false)).IsValid);
+    }
+
+    [Fact]
+    public async Task ReservaConfirmada_NoSeBloqueaPorAntiguaFechaDePreReserva()
+    {
+        var s = new Scenario();
+        s.Reservation.FechaExpiracionPreReserva = DateTimeOffset.UtcNow.AddDays(-1);
+        Assert.True((await s.Service.RegistrarAsync(s.Request(10), false)).IsValid);
+    }
+
+    [Theory]
+    [InlineData(-1, false, null)]
+    [InlineData(0, false, null)]
+    [InlineData(10.001, false, null)]
+    [InlineData(40, true, "")]
+    [InlineData(40, true, "    x")]
+    public async Task Validador_RechazaImportesYMotivosInvalidos(double monto, bool correccion, string? motivo)
+    {
+        var dto = new Scenario().Request((decimal)monto, motivo);
+        var result = await new RegistrarMovimientoPagoCommandValidator().ValidateAsync(new RegistrarMovimientoPagoCommand(dto, correccion));
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public void Modelo_ConfiguraVersionConcurrenteYOperacionUnica()
+    {
+        using var context = new ReservaCanchasContext(new DbContextOptionsBuilder<ReservaCanchasContext>()
+            .UseSqlServer("Server=(local);Database=Modelo;Trusted_Connection=True;TrustServerCertificate=True").Options);
+        Assert.True(context.Model.FindEntityType(typeof(Entity.Pago))!.FindProperty(nameof(Entity.Pago.Revision))!.IsConcurrencyToken);
+        Assert.Contains(context.Model.FindEntityType(typeof(MovimientoPago))!.GetIndexes(),
+            index => index.IsUnique && index.Properties.Single().Name == nameof(MovimientoPago.IdOperacion));
+    }
+
+    private sealed class Scenario
+    {
+        public Mock<IUserIdentity> Identity { get; } = new();
+        public List<MovimientoPago> Movements { get; } = new();
+        public List<OperadorCancha> Assignments { get; } = new() { new() { IdOperador = 7, IdCancha = 3, Activo = true } };
+        public Entity.Reserva Reservation { get; }
+        public Entity.Pago Payment { get; }
+        public MovimientoPagoService Service { get; }
+
+        public Scenario(bool operador = false)
+        {
+            var usuario = Guid.NewGuid();
+            Identity.Setup(i => i.GetCurrentUserId()).Returns(usuario);
+            Identity.Setup(i => i.GetCurrentUserIdNegocio()).Returns(operador ? 7 : 9);
+            Identity.Setup(i => i.GetUserRole()).Returns(operador ? Constants.Role.Operador : Constants.Role.Proveedor);
+            Reservation = new Entity.Reserva
+            {
+                IdReserva = 2, IdCancha = 3, Activo = true, FechaReserva = DateTimeOffset.UtcNow.AddDays(1),
+                IdCanchaNavigation = new Cancha { IdCancha = 3, IdProveedor = 9, ZonaHoraria = "America/Lima" },
+                IdEstadoReservaNavigation = new EstadoReserva { Codigo = Constants.ESTADO_RESERVA.Confirmado }
+            };
+            Payment = new Entity.Pago
+            {
+                IdPago = 1, IdReserva = 2, Monto = 100, MontoAdelanto = 50, MontoPendiente = 50,
+                IdMetodoPago = 2, Activo = true, IdReservaNavigation = Reservation,
+                IdEstadoPagoNavigation = new EstadoPago { Codigo = Constants.ESTADO_PAGO.Parcial }
+            };
+            var payments = Repository(new[] { Payment });
+            payments.Setup(r => r.GetByAsync(It.IsAny<Expression<Func<Entity.Pago, bool>>>(),
+                It.IsAny<Expression<Func<Entity.Pago, object>>[]>())).ReturnsAsync(Payment);
+            var movements = Repository(Movements);
+            movements.Setup(r => r.AddAsync(It.IsAny<MovimientoPago>())).Returns((MovimientoPago m) =>
+            {
+                m.IdMovimientoPago = Movements.Count + 1;
+                Movements.Add(m);
+                return Task.FromResult<MovimientoPago?>(m);
+            });
+            var operators = Repository(new[] { new Operador { IdOperador = 7, IdProveedor = 9, IdUsuario = usuario.ToString(), Activo = true } });
+            var methods = Repository(new[] { new MetodoPago { IdMetodoPago = 2, Codigo = "02", Nombre = "Efectivo", Activo = true } });
+            var states = Repository(new[] { new EstadoPago { IdEstadoPago = 2, Codigo = Constants.ESTADO_PAGO.Parcial, Activo = true },
+                new EstadoPago { IdEstadoPago = 1, Codigo = Constants.ESTADO_PAGO.Pagado, Activo = true },
+                new EstadoPago { IdEstadoPago = 3, Codigo = Constants.ESTADO_PAGO.Pendiente, Activo = true } });
+            Service = new MovimientoPagoService(payments.Object, movements.Object, methods.Object, states.Object,
+                Repository(new[] { new EstadoReserva { IdEstadoReserva = 2, Codigo = Constants.ESTADO_RESERVA.Confirmado, Activo = true } }).Object,
+                new PagoReservaAccessService(Identity.Object, operators.Object, Repository(Assignments).Object),
+                Repository(Array.Empty<ConfiguracionProveedor>()).Object);
+        }
+
+        public RegistrarMovimientoPagoDto Request(decimal monto, string? motivo = null) => new()
+        {
+            IdPago = 1, IdOperacion = Guid.NewGuid(), Revision = Payment.Revision,
+            Monto = monto, Motivo = motivo, CodigoMetodoPago = "02"
+        };
+
+        private static Mock<IRepository<T>> Repository<T>(IEnumerable<T> items) where T : class
+        {
+            var mock = new Mock<IRepository<T>>();
+            mock.Setup(r => r.GetByAsync(It.IsAny<Expression<Func<T, bool>>>()))
+                .Returns((Expression<Func<T, bool>> p) => Task.FromResult(items.FirstOrDefault(p.Compile())));
+            mock.Setup(r => r.GetByAsNoTrackingAsync(It.IsAny<Expression<Func<T, bool>>>()))
+                .Returns((Expression<Func<T, bool>> p) => Task.FromResult(items.FirstOrDefault(p.Compile())));
+            mock.Setup(r => r.FindByAsync(It.IsAny<Expression<Func<T, bool>>>()))
+                .Returns((Expression<Func<T, bool>> p) => Task.FromResult(items.Where(p.Compile())));
+            mock.Setup(r => r.FindByAsNoTrackingAsync(It.IsAny<Expression<Func<T, bool>>>()))
+                .Returns((Expression<Func<T, bool>> p) => Task.FromResult(items.Where(p.Compile())));
+            return mock;
+        }
+    }
+}

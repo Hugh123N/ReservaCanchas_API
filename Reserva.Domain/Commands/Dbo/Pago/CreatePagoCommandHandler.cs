@@ -29,6 +29,12 @@ namespace Reserva.Domain.Commands.Dbo.Pago
         {
             var response = new ResponseDto<GetPagoDto>();
 
+            if (request.CreateDto.IdReserva.HasValue)
+            {
+                response.AddErrorResult("El pago de una reserva se crea junto con la reserva; usa Registrar cobro para agregar dinero.");
+                return response;
+            }
+
             var Pago = _mapper?.Map<Entity.Pago>(request.CreateDto);
 
             if (Pago != null)

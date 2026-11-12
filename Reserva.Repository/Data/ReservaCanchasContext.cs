@@ -68,6 +68,8 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<Pago> Pago { get; set; }
 
+    public virtual DbSet<MovimientoPago> MovimientoPago { get; set; }
+
     public virtual DbSet<PagoPlan> PagoPlan { get; set; }
 
     public virtual DbSet<PlanCaracteristica> PlanCaracteristica { get; set; }
@@ -102,6 +104,22 @@ public partial class ReservaCanchasContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<MovimientoPago>(entity =>
+        {
+            entity.ToTable("MovimientoPago");
+            entity.HasKey(e => e.IdMovimientoPago);
+            entity.HasIndex(e => e.IdOperacion).IsUnique();
+            entity.HasIndex(e => new { e.IdPago, e.IdMovimientoPago });
+            entity.Property(e => e.Tipo).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Importe).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.MontoAnterior).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.MontoResultante).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Motivo).HasMaxLength(500);
+            entity.Property(e => e.UserNameCreate).HasMaxLength(250).IsRequired();
+            entity.HasOne(e => e.IdPagoNavigation).WithMany(e => e.MovimientoPago)
+                .HasForeignKey(e => e.IdPago).OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<AspNetRoleClaims>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__AspNetRo__3214EC0754DAAC85");
@@ -1056,6 +1074,7 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.MontoAdelanto)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("montoAdelanto");
+            entity.Property(e => e.Revision).HasColumnName("revision").IsConcurrencyToken();
             entity.Property(e => e.MontoPendiente)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("montoPendiente");

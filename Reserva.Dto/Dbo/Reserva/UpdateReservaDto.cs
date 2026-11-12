@@ -6,6 +6,7 @@ namespace Reserva.Dto.Dbo.Reserva
     public class UpdateReservaDto : ReservaDto
     {
         public int IdReserva { get; set; }
+        public int? RevisionPago { get; set; }
         public List<BloqueHorarioDto> Horarios { get; set; } = new List<BloqueHorarioDto>();
         public List<UpdatePagoDto> PagoReserva { get; set; } = new List<UpdatePagoDto>();
     }

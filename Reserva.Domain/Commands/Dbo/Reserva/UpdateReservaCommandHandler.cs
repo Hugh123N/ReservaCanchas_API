@@ -5,8 +5,9 @@ using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Reserva;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
-using Reserva.Repository.Security;
 using Reserva.Repository.Utils;
+using Reserva.Domain.Services.Pago;
+using Reserva.Domain.Helpers;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -15,10 +16,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.Reserva> _reservaRepository;
         private readonly IRepository<Entity.DetalleReserva> _detalleReservaRepository;
         private readonly IRepository<Entity.HorarioCancha> _horarioCanchaRepository;
-        private readonly IRepository<Entity.EstadoReserva> _estadoReservaRepository;
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
-        private readonly IRepository<Entity.Operador> _operadorRepository;
-        private readonly IUserIdentity _userIdentity;
+        private readonly PagoReservaAccessService _access;
 
         public UpdateReservaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -27,19 +26,15 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.Reserva> reservaRepository,
             IRepository<Entity.DetalleReserva> detalleReservaRepository,
             IRepository<Entity.HorarioCancha> horarioCanchaRepository,
-            IRepository<Entity.EstadoReserva> estadoReservaRepository,
             IRepository<Entity.EstadoPago> estadoPagoRepository,
-            IRepository<Entity.Operador> operadorRepository,
-            IUserIdentity userIdentity
+            PagoReservaAccessService access
         ) : base(unitOfWork, mapper, validator)
         {
             _reservaRepository = reservaRepository;
             _detalleReservaRepository = detalleReservaRepository;
             _horarioCanchaRepository = horarioCanchaRepository;
-            _estadoReservaRepository = estadoReservaRepository;
             _estadoPagoRepository = estadoPagoRepository;
-            _operadorRepository = operadorRepository;
-            _userIdentity = userIdentity;
+            _access = access;
         }
 
         public override async Task<ResponseDto<GetReservaDto>> HandleCommand(UpdateReservaCommand request, CancellationToken cancellationToken)
@@ -51,7 +46,12 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             {
                 var reserva = await _reservaRepository.GetByAsync(x => x.IdReserva == dto.IdReserva && x.Activo,
                     x => x.DetalleReserva.Where(x => x.Activo),
-                    x => x.Pago.Where(x => x.Activo)
+                    x => x.Pago.Where(x => x.Activo),
+                    x => x.IdCanchaNavigation.IdProveedorNavigation.ConfiguracionProveedor!,
+                    x => x.IdEstadoReservaNavigation,
+                    x => x.IdClienteNavigation!,
+                    x => x.IdTipoDeporteNavigation!,
+                    x => x.IdOperadorConfirmoNavigation!
                 );
 
                 if (reserva == null)
@@ -60,25 +60,86 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     return response;
                 }
 
-                _mapper?.Map(dto, reserva);
-
-                if (dto.PagoReserva != null && dto.PagoReserva.Any())
+                if (!await _access.PuedeAccederAsync(reserva) || !_access.PuedeOperarPorFecha(reserva))
                 {
-                    var pagoDto = dto.PagoReserva.First();
-                    var pagoExistente = reserva.Pago.FirstOrDefault();
-
-                    if (pagoExistente != null)
-                    {
-                        await ActualizarPago(pagoExistente, pagoDto, reserva);
-                    }
+                    response.AddErrorResult("No tienes permiso para editar esta reserva.");
+                    return response;
                 }
+                var pago = reserva.Pago.FirstOrDefault();
+                if (pago == null || dto.RevisionPago != pago.Revision)
+                {
+                    response.AddErrorResult("El pago cambió o falta su versión. Recarga la reserva antes de editar.");
+                    return response;
+                }
+                if (dto.IdCancha != reserva.IdCancha || dto.FechaReserva.Date != reserva.FechaReserva.Date ||
+                    dto.PagoReserva == null || dto.PagoReserva.Count > 1 || dto.PagoReserva.Any(p => p.IdPago != pago.IdPago || p.MontoAdelanto != pago.MontoAdelanto))
+                {
+                    response.AddErrorResult("La edición no permite cambiar la cancha, fecha ni el acumulado cobrado. Usa Registrar cobro o Corregir registro.");
+                    return response;
+                }
+                if (reserva.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Pendiente &&
+                    reserva.IdEstadoReservaNavigation.Codigo != Constants.ESTADO_RESERVA.Confirmado)
+                {
+                    response.AddErrorResult("La reserva no está vigente para editarla.");
+                    return response;
+                }
+
+                reserva.Observaciones = dto.Observaciones;
+                var horarios = new List<Entity.HorarioCancha>();
 
                 if (dto.Horarios != null && dto.Horarios.Any())
                 {
-                    await ActualizarFechaReservaConPrimerHorario(reserva, dto.FechaReserva);
+                    foreach (var bloque in dto.Horarios)
+                    {
+                        var dia = (int)bloque.Fecha.DayOfWeek;
+                        if (dia == 0) dia = 7;
+                        if (bloque.Fecha.Date != reserva.FechaReserva.Date)
+                        {
+                            response.AddErrorResult("Los bloques deben pertenecer a la fecha de la reserva.");
+                            return response;
+                        }
+                        var horariosBloque = (await _horarioCanchaRepository.FindByAsync(h => h.Activo && h.IdCancha == reserva.IdCancha &&
+                            h.IdDiaSemana == dia && h.IdHorarioCancha >= bloque.IdHorarioCanchaInicio && h.IdHorarioCancha <= bloque.IdHorarioCanchaFin,
+                            h => h.IdHoraInicioNavigation, h => h.IdHoraFinNavigation!)).ToList();
+                        if (horariosBloque.Count == 0 || !horariosBloque.Any(h => h.IdHorarioCancha == bloque.IdHorarioCanchaInicio) ||
+                            !horariosBloque.Any(h => h.IdHorarioCancha == bloque.IdHorarioCanchaFin))
+                        {
+                            response.AddErrorResult("No se encontraron horarios configurados para el bloque seleccionado.");
+                            return response;
+                        }
+                        horarios.AddRange(horariosBloque);
+                    }
+                    var ids = horarios.Select(h => h.IdHorarioCancha).ToList();
+                    if (ids.Count == 0 || ids.Distinct().Count() != ids.Count)
+                    {
+                        response.AddErrorResult("Los horarios no son válidos o se superponen.");
+                        return response;
+                    }
+                    var cambioHorarios = !ids.OrderBy(i => i).SequenceEqual(reserva.DetalleReserva.Select(d => d.IdHorarioCancha ?? 0).OrderBy(i => i));
+                    var hoy = DateTimeHelper.ObtenerAhoraLocal(TimezoneUtils.ObtenerZonaHoraria(reserva.IdCanchaNavigation.ZonaHoraria ?? "America/Lima")).Date;
+                    if (cambioHorarios && reserva.FechaReserva.Date < hoy)
+                    {
+                        response.AddErrorResult("No se pueden cambiar horarios de días anteriores a hoy.");
+                        return response;
+                    }
+                    var total = cambioHorarios ? horarios.Sum(h => h.PrecioHora) : pago.Monto;
+                    if (total < pago.MontoAdelanto)
+                    {
+                        response.AddErrorResult("El nuevo total es menor que lo cobrado. Resuelve la devolución antes de reducir los horarios.");
+                        return response;
+                    }
+                    pago.Monto = total;
+                    pago.MontoPendiente = total - pago.MontoAdelanto;
+                    reserva.MontoTotal = total;
+                    var codigoPago = pago.MontoAdelanto == 0 ? Constants.ESTADO_PAGO.Pendiente :
+                        pago.MontoAdelanto == total ? Constants.ESTADO_PAGO.Pagado : Constants.ESTADO_PAGO.Parcial;
+                    var estadoPago = await _estadoPagoRepository.GetByAsync(e => e.Codigo == codigoPago && e.Activo);
+                    if (estadoPago == null) throw new InvalidOperationException("Estado de pago no configurado.");
+                    pago.IdEstadoPago = estadoPago.IdEstadoPago;
+                    pago.IdEstadoPagoNavigation = estadoPago;
                     // Validar disponibilidad de horarios nuevos
                     var validacion = await ValidarDisponibilidadHorariosNuevos(
-                        dto.IdCancha, dto.Horarios, reserva.DetalleReserva.ToList(), dto.FechaReserva);
+                        horarios, reserva.DetalleReserva.ToList(), dto.FechaReserva);
 
                     if (!validacion.Item1)
                     {
@@ -86,15 +147,31 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         return response;
                     }
 
-                    await ActualizarDetallesReserva(reserva, dto.IdCancha, dto.Horarios);
+                    ActualizarDetallesReserva(reserva, horarios);
+                    ActualizarFechaReservaConPrimerHorario(reserva, dto.FechaReserva, horarios);
+                }
+                else if (reserva.DetalleReserva.Any())
+                {
+                    var idsActuales = reserva.DetalleReserva.Select(d => d.IdHorarioCancha).ToList();
+                    horarios.AddRange(await _horarioCanchaRepository.FindByAsync(h => idsActuales.Contains(h.IdHorarioCancha),
+                        h => h.IdHoraInicioNavigation, h => h.IdHoraFinNavigation!));
+                    var horariosPorId = horarios.ToDictionary(h => h.IdHorarioCancha);
+                    foreach (var detalle in reserva.DetalleReserva)
+                        if (horariosPorId.TryGetValue(detalle.IdHorarioCancha ?? 0, out var horario))
+                            detalle.IdHorarioCanchaNavigation = horario;
                 }
 
+                if (pago.IdEstadoPagoNavigation == null)
+                    pago.IdEstadoPagoNavigation = (await _estadoPagoRepository.GetByAsync(e => e.IdEstadoPago == pago.IdEstadoPago))!;
+
+                pago.Revision++;
                 await _reservaRepository.UpdateAsync(reserva);
                 await _reservaRepository.SaveAsync();
 
-                // 7. Retornar respuesta
-                var reservaDto = _mapper?.Map<GetReservaDto>(reserva);
-                if (reservaDto != null) response.UpdateData(reservaDto);
+                var configuracion = reserva.IdCanchaNavigation.IdProveedorNavigation?.ConfiguracionProveedor;
+                var reservaDto = ReservaDetalleDtoMapper.Map(_mapper!, reserva, reserva.DetalleReserva, pago,
+                    configuracion?.Activo == true ? configuracion : null);
+                response.UpdateData(reservaDto);
 
                 response.AddOkResult(Resources.Common.UpdateSuccessMessage);
             }
@@ -106,180 +183,65 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             return await Task.FromResult(response);
         }
 
-        private async Task ActualizarPago(Entity.Pago pago, Dto.Dbo.Pago.UpdatePagoDto pagoDto, Entity.Reserva reserva)
+        private static void ActualizarDetallesReserva(Entity.Reserva reserva, List<Entity.HorarioCancha> horarios)
         {
-            decimal montoPagado = pagoDto.MontoAdelanto;
-            decimal montoPendiente = pagoDto.Monto - montoPagado;
-
-            string codigoEstadoPago;
-            string codigoEstadoReserva;
-            if (montoPagado == 0)
-            {
-                codigoEstadoPago = Constants.ESTADO_PAGO.Pendiente;
-                codigoEstadoReserva = Constants.ESTADO_RESERVA.Pendiente;
-            }
-            else if (montoPagado >= pagoDto.Monto)
-            {
-                codigoEstadoPago = Constants.ESTADO_PAGO.Pagado;
-                codigoEstadoReserva = Constants.ESTADO_RESERVA.Confirmado;
-            }
-            else
-            {
-                codigoEstadoPago = Constants.ESTADO_PAGO.Parcial;
-                codigoEstadoReserva = Constants.ESTADO_RESERVA.Confirmado;
-            }
-
-            var estadoPago = await _estadoPagoRepository.GetByAsync(x => x.Codigo.Equals(codigoEstadoPago) && x.Activo);
-            var estadoReserva = await _estadoReservaRepository.GetByAsNoTrackingAsync(x => x.Codigo.Equals(codigoEstadoReserva) && x.Activo);
-
-            pago.Monto = pagoDto.Monto;
-            pago.MontoAdelanto = montoPagado;
-            pago.MontoPendiente = montoPendiente;
-            pago.IdEstadoPago = estadoPago?.IdEstadoPago ?? pago.IdEstadoPago;
-            pago.CodigoOperacion = pagoDto.CodigoOperacion;
-            pago.NumeroReferencia = pagoDto.NumeroReferencia;
-
-            reserva.MontoTotal = pagoDto.Monto;
-            reserva.IdEstadoReserva = estadoReserva.IdEstadoReserva;
-
-            if (codigoEstadoReserva.Equals(Constants.ESTADO_RESERVA.Confirmado) && reserva.FechaConfirmacion == null)
-            {
-                var idUserCurrent = _userIdentity.GetCurrentUserId();
-                if (idUserCurrent != null && idUserCurrent != Guid.Empty )
-                {
-                    var operador = await _operadorRepository.GetByAsync(x => x.IdUsuario == idUserCurrent.ToString() && x.Activo);
-
-                    reserva.IdOperadorConfirmo = operador?.IdOperador;
-                    reserva.FechaConfirmacion = DateTimeOffset.UtcNow;
-                }
-            }
-        }
-
-        private async Task ActualizarDetallesReserva(Entity.Reserva reserva, int idCancha, List<Dto.Dbo.Calendario.BloqueHorarioDto> bloquesNuevos)
-        {
-            // Expandir bloques a IDs de HorarioCancha
-            var idsHorariosNuevos = new List<int>();
-            foreach (var bloque in bloquesNuevos)
-            {
-                var diaSemana = (int)bloque.Fecha.DayOfWeek;
-                if (diaSemana == 0) diaSemana = 7;
-
-                var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
-                    hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
-                       && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin
-                       && hc.IdCancha == idCancha
-                       && hc.IdDiaSemana == diaSemana
-                       && hc.Activo);
-
-                idsHorariosNuevos.AddRange(horariosEnRango.Select(h => h.IdHorarioCancha));
-            }
-
+            var horariosPorId = horarios.ToDictionary(h => h.IdHorarioCancha);
             var detallesExistentes = reserva.DetalleReserva.ToList();
-
-            // Marcar como inactivos los que ya no están
             foreach (var detalle in detallesExistentes)
             {
-                if (!idsHorariosNuevos.Contains(detalle.IdHorarioCancha ?? 0))
-                {
-                    detalle.Activo = false;
-                }
+                detalle.Activo = horariosPorId.TryGetValue(detalle.IdHorarioCancha ?? 0, out var horario);
+                if (horario != null) detalle.IdHorarioCanchaNavigation = horario;
             }
-
-            // Agregar los nuevos
-            var idsExistentes = detallesExistentes.Select(d => d.IdHorarioCancha).ToList();
-            foreach (var idHorarioNuevo in idsHorariosNuevos)
+            var idsExistentes = detallesExistentes.Select(d => d.IdHorarioCancha).ToHashSet();
+            foreach (var horario in horarios.Where(h => !idsExistentes.Contains(h.IdHorarioCancha)))
             {
-                if (!idsExistentes.Contains(idHorarioNuevo))
+                reserva.DetalleReserva.Add(new Entity.DetalleReserva
                 {
-                    var nuevoDetalle = new Entity.DetalleReserva
-                    {
-                        IdReserva = reserva.IdReserva,
-                        IdHorarioCancha = idHorarioNuevo,
-                        Activo = true
-                    };
-
-                    reserva.DetalleReserva.Add(nuevoDetalle);
-                }
+                    IdReserva = reserva.IdReserva, IdHorarioCancha = horario.IdHorarioCancha,
+                    IdHorarioCanchaNavigation = horario, Activo = true
+                });
             }
         }
 
         private async Task<(bool, string)> ValidarDisponibilidadHorariosNuevos(
-            int idCancha,
-            List<Dto.Dbo.Calendario.BloqueHorarioDto> bloquesNuevos,
+            List<Entity.HorarioCancha> horarios,
             List<Entity.DetalleReserva> detallesActuales, DateTimeOffset fechaReserva)
         {
-            var idsActuales = detallesActuales.Select(d => d.IdHorarioCancha).ToList();
-
-            foreach (var bloque in bloquesNuevos)
+            var idsActuales = detallesActuales.Select(d => d.IdHorarioCancha).ToHashSet();
+            foreach (var horarioCancha in horarios.Where(h => !idsActuales.Contains(h.IdHorarioCancha)))
             {
-                var diaSemana = (int)bloque.Fecha.DayOfWeek;
-                if (diaSemana == 0) diaSemana = 7;
+                var todasReservas = await _detalleReservaRepository.FindByAsync(dr =>
+                    dr.IdHorarioCancha == horarioCancha.IdHorarioCancha
+                    && dr.Activo
+                    && dr.IdReservaNavigation != null
+                    && dr.IdReservaNavigation.Activo
+                    && (dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado
+                        || dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente),
+                    dr => dr.IdReservaNavigation!,
+                    dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
 
-                var horariosEnRango = await _horarioCanchaRepository.FindByAsync(
-                    hc => hc.IdHorarioCancha >= bloque.IdHorarioCanchaInicio
-                       && hc.IdHorarioCancha <= bloque.IdHorarioCanchaFin
-                       && hc.IdCancha == idCancha
-                       && hc.IdDiaSemana == diaSemana
-                       && hc.Activo,
-                    hc => hc.IdHoraInicioNavigation);
+                var reservasExistentes = todasReservas
+                    .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaReserva.Date)
+                    .ToList();
 
-                if (!horariosEnRango.Any())
+                if (reservasExistentes.Any())
                 {
-                    return (false, $"No se encontraron horarios configurados para el rango seleccionado");
-                }
-
-                var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(bloque.Fecha);
-
-                foreach (var horarioCancha in horariosEnRango.OrderBy(h => h.IdHoraInicio))
-                {
-                    // Si este horario ya existía en la reserva, no validar
-                    if (idsActuales.Contains(horarioCancha.IdHorarioCancha))
-                        continue;
-
-                    var todasReservas = await _detalleReservaRepository.FindByAsync(dr =>
-                        dr.IdHorarioCancha == horarioCancha.IdHorarioCancha
-                        && dr.Activo
-                        && dr.IdReservaNavigation != null
-                        && dr.IdReservaNavigation.Activo
-                        && (dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado
-                            || dr.IdReservaNavigation.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Pendiente),
-                        dr => dr.IdReservaNavigation!,
-                        dr => dr.IdReservaNavigation!.IdEstadoReservaNavigation);
-
-                    var reservasExistentes = todasReservas
-                        .Where(dr => DateTimeHelper.NormalizarFechaUtc(dr.IdReservaNavigation!.FechaReserva).Date == fechaReserva.Date)
-                        .ToList();
-
-                    if (reservasExistentes.Any())
-                    {
-                        var hora = horarioCancha.IdHoraInicioNavigation?.HoraTexto ?? horarioCancha.IdHoraInicio.ToString();
-                        return (false, $"El horario del {fechaNormalizada:dd/MM/yyyy} a las {hora} ya está reservado");
-                    }
+                    var hora = horarioCancha.IdHoraInicioNavigation?.HoraTexto ?? horarioCancha.IdHoraInicio.ToString();
+                    return (false, $"El horario del {fechaReserva:dd/MM/yyyy} a las {hora} ya está reservado");
                 }
             }
 
             return (true, string.Empty);
         }
 
-        private async Task ActualizarFechaReservaConPrimerHorario(Entity.Reserva reserva, DateTimeOffset fechaOriginal)
+        private static void ActualizarFechaReservaConPrimerHorario(Entity.Reserva reserva, DateTimeOffset fechaOriginal,
+            List<Entity.HorarioCancha> horarios)
         {
-            // Obtener todos los detalles activos de la reserva
-            var detallesActivos = reserva.DetalleReserva.Where(d => d.Activo && d.IdHorarioCancha.HasValue).ToList();
-
-            if (!detallesActivos.Any())
-                return;
-
-            // Obtener el primer ID de horario (el más pequeño, que generalmente corresponde a la hora más temprana)
-            var primerIdHorario = detallesActivos.Min(d => d.IdHorarioCancha!.Value);
-
-            // Buscar el horario en la base de datos con su navegación a la hora de inicio
-            var primerHorarioCancha = await _horarioCanchaRepository.GetByAsync(
-                hc => hc.IdHorarioCancha == primerIdHorario && hc.Activo,
-                hc => hc.IdHoraInicioNavigation);
-
-            if (primerHorarioCancha != null && primerHorarioCancha.IdHoraInicioNavigation != null)
+            var primeraHora = horarios.Select(h => h.IdHoraInicioNavigation).Where(h => h != null)
+                .OrderBy(h => h.Hora1).FirstOrDefault();
+            if (primeraHora != null)
             {
-                var horaInicio = primerHorarioCancha.IdHoraInicioNavigation.Hora1;
+                var horaInicio = primeraHora.Hora1;
                 var fechaNormalizada = DateTimeHelper.NormalizarFechaUtc(fechaOriginal);
 
                 reserva.FechaReserva = new DateTimeOffset(

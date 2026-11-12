@@ -27,6 +27,11 @@ namespace Reserva.Domain.Commands.Dbo.Pago
 
             if (Pago != null)
             {
+                if (Pago.IdReserva.HasValue)
+                {
+                    response.AddErrorResult("No se elimina el pago de una reserva. Usa los flujos de corrección o cancelación.");
+                    return response;
+                }
                 Pago.Activo = false;
                 await _PagoRepository.UpdateAsync(Pago);
                 response.AddOkResult(Resources.Common.DeleteSuccessMessage);

@@ -126,6 +126,13 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 
                 var codigoReserva = await GenerarCodigoReserva(cancha.IdProveedor);
 
+                if (dto.TipoReserva == TipoReservaOperador.Inmediata &&
+                    dto.Pago.MontoPagado < dto.Pago.MontoTotal * (cancha.IdProveedorNavigation.ConfiguracionProveedor?.PorcentajeAdelantoMinimo ?? 0) / 100)
+                {
+                    response.AddErrorResult("El adelanto no alcanza el porcentaje mínimo configurado.");
+                    return response;
+                }
+
                 string codigoEstadoReserva = dto.TipoReserva == TipoReservaOperador.Inmediata
                     ? Constants.ESTADO_RESERVA.Confirmado
                     : Constants.ESTADO_RESERVA.Pendiente;
@@ -384,6 +391,16 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 Moneda = Constants.CURRENCY.PEN, // Default to PEN (Soles)
                 IdEstadoPagoNavigation = estadoPago!
             };
+
+            if (montoPagado > 0)
+            {
+                pago.MovimientoPago.Add(new Entity.MovimientoPago
+                {
+                    IdOperacion = Guid.NewGuid(), Tipo = "COBRO", Importe = montoPagado,
+                    MontoAnterior = 0, MontoResultante = montoPagado, IdMetodoPago = pago.IdMetodoPago,
+                    Motivo = "Cobro inicial al crear la reserva."
+                });
+            }
 
             return pago;
         }

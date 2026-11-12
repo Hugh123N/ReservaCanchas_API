@@ -40,6 +40,8 @@ namespace Reserva.Domain.Extensions
 
             // Plan Limit Validation Service
             services.AddScoped<IPlanLimitValidationService, PlanLimitValidationService>();
+            services.AddScoped<Services.Pago.PagoReservaAccessService>();
+            services.AddScoped<Services.Pago.MovimientoPagoService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

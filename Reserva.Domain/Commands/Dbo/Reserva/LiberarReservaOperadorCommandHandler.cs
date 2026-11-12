@@ -7,6 +7,7 @@ using Reserva.Dto.Dbo.Reserva;
 using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Domain.Services.Pago;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -17,6 +18,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.Pago> _PagoRepository;
         private readonly IRepository<Entity.EstadoPago> _EstadoPagoRepository;
         private readonly IRepository<Entity.ConfiguracionProveedor> _ConfiguracionProveedorRepository;
+        private readonly PagoReservaAccessService _access;
 
         public LiberarReservaOperadorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -27,7 +29,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.EstadoReserva> EstadoReservaRepository,
             IRepository<Entity.Pago> PagoRepository,
             IRepository<Entity.EstadoPago> EstadoPagoRepository,
-            IRepository<Entity.ConfiguracionProveedor> ConfiguracionProveedorRepository
+            IRepository<Entity.ConfiguracionProveedor> ConfiguracionProveedorRepository,
+            PagoReservaAccessService access
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ReservaRepository = ReservaRepository;
@@ -35,6 +38,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _PagoRepository = PagoRepository;
             _EstadoPagoRepository = EstadoPagoRepository;
             _ConfiguracionProveedorRepository = ConfiguracionProveedorRepository;
+            _access = access;
         }
 
         public override async Task<ResponseDto<GetReservaDto>> HandleCommand(LiberarReservaOperadorCommand request, CancellationToken cancellationToken)
@@ -53,6 +57,12 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             if (reserva == null)
             {
                 response.AddErrorResult("La reserva no existe o ha sido eliminada.");
+                return response;
+            }
+
+            if (!await _access.PuedeAccederAsync(reserva))
+            {
+                response.AddErrorResult("No tienes acceso a esta reserva.");
                 return response;
             }
 
@@ -75,7 +85,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 return response;
             }
 
-            if (reserva.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado)
+            if (reserva.IdEstadoReservaNavigation.Codigo == Constants.ESTADO_RESERVA.Confirmado || pago.MontoAdelanto > 0)
             {
                 var configuracionProveedor = reserva.IdCanchaNavigation?.IdProveedorNavigation?.ConfiguracionProveedor;
 
@@ -109,8 +119,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                 pago.MontoReembolso = request.LiberarDto.MontoReembolso;
                 pago.IdEstadoPago = estadoPagoCancelado.IdEstadoPago;
 
-                await _PagoRepository.UpdateAsync(pago);
-                await _PagoRepository.SaveAsync();
             }
             else
             {
@@ -121,6 +129,9 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     return response;
                 }
             }
+
+            pago.Revision++;
+            await _PagoRepository.UpdateAsync(pago);
 
             var estadoReservaCancelado = await _EstadoReservaRepository.GetByAsNoTrackingAsync(
                 e => e.Codigo == Constants.ESTADO_RESERVA.Cancelado);

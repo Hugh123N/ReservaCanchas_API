@@ -11,6 +11,7 @@ using Reserva.Entity;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Utils;
+using Reserva.Domain.Services.Pago;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -23,6 +24,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.DetalleReserva> _DetalleReservaRepository;
         private readonly INotificacionService _notificacionService;
+        private readonly PagoReservaAccessService _access;
 
         public ConfirmarReservaOperadorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -35,7 +37,8 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IRepository<Entity.EstadoPago> EstadoPagoRepository,
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.DetalleReserva> DetalleReservaRepository,
-            INotificacionService notificacionService
+            INotificacionService notificacionService,
+            PagoReservaAccessService access
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ReservaRepository = ReservaRepository;
@@ -45,6 +48,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             _CanchaRepository = CanchaRepository;
             _DetalleReservaRepository = DetalleReservaRepository;
             _notificacionService = notificacionService;
+            _access = access;
         }
 
         public override async Task<ResponseDto<GetReservaDto>> HandleCommand(
@@ -95,6 +99,18 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             decimal montoAdelanto = request.ConfirmarDto.MontoAdelanto ?? 0;
             decimal montoTotal = pago.Monto;
 
+            if (montoAdelanto != pago.MontoAdelanto)
+            {
+                response.AddErrorResult("Registra el importe mediante Registrar cobro antes de confirmar la reserva.");
+                return response;
+            }
+
+            if (!await _access.PuedeAccederAsync(reserva) || !_access.PuedeOperarPorFecha(reserva))
+            {
+                response.AddErrorResult("No tienes permiso para confirmar esta reserva.");
+                return response;
+            }
+
             if (montoAdelanto > montoTotal)
             {
                 response.AddErrorResult($"El adelanto (S/ {montoAdelanto:F2}) no puede ser mayor al monto total (S/ {montoTotal:F2}).");
@@ -116,6 +132,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             // 7. Actualizar el pago
             pago.MontoAdelanto = montoAdelanto;
+            pago.Revision++;
             pago.MontoPendiente = montoTotal - montoAdelanto;
             pago.NumeroReferencia = request.ConfirmarDto.NumeroRecibo;
 

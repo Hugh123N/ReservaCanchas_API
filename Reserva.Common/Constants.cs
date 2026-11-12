@@ -12,10 +12,10 @@ namespace Reserva.Common
 
         public struct Role
         {
-            public const string Admin = "ADMIN";
-            public const string Proveedor = "PROVEEDOR";
-            public const string Cliente = "CLIENTE";
-            public const string Operador = "OPERADOR";
+            public const string Admin = "Admin";
+            public const string Proveedor = "Proveedor";
+            public const string Cliente = "Cliente";
+            public const string Operador = "Operador";
         }
         public struct RoleIds
         {
