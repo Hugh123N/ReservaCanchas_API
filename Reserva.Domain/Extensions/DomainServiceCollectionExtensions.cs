@@ -42,6 +42,8 @@ namespace Reserva.Domain.Extensions
             services.AddScoped<IPlanLimitValidationService, PlanLimitValidationService>();
             services.AddScoped<Services.Pago.PagoReservaAccessService>();
             services.AddScoped<Services.Pago.MovimientoPagoService>();
+            services.AddScoped<Services.Reporte.ReporteAccessService>();
+            services.AddScoped<Services.Reporte.ReporteService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

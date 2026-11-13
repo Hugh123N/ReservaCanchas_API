@@ -58,10 +58,10 @@ namespace Reserva.Domain.Helpers
         }
 
         /// <summary>
-        /// Formatea horarios agrupando los consecutivos para notificaciones.
-        /// Ejemplo: 08:00-09:00, 09:00-10:00, 10:00-11:00 → "08:00 - 11:00 (3 horas)"
+        /// Formatea rangos consecutivos sin asumir que cada slot dura una hora.
+        /// Ejemplo: 08:00-08:30, 08:30-09:00 → "08:00 - 09:00"
         /// </summary>
-        public static string FormatearHorariosConsecutivos(List<(TimeOnly inicio, TimeOnly fin)> horarios)
+        public static string FormatearRangosHorarios(List<(TimeOnly inicio, TimeOnly fin)> horarios)
         {
             if (horarios == null || !horarios.Any())
                 return "No especificado";
@@ -97,9 +97,13 @@ namespace Reserva.Domain.Helpers
             }
 
             var horariosFormateados = grupos.Select(g => $"{g.inicio:HH:mm} - {g.fin:HH:mm}");
-            var totalHoras = horarios.Count;
+            return string.Join(", ", horariosFormateados);
+        }
 
-            return $"{string.Join(", ", horariosFormateados)} ({totalHoras} {(totalHoras == 1 ? "hora" : "horas")})";
+        public static string FormatearHorariosConsecutivos(List<(TimeOnly inicio, TimeOnly fin)> horarios)
+        {
+            if (horarios == null || horarios.Count == 0) return "No especificado";
+            return $"{FormatearRangosHorarios(horarios)} ({horarios.Count} {(horarios.Count == 1 ? "hora" : "horas")})";
         }
 
         /// <summary>
