@@ -20,6 +20,39 @@ namespace Reserva.Domain.Tests.Pago;
 
 public class MovimientoPagoTests
 {
+    [Theory]
+    [InlineData(40, 2, Constants.ESTADO_RESERVA.Pendiente)]
+    [InlineData(50, 2, Constants.ESTADO_RESERVA.Confirmado)]
+    [InlineData(100, 1, Constants.ESTADO_RESERVA.Confirmado)]
+    public async Task PrimerCobroPendiente_PersisteCabeceraCompletaConEstadoValidoYSuMovimiento(
+        decimal importe, int idEstadoPago, string estadoReserva)
+    {
+        var s = new Scenario(sinPago: true, porcentajeMinimo: 50);
+        var dto = new RegistrarMovimientoPagoDto { IdPago = 0, IdReserva = 2, IdOperacion = Guid.NewGuid(),
+            Revision = 0, Monto = importe, CodigoMetodoPago = "04", ReferenciaOperacion = "YAPE-PRIMERO" };
+
+        var respuesta = await s.Service.RegistrarAsync(dto, false);
+
+        Assert.True(respuesta.IsValid);
+        var escritura = Assert.Single(s.InsercionesPago);
+        Assert.Equal(idEstadoPago, escritura.Estado);
+        Assert.Equal(importe, escritura.Cobrado);
+        Assert.Equal(100 - importe, escritura.Pendiente);
+        Assert.Equal(1, escritura.Movimientos);
+        var pago = Assert.Single(s.Payments);
+        Assert.True(pago.IdPago > 0);
+        Assert.Equal(pago.IdPago, respuesta.Data.IdPago);
+        Assert.Equal(estadoReserva, s.Reservation.IdEstadoReservaNavigation.Codigo);
+        var movimiento = Assert.Single(s.Movements);
+        Assert.Equal(pago.IdPago, movimiento.IdPago);
+        Assert.Equal(importe, movimiento.Importe);
+        Assert.Equal("YAPE-PRIMERO", movimiento.ReferenciaOperacion);
+        s.Pagos.Verify(p => p.UpdateAsync(It.IsAny<Entity.Pago>()), Times.Never);
+        Assert.True((await s.Service.RegistrarAsync(dto, false)).IsValid);
+        Assert.Single(s.InsercionesPago);
+        Assert.Single(s.Movements);
+    }
+
     [Fact]
     public async Task PrimerCobro_CreaCabeceraYMovimientoConResponsableSinSaldoHistorico()
     {
@@ -274,10 +307,12 @@ public class MovimientoPagoTests
         public Entity.Reserva Reservation { get; }
         public Entity.Pago Payment { get; }
         public List<Entity.Pago> Payments { get; } = new();
+        public List<(int Estado, decimal Cobrado, decimal Pendiente, int Movimientos)> InsercionesPago { get; } = new();
+        public Mock<IRepository<Entity.Pago>> Pagos { get; }
         public MovimientoPagoService Service { get; }
         public PagoReservaAccessService Access { get; }
 
-        public Scenario(bool operador = false, bool sinPago = false)
+        public Scenario(bool operador = false, bool sinPago = false, decimal porcentajeMinimo = 0)
         {
             var usuario = Guid.NewGuid();
             Identity.Setup(i => i.GetCurrentUserId()).Returns(usuario);
@@ -287,7 +322,8 @@ public class MovimientoPagoTests
             {
                 IdReserva = 2, IdCancha = 3, Activo = true, MontoTotal = 100, FechaReserva = DateTimeOffset.UtcNow.AddDays(1),
                 IdCanchaNavigation = new Cancha { IdCancha = 3, IdProveedor = 9, ZonaHoraria = "America/Lima" },
-                IdEstadoReservaNavigation = new EstadoReserva { Codigo = Constants.ESTADO_RESERVA.Confirmado }
+                IdEstadoReservaNavigation = new EstadoReserva {
+                    Codigo = sinPago ? Constants.ESTADO_RESERVA.Pendiente : Constants.ESTADO_RESERVA.Confirmado }
             };
             Payment = new Entity.Pago
             {
@@ -297,14 +333,24 @@ public class MovimientoPagoTests
             };
             if (!sinPago) { Payments.Add(Payment); Reservation.Pago.Add(Payment); }
             var payments = Repository(Payments);
+            Pagos = payments;
             payments.Setup(r => r.GetByAsync(It.IsAny<Expression<Func<Entity.Pago, bool>>>(),
                 It.IsAny<Expression<Func<Entity.Pago, object>>[]>()))
                 .Returns((Expression<Func<Entity.Pago, bool>> p, Expression<Func<Entity.Pago, object>>[] _) =>
                     Task.FromResult(Payments.FirstOrDefault(p.Compile())));
             payments.Setup(r => r.AddAsync(It.IsAny<Entity.Pago>())).Returns((Entity.Pago pago) =>
             {
+                // AddAsync persiste inmediatamente: la FK y los importes deben ser válidos en este punto.
+                if (pago.IdEstadoPago <= 0) throw new DbUpdateException("FK Pago.EstadoPago: no se puede insertar el estado cero.");
+                InsercionesPago.Add((pago.IdEstadoPago, pago.MontoAdelanto, pago.MontoPendiente, pago.MovimientoPago.Count));
                 pago.IdPago = 100 + Payments.Count;
                 Payments.Add(pago);
+                foreach (var movimiento in pago.MovimientoPago)
+                {
+                    movimiento.IdPago = pago.IdPago;
+                    movimiento.IdMovimientoPago = Movements.Count + 1;
+                    Movements.Add(movimiento);
+                }
                 return Task.FromResult<Entity.Pago?>(pago);
             });
             var movements = Repository(Movements);
@@ -327,7 +373,8 @@ public class MovimientoPagoTests
             Service = new MovimientoPagoService(payments.Object, movements.Object, methods.Object, states.Object,
                 Repository(new[] { new EstadoReserva { IdEstadoReserva = 2, Codigo = Constants.ESTADO_RESERVA.Confirmado, Activo = true } }).Object,
                 Access,
-                Repository(Array.Empty<ConfiguracionProveedor>()).Object, reservas.Object);
+                Repository(new[] { new ConfiguracionProveedor { IdProveedor = 9, Activo = true,
+                    PorcentajeAdelantoMinimo = porcentajeMinimo } }).Object, reservas.Object);
         }
 
         public RegistrarMovimientoPagoDto Request(decimal monto, string? motivo = null) => new()

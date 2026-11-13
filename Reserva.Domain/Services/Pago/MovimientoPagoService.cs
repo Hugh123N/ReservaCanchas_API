@@ -120,16 +120,18 @@ public class MovimientoPagoService
             response.AddErrorResult("Selecciona un método de cobro presencial válido.");
             return response;
         }
+        var nuevoPago = pago == null;
         if (pago == null)
         {
-            pago = new Entity.Pago { IdReserva = reserva.IdReserva, IdReservaNavigation = reserva,
+            pago = new Entity.Pago { IdReserva = reserva.IdReserva,
                 Monto = total, Moneda = Constants.CURRENCY.PEN, Activo = true };
-            reserva.Pago.Add(pago);
-            await _pagos.AddAsync(pago);
         }
-        await IncorporarSaldoHistoricoAsync(pago);
-        await AgregarAsync(pago, CrearMovimiento(tipo, resultado - cobrado, cobrado, resultado,
-            metodo?.IdMetodoPago, dto.IdOperacion, dto.Motivo, dto.ReferenciaOperacion));
+        else
+        {
+            await IncorporarSaldoHistoricoAsync(pago);
+        }
+        var movimiento = CrearMovimiento(tipo, resultado - cobrado, cobrado, resultado,
+            metodo?.IdMetodoPago, dto.IdOperacion, dto.Motivo, dto.ReferenciaOperacion);
         pago.MontoAdelanto = resultado;
         pago.MontoPendiente = pago.Monto - resultado;
         pago.Revision++;
@@ -146,7 +148,20 @@ public class MovimientoPagoService
             reserva.FechaExpiracionPreReserva = null;
         }
         await _reservas.UpdateAsync(reserva);
-        await _pagos.UpdateAsync(pago);
+        // AddAsync guarda inmediatamente: la cabecera debe tener estado y montos válidos antes de insertarla.
+        if (nuevoPago)
+        {
+            pago.MovimientoPago.Add(movimiento);
+            await _pagos.AddAsync(pago);
+            // Vincular después del alta evita que la auditoría de creación recorra la reserva existente.
+            pago.IdReservaNavigation = reserva;
+            if (!reserva.Pago.Contains(pago)) reserva.Pago.Add(pago);
+        }
+        else
+        {
+            await _pagos.UpdateAsync(pago);
+            await AgregarAsync(pago, movimiento);
+        }
         response.UpdateData(new GetHistorialPagoDto { IdPago = pago.IdPago, IdReserva = reserva.IdReserva,
             Revision = pago.Revision, Monto = total, MontoPagado = resultado, Saldo = pago.MontoPendiente,
             MontoReembolsado = pago.MontoReembolso ?? 0, MontoNeto = resultado - (pago.MontoReembolso ?? 0) });
