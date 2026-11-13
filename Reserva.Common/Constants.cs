@@ -66,6 +66,8 @@ namespace Reserva.Common
             public const string Confirmado = "02";
             public const string Cancelado = "03";
             public const string Expirado = "04";
+            public const string NoPresentado = "05";
+            public const string Completado = "06";
         }
 
         public struct ESTADO_PAGO

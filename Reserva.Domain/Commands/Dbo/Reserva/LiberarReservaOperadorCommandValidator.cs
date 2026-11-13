@@ -19,6 +19,16 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             RuleFor(x => x.LiberarDto.MontoReembolso)
                 .GreaterThanOrEqualTo(0)
                 .WithMessage("El monto de reembolso no puede ser negativo.");
+            RuleFor(x => x.LiberarDto.MontoReembolso).Must(m => decimal.Round(m, 2) == m);
+            RuleFor(x => x.LiberarDto.ReferenciaOperacion).MaximumLength(100);
+            When(x => x.LiberarDto.MontoReembolso > 0, () =>
+            {
+                RuleFor(x => x.LiberarDto.IdOperacion).NotEmpty();
+                RuleFor(x => x.LiberarDto.RevisionPago).NotNull().GreaterThanOrEqualTo(0);
+                RuleFor(x => x.LiberarDto.CodigoMetodoPago)
+                    .Must(c => c == "02" || c == "03" || c == "04" || c == "05")
+                    .WithMessage("Selecciona el método utilizado para devolver el dinero.");
+            });
         }
     }
 }

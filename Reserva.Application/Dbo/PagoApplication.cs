@@ -12,6 +12,8 @@ namespace Reserva.Application.Dbo
     {
         public Task<ResponseDto<GetHistorialPagoDto>> Historial(int id)
             => _mediator.Send(new GetHistorialPagoQuery(id));
+        public Task<ResponseDto<GetHistorialPagoDto>> HistorialReserva(int idReserva)
+            => _mediator.Send(new GetHistorialPagoQuery(0, idReserva));
         public Task<ResponseDto<GetHistorialPagoDto>> RegistrarCobro(RegistrarMovimientoPagoDto dto)
             => _mediator.Send(new RegistrarMovimientoPagoCommand(dto, false));
         public Task<ResponseDto<GetHistorialPagoDto>> CorregirRegistro(RegistrarMovimientoPagoDto dto)

@@ -3,11 +3,13 @@ namespace Reserva.Dto.Dbo.Pago;
 public class RegistrarMovimientoPagoDto
 {
     public int IdPago { get; set; }
+    public int? IdReserva { get; set; }
     public Guid IdOperacion { get; set; }
     public int Revision { get; set; }
     public decimal Monto { get; set; }
     public string? CodigoMetodoPago { get; set; }
     public string? Motivo { get; set; }
+    public string? ReferenciaOperacion { get; set; }
 }
 
 public class GetMovimientoPagoDto
@@ -18,6 +20,10 @@ public class GetMovimientoPagoDto
     public decimal MontoAnterior { get; set; }
     public decimal MontoResultante { get; set; }
     public string? MetodoPago { get; set; }
+    public int? IdMetodoPago { get; set; }
+    public Guid? IdUsuarioResponsable { get; set; }
+    public string? RolResponsable { get; set; }
+    public string? ReferenciaOperacion { get; set; }
     public string? Motivo { get; set; }
     public string Usuario { get; set; } = null!;
     public DateTimeOffset Fecha { get; set; }
@@ -26,10 +32,13 @@ public class GetMovimientoPagoDto
 public class GetHistorialPagoDto
 {
     public int IdPago { get; set; }
+    public int IdReserva { get; set; }
     public int Revision { get; set; }
     public decimal Monto { get; set; }
     public decimal MontoPagado { get; set; }
     public decimal Saldo { get; set; }
+    public decimal MontoReembolsado { get; set; }
+    public decimal MontoNeto { get; set; }
     public bool PuedeCobrar { get; set; }
     public bool PuedeCorregir { get; set; }
     public List<GetMovimientoPagoDto> Movimientos { get; set; } = new();

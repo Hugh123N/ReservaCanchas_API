@@ -6,6 +6,7 @@ namespace Reserva.Application.Abstractions.Dbo
     public interface IPagoApplication
     {
         Task<ResponseDto<GetHistorialPagoDto>> Historial(int id);
+        Task<ResponseDto<GetHistorialPagoDto>> HistorialReserva(int idReserva);
         Task<ResponseDto<GetHistorialPagoDto>> RegistrarCobro(RegistrarMovimientoPagoDto dto);
         Task<ResponseDto<GetHistorialPagoDto>> CorregirRegistro(RegistrarMovimientoPagoDto dto);
         Task<ResponseDto<GetPagoDto>> Create(CreatePagoDto createDto);

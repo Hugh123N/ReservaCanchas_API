@@ -6,14 +6,16 @@ using Reserva.Dto.Dbo.Pago;
 
 namespace Reserva.Domain.Queries.Dbo.Pago;
 
-public class GetHistorialPagoQuery(int idPago) : QueryBase<GetHistorialPagoDto>
+public class GetHistorialPagoQuery(int idPago, int? idReserva = null) : QueryBase<GetHistorialPagoDto>
 {
     public int IdPago { get; } = idPago;
+    public int? IdReserva { get; } = idReserva;
 }
 
 public class GetHistorialPagoQueryHandler(IMapper mapper, MovimientoPagoService service)
     : QueryHandlerBase<GetHistorialPagoQuery, GetHistorialPagoDto>(mapper)
 {
     protected override Task<ResponseDto<GetHistorialPagoDto>> HandleQuery(GetHistorialPagoQuery request,
-        CancellationToken cancellationToken) => service.ObtenerAsync(request.IdPago);
+        CancellationToken cancellationToken) => request.IdReserva.HasValue
+            ? service.ObtenerPorReservaAsync(request.IdReserva.Value) : service.ObtenerAsync(request.IdPago);
 }

@@ -37,7 +37,5 @@ public partial class Operador
 
     public virtual ICollection<OperadorCancha> OperadorCancha { get; set; } = new List<OperadorCancha>();
 
-    public virtual ICollection<Pago> Pago { get; set; } = new List<Pago>();
-
     public virtual ICollection<Reserva> Reserva { get; set; } = new List<Reserva>();
 }

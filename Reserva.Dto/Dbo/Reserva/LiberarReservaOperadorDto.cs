@@ -19,5 +19,9 @@ namespace Reserva.Dto.Dbo.Reserva
         /// Monto del reembolso a procesar
         /// </summary>
         public decimal MontoReembolso { get; set; }
+        public Guid IdOperacion { get; set; }
+        public int? RevisionPago { get; set; }
+        public string? CodigoMetodoPago { get; set; }
+        public string? ReferenciaOperacion { get; set; }
     }
 }

@@ -110,14 +110,21 @@ public partial class ReservaCanchasContext : DbContext
             entity.HasKey(e => e.IdMovimientoPago);
             entity.HasIndex(e => e.IdOperacion).IsUnique();
             entity.HasIndex(e => new { e.IdPago, e.IdMovimientoPago });
+            entity.HasIndex(e => new { e.IdUsuarioResponsable, e.CreateDate });
             entity.Property(e => e.Tipo).HasMaxLength(20).IsRequired();
             entity.Property(e => e.Importe).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.MontoAnterior).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.MontoResultante).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Motivo).HasMaxLength(500);
+            entity.Property(e => e.RolResponsable).HasMaxLength(20);
+            entity.Property(e => e.ReferenciaOperacion).HasMaxLength(100);
             entity.Property(e => e.UserNameCreate).HasMaxLength(250).IsRequired();
             entity.HasOne(e => e.IdPagoNavigation).WithMany(e => e.MovimientoPago)
                 .HasForeignKey(e => e.IdPago).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.IdMetodoPagoNavigation).WithMany()
+                .HasForeignKey(e => e.IdMetodoPago).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.IdUsuarioResponsableNavigation).WithMany()
+                .HasForeignKey(e => e.IdUsuarioResponsable).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<AspNetRoleClaims>(entity =>
@@ -1036,16 +1043,12 @@ public partial class ReservaCanchasContext : DbContext
 
             entity.HasIndex(e => e.IdEstadoPago, "idx_estado");
 
-            entity.HasIndex(e => e.IdReserva, "idx_reserva");
+            entity.HasIndex(e => e.IdReserva, "idx_reserva").IsUnique();
 
             entity.Property(e => e.IdPago).HasColumnName("idPago");
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true)
                 .HasColumnName("activo");
-            entity.Property(e => e.CodigoOperacion)
-                .HasMaxLength(30)
-                .IsUnicode(false)
-                .HasColumnName("codigoOperacion");
             entity.Property(e => e.CreateDate)
                 .HasDefaultValueSql("(sysdatetimeoffset())")
                 .HasColumnName("createDate");
@@ -1059,8 +1062,6 @@ public partial class ReservaCanchasContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("culqiTokenId");
             entity.Property(e => e.IdEstadoPago).HasColumnName("idEstadoPago");
-            entity.Property(e => e.IdMetodoPago).HasColumnName("idMetodoPago");
-            entity.Property(e => e.IdOperador).HasColumnName("idOperador");
             entity.Property(e => e.IdReserva).HasColumnName("idReserva");
             entity.Property(e => e.Moneda)
                 .HasMaxLength(3)
@@ -1081,10 +1082,6 @@ public partial class ReservaCanchasContext : DbContext
             entity.Property(e => e.MontoReembolso)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("montoReembolso");
-            entity.Property(e => e.NumeroReferencia)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("numeroReferencia");
             entity.Property(e => e.UpdateDate).HasColumnName("updateDate");
             entity.Property(e => e.UserNameCreate)
                 .HasMaxLength(250)
@@ -1099,15 +1096,6 @@ public partial class ReservaCanchasContext : DbContext
                 .HasForeignKey(d => d.IdEstadoPago)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Pago__idEstadoPa__793DFFAF");
-
-            entity.HasOne(d => d.IdMetodoPagoNavigation).WithMany(p => p.Pago)
-                .HasForeignKey(d => d.IdMetodoPago)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Pago__idMetodoPa__7849DB76");
-
-            entity.HasOne(d => d.IdOperadorNavigation).WithMany(p => p.Pago)
-                .HasForeignKey(d => d.IdOperador)
-                .HasConstraintName("FK__Pago__idOperador__7A3223E8");
 
             entity.HasOne(d => d.IdReservaNavigation).WithMany(p => p.Pago)
                 .HasForeignKey(d => d.IdReserva)
@@ -1431,6 +1419,7 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Entity.Reserva>(entity =>
         {
+            entity.Property(e => e.UpdateDate).HasPrecision(6).IsConcurrencyToken();
             entity.HasKey(e => e.IdReserva).HasName("PK__Reserva__94D104C8BF7A8C45");
 
             entity.HasIndex(e => e.CodigoReserva, "UQ__Reserva__EFEC21CC96BDEBCB").IsUnique();

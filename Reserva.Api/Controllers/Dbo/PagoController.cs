@@ -11,6 +11,10 @@ namespace Reserva.Api.Controllers.Dbo
     public class PagoController : IPagoApplication
     {
         [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
+        [HttpGet("reserva/{idReserva:int}/movimientos")]
+        public Task<ResponseDto<GetHistorialPagoDto>> HistorialReserva(int idReserva) => _PagoApplication.HistorialReserva(idReserva);
+
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
         [HttpGet("{id:int}/movimientos")]
         public Task<ResponseDto<GetHistorialPagoDto>> Historial(int id) => _PagoApplication.Historial(id);
 

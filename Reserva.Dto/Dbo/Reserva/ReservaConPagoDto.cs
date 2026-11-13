@@ -16,7 +16,7 @@ namespace Reserva.Dto.Dbo.Reserva
         /// <summary>
         /// Datos del pago pendiente asociado a la reserva
         /// </summary>
-        public GetPagoDto Pago { get; set; } = null!;
+        public GetPagoDto? Pago { get; set; }
 
         /// <summary>
         /// Código único de la reserva (ej: RES-2024-0001)

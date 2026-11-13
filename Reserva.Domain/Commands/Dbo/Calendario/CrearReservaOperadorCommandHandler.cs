@@ -11,6 +11,7 @@ using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Security;
 using Reserva.Repository.Utils;
+using Reserva.Domain.Services.Pago;
 
 namespace Reserva.Domain.Commands.Dbo.Calendario
 {
@@ -23,10 +24,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         private readonly IRepository<Entity.Cancha> _canchaRepository;
         private readonly IRepository<Entity.EstadoReserva> _estadoReservaRepository;
         private readonly IRepository<Entity.EstadoPago> _estadoPagoRepository;
-        private readonly IRepository<Entity.MetodoPago> _metodoPagoRepository;
         private readonly IRepository<Entity.Operador> _operadorRepository;
         private readonly IDbParameterFactory _parameterFactory;
         private readonly IUserIdentity _userIdentity;
+        private readonly MovimientoPagoService _movimientos;
+        private readonly PagoReservaAccessService _access;
 
         public CrearReservaOperadorCommandHandler(
             IUnitOfWork unitOfWork,
@@ -40,10 +42,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             IRepository<Entity.Cancha> canchaRepository,
             IRepository<Entity.EstadoReserva> estadoReservaRepository,
             IRepository<Entity.EstadoPago> estadoPagoRepository,
-            IRepository<Entity.MetodoPago> metodoPagoRepository,
             IUserIdentity userIdentity,
             IDbParameterFactory parameterFactory,
-            IRepository<Entity.Operador> operadorRepository
+            IRepository<Entity.Operador> operadorRepository,
+            MovimientoPagoService movimientos,
+            PagoReservaAccessService access
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _clienteRepository = clienteRepository;
@@ -53,10 +56,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             _canchaRepository = canchaRepository;
             _estadoReservaRepository = estadoReservaRepository;
             _estadoPagoRepository = estadoPagoRepository;
-            _metodoPagoRepository = metodoPagoRepository;
             _operadorRepository = operadorRepository;
             _parameterFactory = parameterFactory;
             _userIdentity = userIdentity;
+            _movimientos = movimientos;
+            _access = access;
         }
 
         public override async Task<ResponseDto<ReservaOperadorResponseDto>> HandleCommand(CrearReservaOperadorCommand request,CancellationToken cancellationToken)
@@ -85,6 +89,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 var cliente = resultadoCliente.Data;
 
                 var canchaParaTz = await _canchaRepository.GetByAsync(x => x.IdCancha == dto.IdCancha && x.Activo);
+                if (!await _access.PuedeAccederCanchaAsync(canchaParaTz))
+                {
+                    response.AddErrorResult("No tienes permiso para crear reservas en esta cancha.");
+                    return response;
+                }
                 var zonaHoraria = TimezoneUtils.ObtenerZonaHoraria(canchaParaTz!.ZonaHoraria);
 
                 var primeraFechaDto = dto.Horarios.Min(h => h.Fecha);
@@ -132,6 +141,11 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     response.AddErrorResult("El adelanto no alcanza el porcentaje mínimo configurado.");
                     return response;
                 }
+                if (dto.Pago.MontoTotal != disponible.Item3)
+                {
+                    response.AddErrorResult("El precio de los horarios cambió. Actualiza la disponibilidad antes de reservar.");
+                    return response;
+                }
 
                 string codigoEstadoReserva = dto.TipoReserva == TipoReservaOperador.Inmediata
                     ? Constants.ESTADO_RESERVA.Confirmado
@@ -157,7 +171,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
                 int duracionPreReservaHoras = cancha!.IdProveedorNavigation.ConfiguracionProveedor?.DuracionPreReserva ?? Constants.DEFECT.PRE_RESERVA;
 
-                var pago = await CrearRegistroPago(dto.Pago.MontoTotal, dto.Pago, dto.TipoReserva, idOperador);
+                var pago = dto.TipoReserva == TipoReservaOperador.Inmediata
+                    ? await CrearRegistroPago(dto.Pago.MontoTotal, dto.Pago) : null;
 
                 var reserva = new Entity.Reserva
                 {
@@ -172,7 +187,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     RecordatorioEnviado = false,
                     NotificacionAdvertenciaEnviada = false,
                     FechaExpiracionPreReserva = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria).AddHours(duracionPreReservaHoras),
-                    Pago = new List<Entity.Pago> { pago },
+                    Pago = pago == null ? new List<Entity.Pago>() : new List<Entity.Pago> { pago },
                 };
 
                 // Si es reserva inmediata, agregar info de confirmación
@@ -180,6 +195,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 {
                     reserva.IdOperadorConfirmo = idOperador;
                     reserva.FechaConfirmacion = DateTimeHelper.ObtenerAhoraLocal(zonaHoraria);
+                    reserva.FechaExpiracionPreReserva = null;
                     // TODO: ENVIAR NOTIFICAICON AL CLIENTE
                 }
 
@@ -195,8 +211,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     FechaReserva = reserva.FechaReserva,
                     MontoTotal = reserva.MontoTotal,
                     EstadoReserva = codigoEstadoReserva,
-                    IdPago = pago.IdPago,
-                    EstadoPago = pago.IdEstadoPagoNavigation?.Codigo ?? "",
+                    IdPago = pago?.IdPago,
+                    EstadoPago = pago?.IdEstadoPagoNavigation?.Codigo ?? Constants.ESTADO_PAGO.Pendiente,
                     NombreCliente = $"{cliente.Nombres} {cliente.Apellidos}",
                     TelefonoCliente = cliente.Telefono,
                     NombreCancha = cancha.Nombre,
@@ -253,8 +269,9 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             return await _mediator!.Send(new CreateClienteCommand(createDto), cancellationToken);
         }
 
-        private async Task<(bool, string)> ValidarDisponibilidadHorarios(int idCancha,List<BloqueHorarioDto> horarios, DateTimeOffset fechaReserva)
+        private async Task<(bool, string, decimal)> ValidarDisponibilidadHorarios(int idCancha,List<BloqueHorarioDto> horarios, DateTimeOffset fechaReserva)
         {
+            decimal total = 0;
             // Validar solapamiento entre bloques de la MISMA petición (el frontend lo previene, aquí es la barrera de integridad)
             var slotsSeleccionados = horarios
                 .SelectMany(b => Enumerable.Range(b.IdHorarioCanchaInicio, b.IdHorarioCanchaFin - b.IdHorarioCanchaInicio + 1))
@@ -262,7 +279,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
             if (slotsSeleccionados.Count != slotsSeleccionados.Distinct().Count())
             {
-                return (false, "Los horarios seleccionados se superponen entre bloques");
+                return (false, "Los horarios seleccionados se superponen entre bloques", 0);
             }
 
             var canchaVal = await _canchaRepository.GetByAsync(x => x.IdCancha == idCancha && x.Activo);
@@ -287,9 +304,10 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
                 if (!horariosEnRango.Any())
                 {
-                    return (false, $"No se encontraron horarios configurados para el rango seleccionado");
+                    return (false, $"No se encontraron horarios configurados para el rango seleccionado", 0);
                 }
 
+                total += horariosEnRango.Sum(h => h.PrecioHora);
                 // Verificar disponibilidad de cada horario
                 foreach (var horarioCancha in horariosEnRango.OrderBy(h => h.IdHoraInicio))
                 {
@@ -308,12 +326,12 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     if (reservasExistentes.Any())
                     {
                         var hora = horarioCancha.IdHoraInicioNavigation?.HoraTexto ?? horarioCancha.IdHoraInicio.ToString();
-                        return (false, $"El horario del {fechaReserva:dd/MM/yyyy} a las {hora} ya está reservado");
+                        return (false, $"El horario del {fechaReserva:dd/MM/yyyy} a las {hora} ya está reservado", 0);
                     }
                 }
             }
 
-            return (true, string.Empty);
+            return (true, string.Empty, total);
         }
 
         /// <summary>
@@ -351,13 +369,9 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             await _detalleReservaRepository.SaveAsync();
         }
 
-        private async Task<Entity.Pago> CrearRegistroPago(decimal montoTotal,PagoReservaOperadorDto pagoDto,
-            TipoReservaOperador tipoReserva,
-            int? idOperador)
+        private async Task<Entity.Pago> CrearRegistroPago(decimal montoTotal, PagoReservaOperadorDto pagoDto)
         {
-            decimal montoPagado = tipoReserva == TipoReservaOperador.Inmediata
-                ? (pagoDto.MontoPagado ?? 0)
-                : 0;
+            decimal montoPagado = pagoDto.MontoPagado ?? 0;
 
             decimal montoPendiente = montoTotal - montoPagado;
 
@@ -376,7 +390,8 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
             }
 
             var estadoPago = await _estadoPagoRepository.GetByAsync(x => x.Codigo == codigoEstadoPago && x.Activo);
-            var metodoPago = await _metodoPagoRepository.GetByAsync(x => x.Codigo == pagoDto.CodigoMetodoPago && x.Activo);
+            var metodoPago = await _movimientos.ObtenerMetodoAsync(pagoDto.CodigoMetodoPago)
+                ?? throw new InvalidOperationException("Selecciona un método de pago válido.");
 
             var pago = new Entity.Pago
             {
@@ -384,22 +399,14 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                 MontoAdelanto = montoPagado,
                 MontoPendiente = montoPendiente,
                 IdEstadoPago = estadoPago?.IdEstadoPago ?? 0,
-                IdMetodoPago = metodoPago?.IdMetodoPago ?? 0,
-                CodigoOperacion = pagoDto.CodigoOperacion,
-                NumeroReferencia = pagoDto.NumeroReferencia,
-                IdOperador = idOperador,
                 Moneda = Constants.CURRENCY.PEN, // Default to PEN (Soles)
                 IdEstadoPagoNavigation = estadoPago!
             };
 
             if (montoPagado > 0)
             {
-                pago.MovimientoPago.Add(new Entity.MovimientoPago
-                {
-                    IdOperacion = Guid.NewGuid(), Tipo = "COBRO", Importe = montoPagado,
-                    MontoAnterior = 0, MontoResultante = montoPagado, IdMetodoPago = pago.IdMetodoPago,
-                    Motivo = "Cobro inicial al crear la reserva."
-                });
+                pago.MovimientoPago.Add(_movimientos.CrearMovimiento("COBRO", montoPagado, 0, montoPagado,
+                    metodoPago.IdMetodoPago, pagoDto.IdOperacion, "Cobro inicial al crear la reserva.", pagoDto.ReferenciaOperacion));
             }
 
             return pago;

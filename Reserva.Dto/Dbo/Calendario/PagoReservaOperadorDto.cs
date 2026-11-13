@@ -23,11 +23,11 @@ namespace Reserva.Dto.Dbo.Calendario
         /// <summary>
         /// Código de operación (opcional)
         /// </summary>
-        public string? CodigoOperacion { get; set; }
+        public Guid IdOperacion { get; set; }
 
         /// <summary>
         /// Número de referencia (opcional)
         /// </summary>
-        public string? NumeroReferencia { get; set; }
+        public string? ReferenciaOperacion { get; set; }
     }
 }

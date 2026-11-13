@@ -11,10 +11,6 @@ public partial class Pago
 
     public string Moneda { get; set; } = null!;
 
-    public string? CodigoOperacion { get; set; }
-
-    public string? NumeroReferencia { get; set; }
-
     public decimal Monto { get; set; }
 
     public decimal MontoAdelanto { get; set; }
@@ -23,11 +19,7 @@ public partial class Pago
 
     public int Revision { get; set; }
 
-    public virtual ICollection<MovimientoPago> MovimientoPago { get; set; } = new List<MovimientoPago>();
-
     public decimal? MontoReembolso { get; set; }
-
-    public int IdMetodoPago { get; set; }
 
     public int IdEstadoPago { get; set; }
 
@@ -36,8 +28,6 @@ public partial class Pago
     public string? CulqiTokenId { get; set; }
 
     public string? CulqiReferenceCode { get; set; }
-
-    public int? IdOperador { get; set; }
 
     public string UserNameCreate { get; set; } = null!;
 
@@ -51,11 +41,9 @@ public partial class Pago
 
     public virtual ICollection<ComprobantePago> ComprobantePago { get; set; } = new List<ComprobantePago>();
 
+    public virtual ICollection<MovimientoPago> MovimientoPago { get; set; } = new List<MovimientoPago>();
+
     public virtual EstadoPago IdEstadoPagoNavigation { get; set; } = null!;
-
-    public virtual MetodoPago IdMetodoPagoNavigation { get; set; } = null!;
-
-    public virtual Operador? IdOperadorNavigation { get; set; }
 
     public virtual Reserva? IdReservaNavigation { get; set; }
 }

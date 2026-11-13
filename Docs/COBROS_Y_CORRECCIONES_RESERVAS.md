@@ -1,5 +1,8 @@
 # Cobros y correcciones de reservas
 
+> Actualización del modelo: ver [MOVIMIENTOS_PAGO.md](MOVIMIENTOS_PAGO.md) para la
+> cabecera opcional, los responsables por movimiento, reembolsos y migración vigente.
+
 ## Preparación para probar
 
 1. Detener la API que se ejecuta desde Visual Studio.

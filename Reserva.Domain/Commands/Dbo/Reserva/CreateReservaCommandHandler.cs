@@ -21,9 +21,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
     public class CreateReservaCommandHandler : CommandHandlerBase<CreateReservaCommand, ReservaConPagoDto>
     {
         private readonly IRepository<Entity.Reserva> _ReservaRepository;
-        private readonly IRepository<Entity.Pago> _PagoRepository;
         private readonly IRepository<Entity.EstadoReserva> _EstadoReservaRepository;
-        private readonly IRepository<Entity.EstadoPago> _EstadoPagoRepository;
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.MetodoPago> _MetodoPagoRepository;
         private readonly IRepository<Entity.Operador> _OperadorRepository;
@@ -39,9 +37,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             IMediator mediator,
             CreateReservaCommandValidator validator,
             IRepository<Entity.Reserva> ReservaRepository,
-            IRepository<Entity.Pago> PagoRepository,
             IRepository<Entity.EstadoReserva> EstadoReservaRepository,
-            IRepository<Entity.EstadoPago> EstadoPagoRepository,
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.MetodoPago> MetodoPagoRepository,
             IRepository<Entity.Operador> OperadorRepository,
@@ -53,9 +49,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ReservaRepository = ReservaRepository;
-            _PagoRepository = PagoRepository;
             _EstadoReservaRepository = EstadoReservaRepository;
-            _EstadoPagoRepository = EstadoPagoRepository;
             _CanchaRepository = CanchaRepository;
             _MetodoPagoRepository = MetodoPagoRepository;
             _OperadorRepository = OperadorRepository;
@@ -155,32 +149,7 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
 
             decimal montoTotal = request.CreateDto.MontoTotal;
 
-            var estadoPagoPendiente = await _EstadoPagoRepository.GetByAsNoTrackingAsync(
-                x => x.Codigo!.Equals(Constants.ESTADO_PAGO.Pendiente));
-
-            if (estadoPagoPendiente == null)
-            {
-                response.AddErrorResult("Error del sistema: Estado de pago no encontrado.");
-                return response;
-            }
-
-            var nuevoPago = new Entity.Pago
-            {
-                IdReserva = nuevaReserva.IdReserva,
-                Moneda = Constants.CURRENCY.PEN,
-                Monto = montoTotal,
-                MontoAdelanto = 0,
-                MontoPendiente = montoTotal,
-                IdMetodoPago = metodoPago.IdMetodoPago,
-                IdEstadoPago = estadoPagoPendiente.IdEstadoPago,
-                CodigoOperacion = null
-            };
-
-            await _PagoRepository.AddAsync(nuevoPago);
-            await _PagoRepository.SaveAsync();
-
             var reservaDto = _mapper?.Map<GetReservaDto>(nuevaReserva);
-            var pagoDto = _mapper?.Map<GetPagoDto>(nuevoPago);
 
             var operadores = await _OperadorRepository.FindByAsNoTrackingAsync(x => x.OperadorCancha.Any(c => c.IdCancha == cancha.IdCancha));
 
@@ -189,14 +158,14 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             var reservaConPagoDto = new ReservaConPagoDto
             {
                 Reserva = reservaDto!,
-                Pago = pagoDto!,
+                Pago = null,
 
                 TelefonoCancha = cancha.TelefonoCancha ?? cancha.IdProveedorNavigation.Telefono,
                 NombreOperador = !string.IsNullOrEmpty(nombresOperadores) ? nombresOperadores : cancha.IdProveedorNavigation.Nombres,
 
                 MetodoPago = metodoPago.Nombre,
-                MontoFormateado = nuevoPago.Monto.ToString("F2"),
-                Moneda = nuevoPago.Moneda,
+                MontoFormateado = montoTotal.ToString("F2"),
+                Moneda = Constants.CURRENCY.PEN,
                 CodigoReserva = nuevaReserva.CodigoReserva,
                 DuracionPreReservaHoras = duracionPreReservaHoras,
                 FechaExpiracionPreReserva = nuevaReserva.FechaExpiracionPreReserva,

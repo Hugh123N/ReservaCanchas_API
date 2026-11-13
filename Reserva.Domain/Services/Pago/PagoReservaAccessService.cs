@@ -20,13 +20,17 @@ public class PagoReservaAccessService
     }
 
     public bool EsProveedor => _identity.GetUserRole() == Constants.Role.Proveedor;
+    public Guid? IdUsuario => _identity.GetCurrentUserId();
+    public string Rol => _identity.GetUserRole();
 
-    public async Task<bool> PuedeAccederAsync(Entity.Reserva reserva)
+    public async Task<bool> PuedeAccederAsync(Entity.Reserva reserva) =>
+        reserva.Activo && await PuedeAccederCanchaAsync(reserva.IdCanchaNavigation);
+
+    public async Task<bool> PuedeAccederCanchaAsync(Entity.Cancha? cancha)
     {
-        var cancha = reserva.IdCanchaNavigation;
         var idUsuario = _identity.GetCurrentUserId();
 
-        if (!reserva.Activo || cancha == null || !idUsuario.HasValue || idUsuario == Guid.Empty) 
+        if (cancha == null || !idUsuario.HasValue || idUsuario == Guid.Empty)
             return false;
 
         var negocio = _identity.GetCurrentUserIdNegocio();

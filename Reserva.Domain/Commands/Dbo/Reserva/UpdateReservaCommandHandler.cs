@@ -66,13 +66,15 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                     return response;
                 }
                 var pago = reserva.Pago.FirstOrDefault();
-                if (pago == null || dto.RevisionPago != pago.Revision)
+                if ((dto.RevisionPago ?? 0) != (pago?.Revision ?? 0))
                 {
                     response.AddErrorResult("El pago cambió o falta su versión. Recarga la reserva antes de editar.");
                     return response;
                 }
                 if (dto.IdCancha != reserva.IdCancha || dto.FechaReserva.Date != reserva.FechaReserva.Date ||
-                    dto.PagoReserva == null || dto.PagoReserva.Count > 1 || dto.PagoReserva.Any(p => p.IdPago != pago.IdPago || p.MontoAdelanto != pago.MontoAdelanto))
+                    dto.PagoReserva == null || dto.PagoReserva.Count > 1 ||
+                    (pago == null && dto.PagoReserva.Any()) ||
+                    dto.PagoReserva.Any(p => p.IdPago != pago!.IdPago || p.MontoAdelanto != pago.MontoAdelanto))
                 {
                     response.AddErrorResult("La edición no permite cambiar la cancha, fecha ni el acumulado cobrado. Usa Registrar cobro o Corregir registro.");
                     return response;
@@ -122,21 +124,24 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                         response.AddErrorResult("No se pueden cambiar horarios de días anteriores a hoy.");
                         return response;
                     }
-                    var total = cambioHorarios ? horarios.Sum(h => h.PrecioHora) : pago.Monto;
-                    if (total < pago.MontoAdelanto)
+                    var total = cambioHorarios ? horarios.Sum(h => h.PrecioHora) : reserva.MontoTotal;
+                    if (total < (pago?.MontoAdelanto ?? 0))
                     {
                         response.AddErrorResult("El nuevo total es menor que lo cobrado. Resuelve la devolución antes de reducir los horarios.");
                         return response;
                     }
-                    pago.Monto = total;
-                    pago.MontoPendiente = total - pago.MontoAdelanto;
                     reserva.MontoTotal = total;
-                    var codigoPago = pago.MontoAdelanto == 0 ? Constants.ESTADO_PAGO.Pendiente :
-                        pago.MontoAdelanto == total ? Constants.ESTADO_PAGO.Pagado : Constants.ESTADO_PAGO.Parcial;
-                    var estadoPago = await _estadoPagoRepository.GetByAsync(e => e.Codigo == codigoPago && e.Activo);
-                    if (estadoPago == null) throw new InvalidOperationException("Estado de pago no configurado.");
-                    pago.IdEstadoPago = estadoPago.IdEstadoPago;
-                    pago.IdEstadoPagoNavigation = estadoPago;
+                    if (pago != null)
+                    {
+                        pago.Monto = total;
+                        pago.MontoPendiente = total - pago.MontoAdelanto;
+                        var codigoPago = pago.MontoAdelanto == 0 ? Constants.ESTADO_PAGO.Pendiente :
+                            pago.MontoAdelanto == total ? Constants.ESTADO_PAGO.Pagado : Constants.ESTADO_PAGO.Parcial;
+                        var estadoPago = await _estadoPagoRepository.GetByAsync(e => e.Codigo == codigoPago && e.Activo)
+                            ?? throw new InvalidOperationException("Estado de pago no configurado.");
+                        pago.IdEstadoPago = estadoPago.IdEstadoPago;
+                        pago.IdEstadoPagoNavigation = estadoPago;
+                    }
                     // Validar disponibilidad de horarios nuevos
                     var validacion = await ValidarDisponibilidadHorariosNuevos(
                         horarios, reserva.DetalleReserva.ToList(), dto.FechaReserva);
@@ -161,10 +166,10 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
                             detalle.IdHorarioCanchaNavigation = horario;
                 }
 
-                if (pago.IdEstadoPagoNavigation == null)
+                if (pago != null && pago.IdEstadoPagoNavigation == null)
                     pago.IdEstadoPagoNavigation = (await _estadoPagoRepository.GetByAsync(e => e.IdEstadoPago == pago.IdEstadoPago))!;
 
-                pago.Revision++;
+                if (pago != null) pago.Revision++;
                 await _reservaRepository.UpdateAsync(reserva);
                 await _reservaRepository.SaveAsync();
 

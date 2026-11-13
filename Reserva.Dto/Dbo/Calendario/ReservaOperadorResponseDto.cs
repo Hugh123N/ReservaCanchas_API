@@ -33,7 +33,7 @@ namespace Reserva.Dto.Dbo.Calendario
         /// <summary>
         /// ID del pago creado
         /// </summary>
-        public int IdPago { get; set; }
+        public int? IdPago { get; set; }
 
         /// <summary>
         /// Estado del pago

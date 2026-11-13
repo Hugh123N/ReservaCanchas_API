@@ -27,6 +27,7 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
         {
             RequiredInformation(x => x.RequestDto).DependentRules(() =>
             {
+                RuleFor(x => x.RequestDto.TipoReserva).IsInEnum();
                 // Validar Cancha
                 RuleFor(x => x.RequestDto.IdCancha)
                     .GreaterThan(0)
@@ -155,6 +156,10 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
 
                 When(x => x.RequestDto.Pago != null, () =>
                 {
+                    RuleFor(x => x.RequestDto.Pago.ReferenciaOperacion).MaximumLength(100);
+                    When(x => x.RequestDto.TipoReserva == TipoReservaOperador.Normal, () =>
+                        RuleFor(x => x.RequestDto.Pago.MontoPagado).Must(m => !m.HasValue || m == 0)
+                            .WithMessage("Una reserva sin pago debe tener cero recibido."));
                     RuleFor(x => x.RequestDto.Pago.MontoTotal)
                         .GreaterThan(0)
                         .WithMessage("El monto total debe ser mayor a cero");
@@ -167,6 +172,10 @@ namespace Reserva.Domain.Commands.Dbo.Calendario
                     // Si es reserva inmediata, validar monto pagado
                     When(x => x.RequestDto.TipoReserva == TipoReservaOperador.Inmediata, () =>
                     {
+                        RuleFor(x => x.RequestDto.Pago.IdOperacion).NotEmpty();
+                        RuleFor(x => x.RequestDto.Pago.CodigoMetodoPago)
+                            .Must(c => c == "02" || c == "03" || c == "04" || c == "05")
+                            .WithMessage("Selecciona un método de cobro presencial válido.");
                         RuleFor(x => x.RequestDto.Pago.MontoPagado)
                             .NotNull()
                             .GreaterThan(0)

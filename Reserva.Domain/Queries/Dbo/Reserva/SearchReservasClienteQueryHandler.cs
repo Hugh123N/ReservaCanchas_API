@@ -74,7 +74,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
                 if (!string.IsNullOrWhiteSpace(filters.EstadoPago))
                 {
-                    filter = filter.And(x => x.Pago.Any(p => p.Activo && p.IdEstadoPagoNavigation.Nombre == filters.EstadoPago));
+                    filter = filter.And(x => x.Pago.Any(p => p.Activo && p.IdEstadoPagoNavigation.Nombre == filters.EstadoPago) ||
+                        (filters.EstadoPago == "Pendiente" && !x.Pago.Any(p => p.Activo)));
                 }
             }
 
@@ -136,7 +137,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     horarios = HorarioHelper.AgruparHorariosDesdeDetalles(detallesReserva);
                 }
 
-                var estadoPago = "Desconocido";
+                var estadoPago = "Pendiente";
 
                 var estado = estadosPago!.FirstOrDefault(x => x.IdEstadoPago == r.Pago.FirstOrDefault(p => p.Activo)?.IdEstadoPago);
                 if (estado != null)
@@ -165,8 +166,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     // Pago
                     EstadoPago = estadoPago,
                     MontoAdelanto = r.Pago.FirstOrDefault(p => p.Activo)?.MontoAdelanto ?? 0,
-                    MontoPendiente = r.Pago.FirstOrDefault(p => p.Activo)?.MontoPendiente ?? 0,
-                    NumeroRecibo = r.Pago.FirstOrDefault(p => p.Activo)?.NumeroReferencia,
+                    MontoPendiente = r.Pago.FirstOrDefault(p => p.Activo)?.MontoPendiente ?? r.MontoTotal,
 
                     // Fechas
                     FechaExpiracionPreReserva = r.FechaExpiracionPreReserva,

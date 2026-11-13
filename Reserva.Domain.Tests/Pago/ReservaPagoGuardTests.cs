@@ -16,6 +16,23 @@ namespace Reserva.Domain.Tests.Pago;
 
 public class ReservaPagoGuardTests
 {
+    [Fact]
+    public async Task EditarReservaPendienteSinPago_NoCreaCabeceraNiDinero()
+    {
+        var s = new Scenario();
+        s.Reservation.Pago.Clear();
+        s.Reservation.MontoTotal = 100;
+        s.Reservation.IdEstadoReservaNavigation.Codigo = Constants.ESTADO_RESERVA.Pendiente;
+        var dto = s.Request();
+        dto.RevisionPago = 0;
+        dto.PagoReserva.Clear();
+        dto.Observaciones = "Todavía sin cobro";
+        var resultado = await s.Handler.HandleCommand(new(dto), default);
+        Assert.True(resultado.IsValid);
+        Assert.Null(resultado.Data.PagoReserva);
+        Assert.Equal(100, resultado.Data.MontoTotal);
+        Assert.Empty(s.Reservation.Pago);
+    }
     [Theory]
     [InlineData(40)]
     [InlineData(60)]

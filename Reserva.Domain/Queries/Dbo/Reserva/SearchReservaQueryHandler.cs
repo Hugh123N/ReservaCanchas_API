@@ -64,7 +64,8 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     filter = filter.And(x => x.IdCanchaNavigation.Nombre.Contains(filters.NombreCancha));
 
                 if (!string.IsNullOrWhiteSpace(filters.CodigoEstadoPago))
-                    filter = filter.And(x => x.Pago.Any(p => p.Activo && p.IdEstadoPagoNavigation.Codigo == filters.CodigoEstadoPago));
+                    filter = filter.And(x => x.Pago.Any(p => p.Activo && p.IdEstadoPagoNavigation.Codigo == filters.CodigoEstadoPago) ||
+                        (filters.CodigoEstadoPago == "03" && !x.Pago.Any(p => p.Activo)));
 
                 if (filters.IdProveedor.HasValue)
                     filter = filter.And(x => x.IdCanchaNavigation.IdProveedor == filters.IdProveedor.Value);
@@ -161,11 +162,10 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                     // Horarios
                     Horarios = horarios,
                     // Pago
-                    CodigoEstadoPago = pagoActivo?.IdEstadoPagoNavigation?.Codigo ?? "02",
+                    CodigoEstadoPago = pagoActivo?.IdEstadoPagoNavigation?.Codigo ?? global::Reserva.Common.Constants.ESTADO_PAGO.Pendiente,
                     EstadoPago = pagoActivo?.IdEstadoPagoNavigation?.Nombre ?? "Pendiente",
                     MontoAdelanto = pagoActivo?.MontoAdelanto ?? 0,
-                    MontoPendiente = pagoActivo?.MontoPendiente ?? 0,
-                    NumeroRecibo = pagoActivo?.NumeroReferencia,
+                    MontoPendiente = pagoActivo?.MontoPendiente ?? r.MontoTotal,
                     // Fechas
                     FechaExpiracionPreReserva = r.FechaExpiracionPreReserva,
                     FechaCreacion = r.CreateDate

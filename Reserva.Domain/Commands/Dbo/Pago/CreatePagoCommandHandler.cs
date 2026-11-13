@@ -31,7 +31,7 @@ namespace Reserva.Domain.Commands.Dbo.Pago
 
             if (request.CreateDto.IdReserva.HasValue)
             {
-                response.AddErrorResult("El pago de una reserva se crea junto con la reserva; usa Registrar cobro para agregar dinero.");
+                response.AddErrorResult("El pago de una reserva se crea al recibir el primer cobro; usa Registrar cobro.");
                 return response;
             }
 

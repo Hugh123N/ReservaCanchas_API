@@ -134,7 +134,6 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
             pago.MontoAdelanto = montoAdelanto;
             pago.Revision++;
             pago.MontoPendiente = montoTotal - montoAdelanto;
-            pago.NumeroReferencia = request.ConfirmarDto.NumeroRecibo;
 
             Entity.EstadoPago? estadoPago;
 
