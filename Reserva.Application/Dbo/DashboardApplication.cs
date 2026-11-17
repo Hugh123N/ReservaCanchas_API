@@ -11,6 +11,9 @@ namespace Reserva.Application.Dbo
     {
         public DashboardApplication(IMediator mediator) : base(mediator) { }
 
+        public Task<ResponseDto<GetDashboardAdminDto>> GetDashboardAdmin(int meses, CancellationToken cancellationToken)
+            => _mediator.Send(new GetDashboardAdminQuery(meses), cancellationToken);
+
         public async Task<ResponseDto<GetDashboardProveedorDto>> GetDashboardProveedor()
             => await _mediator.Send(new GetDashboardProveedorQuery());
 

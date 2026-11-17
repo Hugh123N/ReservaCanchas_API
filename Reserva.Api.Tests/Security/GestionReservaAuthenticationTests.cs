@@ -79,6 +79,20 @@ public class GestionReservaAuthenticationTests
         Assert.Null(idUsuario);
     }
 
+    [Theory]
+    [InlineData("Admin", true)]
+    [InlineData("Proveedor", false)]
+    [InlineData("Operador", false)]
+    [InlineData("Cliente", false)]
+    [InlineData(null, false)]
+    public async Task DashboardAdmin_ExigeBearerYRolAdmin(string? rol, bool permitido)
+    {
+        var (result, _, _, _) = await AutorizarAsync(typeof(DashboardController), nameof(DashboardController.GetDashboardAdmin), rol);
+        Assert.Equal(permitido, result.Succeeded);
+        if (rol == null) Assert.True(result.Challenged);
+        else if (!permitido) Assert.True(result.Forbidden);
+    }
+
     private static async Task<(PolicyAuthorizationResult Result, Guid? IdUsuario, int? IdNegocio, HttpContext Context)> AutorizarAsync(
         Type controller, string action, string? role, bool expired = false)
     {

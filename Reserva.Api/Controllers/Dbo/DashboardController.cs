@@ -17,6 +17,12 @@ namespace Reserva.Api.Controllers.Dbo
             _dashboardApplication = dashboardApplication;
         }
 
+        [HttpGet("admin")]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme,
+            Roles = Common.Constants.Role.Admin)]
+        public Task<ResponseDto<GetDashboardAdminDto>> GetDashboardAdmin([FromQuery] int meses = 6, CancellationToken cancellationToken = default)
+            => _dashboardApplication.GetDashboardAdmin(meses, cancellationToken);
+
         [HttpGet("proveedor")]
         public async Task<ResponseDto<GetDashboardProveedorDto>> GetDashboardProveedor()
             => await _dashboardApplication.GetDashboardProveedor();
