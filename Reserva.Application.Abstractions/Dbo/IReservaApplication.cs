@@ -12,8 +12,9 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<GetReservaDto>> Update(UpdateReservaDto updateDto);
         Task<ResponseDto> Delete(int id);
         Task<ResponseDto<GetReservaDto>> Get(int id);
+        Task<ResponseDto<GetReservaDto>> GetGestion(int id);
         Task<ResponseDto<IEnumerable<ListReservaDto>>> List(int id);
-        Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams);
+        Task<ResponseDto<SearchReservasResultDto>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboReservaDto>>> SelectCombo();
         Task<ResponseDto<SearchResultDto<SelectReservaDto>>> Select(SearchParamsDto<SelectReservaFilterDto> searchParams);
 

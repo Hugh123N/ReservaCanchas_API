@@ -2,13 +2,18 @@
 
 ## Alcance acordado
 
-Se implementan tres reportes, consultables en pantalla y descargables como `.xlsx`.
-Los dos primeros son del proveedor y el tercero es exclusivo del operador.
+Los reportes son consultables en pantalla y descargables como `.xlsx`.
+El proveedor dispone de Control económico, Demanda y Control de movimientos/responsables;
+la Agenda y cobros del día es exclusiva del operador.
+
+El control de movimientos, identidad por operación y Excel de varias hojas se documenta
+en [CONTROL_MOVIMIENTOS_RESPONSABLES.md](CONTROL_MOVIMIENTOS_RESPONSABLES.md).
 
 | Reporte | Objetivo | Criterio |
 |---|---|---|
 | Control económico de reservas | Revisar importes, cobros acumulados, devoluciones y saldos | Fecha local de la reserva; situación económica actual |
 | Demanda de canchas y horarios | Identificar canchas, días y franjas con más o menos reservas | Horas confirmadas; pendientes y canceladas por separado |
+| Control de movimientos y responsables | Supervisar cobros, devoluciones y ajustes por persona y cancha | Fecha de operación; situación trasladada al search de Reservas |
 | Agenda y cobros del día | Atender al cliente y conocer el saldo por cobrar | Un día seleccionable, hoy por defecto; canchas asignadas |
 
 ### Control económico
@@ -110,6 +115,7 @@ se rechaza incluso cuando el identificador se modifica directamente en la petici
 Reportes
 ├── Control económico        [Proveedor]
 ├── Demanda de horarios      [Proveedor]
+├── Movimientos y responsables [Proveedor]
 └── Agenda y cobros del día   [Operador]
 ```
 

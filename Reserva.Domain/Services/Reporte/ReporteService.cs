@@ -60,7 +60,7 @@ public class ReporteService
             response.AddErrorResult("El reporte supera 25 000 reservas. Reduce el período o selecciona una cancha.");
             return response;
         }
-        reservas = reservas.Where(r => CoincideEstado(r, filtro)).ToList();
+        reservas = reservas.Where(r => ReporteBuilder.CoincideEstado(r, filtro)).ToList();
         var ids = reservas.Select(r => r.IdReserva).ToList();
         var horarios = new List<ReporteHorarioData>();
         // Se consulta por el rango y el alcance en SQL, sin un IN con miles de IDs.
@@ -101,7 +101,8 @@ public class ReporteService
         }
         reporte.EstadoReserva = string.IsNullOrEmpty(filtro.EstadoReserva) ? "Todos" : filtro.EstadoReserva == "VIGENTES" ? "Pendientes y confirmadas" :
             reservas.FirstOrDefault()?.EstadoNombre ?? filtro.EstadoReserva;
-        reporte.EstadoPago = string.IsNullOrEmpty(filtro.EstadoPago) ? "Todos" : reservas.FirstOrDefault()?.Pago?.EstadoNombre ?? filtro.EstadoPago;
+        reporte.EstadoPago = string.IsNullOrEmpty(filtro.EstadoPago) ? "Todos" : reservas.FirstOrDefault()?.Pago?.EstadoNombre ??
+            (filtro.EstadoPago == Constants.ESTADO_PAGO.Pendiente ? "Pendiente (incluye reservas sin cobros)" : filtro.EstadoPago);
         response.UpdateData(reporte);
         return response;
     }
@@ -110,11 +111,7 @@ public class ReporteService
     {
         if (canchas.Count == 0) return new();
         var zonas = canchas.ToDictionary(c => c.IdCancha, c => TimezoneUtils.ObtenerZonaHoraria(c.ZonaHoraria));
-        var limites = zonas.Values.Select(z => (
-            Desde: DateTimeHelper.NormalizarFechaLocal(filtro.FechaDesde.ToDateTime(TimeOnly.MinValue), z).ToUniversalTime(),
-            Hasta: DateTimeHelper.NormalizarFechaLocal(filtro.FechaHasta.AddDays(1).ToDateTime(TimeOnly.MinValue), z).ToUniversalTime())).ToList();
-        var desde = limites.Min(l => l.Desde);
-        var hasta = limites.Max(l => l.Hasta);
+        var (desde, hasta) = ReportePeriodo.LimitesUtc(canchas, filtro.FechaDesde, filtro.FechaHasta);
         var ids = canchas.Select(c => c.IdCancha).ToList();
         var datos = await ReporteConsultas.Reservas(_reservas.FindAllAsNoTracking(), ids, desde, hasta, MaxReservas + 1).ToListAsync(ct);
         if (datos.Count > MaxReservas) return null;
@@ -128,7 +125,4 @@ public class ReporteService
         return datos.Where(r => r.FechaLocal >= filtro.FechaDesde && r.FechaLocal <= filtro.FechaHasta).ToList();
     }
 
-    private static bool CoincideEstado(ReporteReservaData r, FiltroReporteDto filtro) =>
-        (string.IsNullOrEmpty(filtro.EstadoReserva) || (filtro.EstadoReserva == "VIGENTES" ? ReporteBuilder.EsVigente(r) : r.EstadoCodigo == filtro.EstadoReserva)) &&
-        (string.IsNullOrEmpty(filtro.EstadoPago) || r.Pago?.EstadoCodigo == filtro.EstadoPago);
 }

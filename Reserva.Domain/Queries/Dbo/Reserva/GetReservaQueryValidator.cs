@@ -24,6 +24,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
 
         protected async Task<bool> ValidateExistenceAsync(GetReservaQuery command, int id, ValidationContext<GetReservaQuery> context, CancellationToken cancellationToken)
         {
+            if (command.Gestion) return true;
             var exists = await _ReservaRepository.FindAll().Where(x => x.IdReserva == id).AnyAsync(cancellationToken);
             if (!exists) return CustomValidationMessage(context, Resources.Common.GetRecordNotFound);
             return true;

@@ -26,7 +26,7 @@ public class ReporteBuilderTests
         Assert.Equal(150, Valor("Cobrado acumulado"));
         Assert.Equal(70, Valor("Devuelto"));
         Assert.Equal(80, Valor("Cobrado neto"));
-        Assert.Equal(250, Valor("Saldo vigente"));
+        Assert.Equal(250, Valor("Por cobrar"));
         Assert.Equal(0m, reporte.Filas.Single(f => (string)f["codigo"]! == "RES-2")["saldo"]);
     }
 

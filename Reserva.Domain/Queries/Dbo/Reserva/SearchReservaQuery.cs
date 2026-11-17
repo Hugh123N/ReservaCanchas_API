@@ -4,7 +4,7 @@ using Reserva.Dto.Dbo.Reserva;
 
 namespace Reserva.Domain.Queries.Dbo.Reserva
 {
-    public class SearchReservaQuery : SearchQueryBase<SearchReservaFilterDto, ReservaClienteDto>
+    public class SearchReservaQuery : SearchQueryBase<SearchReservaFilterDto, ReservaClienteDto, SearchReservasResultDto>
     {
         public SearchReservaQuery(SearchParamsDto<SearchReservaFilterDto> searchParams) : base(searchParams)
         {

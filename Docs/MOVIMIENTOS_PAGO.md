@@ -74,6 +74,7 @@ El catálogo usa 01 Pendiente, 02 Confirmado, 03 Cancelado y 04 Expirado. Los es
 históricos 05 No presentado y 06 Completado se conservan. La migración reasigna códigos
 por el nombre del estado, conservando IDs y sus reservas relacionadas.
 
-Los reportes nuevos por responsable/método y la futura tabla PreReserva quedan para
-otra implementación. El flujo actual de devolución es inmediato al cancelar; no se
-incorpora una programación de reembolsos posteriores.
+El reporte por responsable/método está disponible en
+[CONTROL_MOVIMIENTOS_RESPONSABLES.md](CONTROL_MOVIMIENTOS_RESPONSABLES.md).
+La futura tabla PreReserva queda para otra implementación. El flujo actual de devolución
+es inmediato al cancelar; no se incorpora una programación de reembolsos posteriores.

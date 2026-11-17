@@ -4,6 +4,7 @@ using Reserva.Domain.Queries.Base;
 using Reserva.Dto.Dbo.Reserva;
 using Reserva.Domain.Helpers;
 using Reserva.Repository.Abstractions.Base;
+using Reserva.Domain.Services.Reporte;
 
 namespace Reserva.Domain.Queries.Dbo.Reserva
 {
@@ -13,6 +14,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
         private readonly IRepository<Entity.DetalleReserva> _detalleReservaRepository;
         private readonly IRepository<Entity.Pago> _pagoRepository;
         private readonly IRepository<Entity.ConfiguracionProveedor> _configuracionProveedorRepository;
+        private readonly ReporteAccessService _access;
 
         public GetReservaQueryHandler(
             IMapper mapper,
@@ -20,21 +22,27 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
             IRepository<Entity.Reserva> reservaRepository,
             IRepository<Entity.DetalleReserva> detalleReservaRepository,
             IRepository<Entity.Pago> pagoRepository,
-            IRepository<Entity.ConfiguracionProveedor> configuracionProveedorRepository
+            IRepository<Entity.ConfiguracionProveedor> configuracionProveedorRepository,
+            ReporteAccessService access
         ) : base(mapper, validator)
         {
             _reservaRepository = reservaRepository;
             _detalleReservaRepository = detalleReservaRepository;
             _pagoRepository = pagoRepository;
             _configuracionProveedorRepository = configuracionProveedorRepository;
+            _access = access;
         }
 
         protected override async Task<ResponseDto<GetReservaDto>> HandleQuery(GetReservaQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetReservaDto>();
 
+            var canchas = request.Gestion ? await _access.ObtenerCanchasAsync() : null;
+            if (request.Gestion && canchas == null) { response.AddErrorResult("Reserva no encontrada o sin acceso."); return response; }
+            var ids = canchas?.Select(c => c.IdCancha).ToList() ?? new();
+
             var reserva = await _reservaRepository.GetByAsNoTrackingAsync(
-                x => x.IdReserva == request.Id && x.Activo,
+                x => x.IdReserva == request.Id && (request.Gestion ? ids.Contains(x.IdCancha) : x.Activo),
                 r => r.IdTipoDeporteNavigation!,
                 r => r.IdClienteNavigation!,
                 r => r.IdEstadoReservaNavigation!,
@@ -64,6 +72,7 @@ namespace Reserva.Domain.Queries.Dbo.Reserva
                 c => c.IdProveedor == reserva.IdCanchaNavigation!.IdProveedor && c.Activo);
 
             var reservaDto = ReservaDetalleDtoMapper.Map(_mapper!, reserva, detalles, pagoActivo, configuracionProveedor);
+            reservaDto.Anulada = !reserva.Activo;
 
             response.UpdateData(reservaDto);
             response.AddOkResult("Reserva obtenida exitosamente.");

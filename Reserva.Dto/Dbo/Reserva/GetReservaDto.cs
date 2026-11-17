@@ -8,6 +8,7 @@ namespace Reserva.Dto.Dbo.Reserva
     public class GetReservaDto : ReservaDto
     {
         public int IdReserva { get; set; }
+        public bool Anulada { get; set; }
         public string? CodigoReserva { get; set; }
 
         public string NombreCancha { get; set; } = null!;

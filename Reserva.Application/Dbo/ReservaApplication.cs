@@ -21,11 +21,13 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new UpdateReservaCommand(updateDto));
         public async Task<ResponseDto> Delete(int id)
             => await _mediator.Send(new DeleteReservaCommand(id));
+        public Task<ResponseDto<GetReservaDto>> GetGestion(int id) => _mediator.Send(new GetReservaQuery(id, gestion: true));
+
         public async Task<ResponseDto<GetReservaDto>> Get(int id)
             => await _mediator.Send(new GetReservaQuery(id));
         public async Task<ResponseDto<IEnumerable<ListReservaDto>>> List(int id)
             => await _mediator.Send(new ListReservaQuery(id));
-        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
+        public async Task<ResponseDto<SearchReservasResultDto>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
             => await _mediator.Send(new SearchReservaQuery(searchParams));
         public async Task<ResponseDto<IEnumerable<SelectComboReservaDto>>> SelectCombo()
             => await _mediator.Send(new SelectComboReservaQuery());

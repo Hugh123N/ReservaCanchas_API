@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 namespace Reserva.Common.Excel;
 
 public record ColumnaExcel(string Titulo, string Formato = "texto");
+public record HojaExcel(string Nombre, string Titulo, IReadOnlyList<ColumnaExcel> Columnas, IEnumerable<IReadOnlyList<object?>> Filas);
 
 public static class ExportadorExcel
 {
@@ -10,8 +11,10 @@ public static class ExportadorExcel
 
     public static byte[] Generar(string titulo, IReadOnlyList<ColumnaExcel> columnas,
         IEnumerable<IReadOnlyList<object?>> filas, IReadOnlyList<(string Etiqueta, object? Valor, string Formato)> resumen)
+        => GenerarLibro(titulo, resumen, new[] { new HojaExcel("Detalle", titulo, columnas, filas) });
+
+    public static byte[] GenerarLibro(string titulo, IReadOnlyList<(string Etiqueta, object? Valor, string Formato)> resumen, IEnumerable<HojaExcel> hojas)
     {
-        if (columnas.Count == 0) throw new ArgumentException("El archivo requiere columnas.", nameof(columnas));
         using var libro = new XLWorkbook();
         var hojaResumen = libro.AddWorksheet("Resumen");
         hojaResumen.Cell(1, 1).Value = titulo;
@@ -27,7 +30,18 @@ public static class ExportadorExcel
         hojaResumen.Column(2).Width = 75;
         hojaResumen.Column(2).Style.Alignment.WrapText = true;
 
-        var detalle = libro.AddWorksheet("Detalle");
+        foreach (var hoja in hojas) EscribirHoja(libro, hoja);
+        using var stream = new MemoryStream();
+        libro.SaveAs(stream);
+        return stream.ToArray();
+    }
+
+    private static void EscribirHoja(XLWorkbook libro, HojaExcel hoja)
+    {
+        var columnas = hoja.Columnas;
+        if (columnas.Count == 0) throw new ArgumentException("El archivo requiere columnas.");
+        var detalle = libro.AddWorksheet(hoja.Nombre);
+        var titulo = hoja.Titulo;
         detalle.Cell(1, 1).Value = titulo;
         detalle.Range(1, 1, 1, columnas.Count).Merge().Style.Font.SetBold().Font.SetFontSize(14);
         const int cabecera = 3;
@@ -39,17 +53,14 @@ public static class ExportadorExcel
         detalle.Range(cabecera, 1, cabecera, columnas.Count).Style
             .Fill.SetBackgroundColor(XLColor.FromHtml("#0F766E")).Font.SetFontColor(XLColor.White).Font.SetBold();
         var fila = cabecera + 1;
-        foreach (var valores in filas)
+        foreach (var valores in hoja.Filas)
         {
-            if (valores.Count != columnas.Count) throw new ArgumentException("La fila no coincide con las columnas.", nameof(filas));
+            if (valores.Count != columnas.Count) throw new ArgumentException("La fila no coincide con las columnas.");
             for (var c = 0; c < columnas.Count; c++) Escribir(detalle.Cell(fila, c + 1), valores[c], columnas[c].Formato);
             fila++;
         }
         detalle.Range(cabecera, 1, Math.Max(cabecera, fila - 1), columnas.Count).SetAutoFilter();
         detalle.SheetView.FreezeRows(cabecera);
-        using var stream = new MemoryStream();
-        libro.SaveAs(stream);
-        return stream.ToArray();
     }
 
     private static void Escribir(IXLCell celda, object? valor, string formato)

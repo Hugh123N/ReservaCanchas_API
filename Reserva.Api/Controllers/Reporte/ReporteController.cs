@@ -11,6 +11,20 @@ namespace Reserva.Api.Controllers.Reporte;
 [Route("api/Reporte")]
 public class ReporteController(IReporteApplication application) : ControllerBase
 {
+    [Security.Authorize(Roles = Constants.Role.Proveedor)]
+    [HttpGet("control-movimientos/filtros")]
+    public Task<ResponseDto<FiltrosControlMovimientosDto>> FiltrosControl(CancellationToken cancellationToken)
+        => application.FiltrosControl(cancellationToken);
+
+    [Security.Authorize(Roles = Constants.Role.Proveedor)]
+    [HttpPost("control-movimientos")]
+    public Task<ResponseDto<ControlMovimientosDto>> Control(FiltroControlMovimientosDto filtro, CancellationToken cancellationToken)
+        => application.Control(filtro, cancellationToken);
+
+    [Security.Authorize(Roles = Constants.Role.Proveedor)]
+    [HttpPost("control-movimientos/excel")]
+    public async Task<IActionResult> ControlExcel(FiltroControlMovimientosDto filtro, CancellationToken cancellationToken)
+        => Archivo(await application.ExportarControl(filtro, cancellationToken));
     [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
     [HttpGet("filtros")]
     public Task<ResponseDto<FiltrosReporteDto>> Filtros(CancellationToken cancellationToken)

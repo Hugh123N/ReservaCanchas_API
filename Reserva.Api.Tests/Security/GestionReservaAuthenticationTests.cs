@@ -24,7 +24,8 @@ public class GestionReservaAuthenticationTests
     public static IEnumerable<object[]> AccionesGestion()
     {
         foreach (var action in new[] { nameof(ReservaController.Update), nameof(ReservaController.Delete),
-            nameof(ReservaController.ConfirmarReservaOperador), nameof(ReservaController.LiberarReservaOperador) })
+            nameof(ReservaController.ConfirmarReservaOperador), nameof(ReservaController.LiberarReservaOperador),
+            nameof(ReservaController.Search), nameof(ReservaController.GetGestion) })
             yield return new object[] { typeof(ReservaController), action, false };
         foreach (var action in new[] { nameof(PagoController.Historial), nameof(PagoController.RegistrarCobro),
             nameof(PagoController.CorregirRegistro) })

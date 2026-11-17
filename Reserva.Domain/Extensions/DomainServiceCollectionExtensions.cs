@@ -44,6 +44,7 @@ namespace Reserva.Domain.Extensions
             services.AddScoped<Services.Pago.MovimientoPagoService>();
             services.AddScoped<Services.Reporte.ReporteAccessService>();
             services.AddScoped<Services.Reporte.ReporteService>();
+            services.AddScoped<Services.Reporte.ControlMovimientosService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

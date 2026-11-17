@@ -9,6 +9,11 @@ public static class ReporteBuilder
     public static bool EsVigente(ReporteReservaData r) => r.Activo &&
         (r.EstadoCodigo == Constants.ESTADO_RESERVA.Confirmado || r.EstadoCodigo == Constants.ESTADO_RESERVA.Pendiente);
 
+    public static bool CoincideEstado(ReporteReservaData r, FiltroReporteDto filtro) =>
+        (string.IsNullOrEmpty(filtro.EstadoReserva) || (filtro.EstadoReserva == "VIGENTES" ? EsVigente(r) :
+            filtro.EstadoReserva == "ANULADAS" ? !r.Activo : r.EstadoCodigo == filtro.EstadoReserva)) &&
+        (string.IsNullOrEmpty(filtro.EstadoPago) || (r.Pago?.EstadoCodigo ?? Constants.ESTADO_PAGO.Pendiente) == filtro.EstadoPago);
+
     public static ReporteDto Construir(TipoReporte tipo, FiltroReporteDto filtro, List<ReporteReservaData> reservas,
         List<ReporteHorarioData> horarios, List<CanchaReporteDto> canchas, List<FranjaReporteData> configurados)
     {
@@ -40,7 +45,7 @@ public static class ReporteBuilder
                 ["codigo"] = r.Codigo, ["fecha"] = r.FechaLocal, ["cancha"] = nombres[r.IdCancha],
                 ["horario"] = horariosPorReserva.GetValueOrDefault(r.IdReserva, r.HoraLocal.ToString("HH:mm")),
                 ["cliente"] = r.Cliente, ["telefono"] = r.Telefono ?? "", ["estadoReserva"] = r.EstadoNombre,
-                ["estadoPago"] = r.Pago?.EstadoNombre ?? "Sin pago", ["total"] = total, ["cobrado"] = cobrado,
+                ["estadoPago"] = r.Pago?.EstadoNombre ?? "Pendiente (sin cobros)", ["total"] = total, ["cobrado"] = cobrado,
                 ["devuelto"] = devuelto, ["neto"] = cobrado - devuelto,
                 ["saldo"] = EsVigente(r) ? Math.Max(0, total - cobrado) : 0, ["observaciones"] = r.Observaciones ?? ""
             });
@@ -56,7 +61,7 @@ public static class ReporteBuilder
             new("fecha", "Fecha de reserva", "fecha"), new("codigo", "Código"), new("cancha", "Cancha"),
             new("horario", "Horario"), new("cliente", "Cliente"), new("estadoReserva", "Reserva"), new("estadoPago", "Pago"),
             new("total", "Importe reserva", "moneda"), new("cobrado", "Cobrado acumulado", "moneda"),
-            new("devuelto", "Devuelto", "moneda"), new("neto", "Cobrado neto", "moneda"), new("saldo", "Saldo vigente", "moneda")
+            new("devuelto", "Devuelto", "moneda"), new("neto", "Cobrado neto", "moneda"), new("saldo", "Por cobrar", "moneda")
         };
         var vigentes = reservas.Where(EsVigente).ToList();
         decimal Saldo(ReporteReservaData r) => Math.Max(0, (r.Pago?.Total ?? r.MontoTotal) - (r.Pago?.Cobrado ?? 0));
@@ -72,7 +77,7 @@ public static class ReporteBuilder
             new("Cobrado acumulado", reservas.Sum(r => r.Pago?.Cobrado ?? 0), "moneda"),
             new("Devuelto", reservas.Sum(r => r.Pago?.Devuelto ?? 0), "moneda"),
             new("Cobrado neto", reservas.Sum(r => (r.Pago?.Cobrado ?? 0) - (r.Pago?.Devuelto ?? 0)), "moneda"),
-            new("Saldo vigente", vigentes.Sum(Saldo), "moneda")
+            new("Por cobrar", vigentes.Sum(Saldo), "moneda")
         };
     }
 

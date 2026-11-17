@@ -29,11 +29,15 @@ namespace Reserva.Api.Controllers.Dbo
         [HttpGet("{id}")]
         public async Task<ResponseDto<GetReservaDto>> Get(int id)
             => await _ReservaApplication.Get(id);
+        [HttpGet("gestion/{id:int}")]
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
+        public Task<ResponseDto<GetReservaDto>> GetGestion(int id) => _ReservaApplication.GetGestion(id);
         [HttpPost("list")]
         public async Task<ResponseDto<IEnumerable<ListReservaDto>>> List(int id)
             => await _ReservaApplication.List(id);
         [HttpPost("search")]
-        public async Task<ResponseDto<SearchResultDto<ReservaClienteDto>>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
+        [Security.Authorize(Roles = Constants.Role.Proveedor + "," + Constants.Role.Operador)]
+        public async Task<ResponseDto<SearchReservasResultDto>> Search(SearchParamsDto<SearchReservaFilterDto> searchParams)
             => await _ReservaApplication.Search(searchParams);
         [HttpGet("selectcombo")]
         public async Task<ResponseDto<IEnumerable<SelectComboReservaDto>>> SelectCombo()

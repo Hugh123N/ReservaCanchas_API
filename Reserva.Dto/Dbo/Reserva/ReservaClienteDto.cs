@@ -7,6 +7,8 @@ namespace Reserva.Dto.Dbo.Reserva
         public int IdReserva { get; set; }
         public string CodigoReserva { get; set; } = null!;
         public DateTimeOffset Fecha { get; set; }
+        public DateOnly FechaLocal { get; set; }
+        public bool Anulada { get; set; }
         public decimal Monto { get; set; }
 
         // Información del estado
@@ -31,6 +33,10 @@ namespace Reserva.Dto.Dbo.Reserva
         public string EstadoPago { get; set; } = null!;
         public decimal MontoAdelanto { get; set; }
         public decimal MontoPendiente { get; set; }
+        public decimal MontoReembolso { get; set; }
+        public string? ResponsableUltimoReembolso { get; set; }
+        public DateTime? FechaUltimoReembolso { get; set; }
+        public string? EventoReserva { get; set; }
         public string? NumeroRecibo { get; set; }
 
         // Fechas de control

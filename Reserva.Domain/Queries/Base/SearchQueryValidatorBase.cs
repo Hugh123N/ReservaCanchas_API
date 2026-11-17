@@ -6,30 +6,42 @@ namespace Reserva.Domain.Queries.Base
     public class SearchQueryValidatorBase<TRequest, TFilter, TResponse> : QueryValidatorBase<TRequest>
         where TRequest : SearchQueryBase<TFilter, TResponse>
     {
+        private readonly SearchQueryValidatorBase<TRequest, TFilter, TResponse, Dto.Base.SearchResultDto<TResponse>> _common = new();
+
+        public SearchQueryValidatorBase()
+        {
+            Include(_common);
+        }
+    }
+
+    public class SearchQueryValidatorBase<TRequest, TFilter, TResponse, TResult> : QueryValidatorBase<TRequest>
+        where TRequest : SearchQueryBase<TFilter, TResponse, TResult>
+        where TResult : Dto.Base.SearchResultDto<TResponse>
+    {
         private readonly string[] SortDirenctions = new string[] { "asc", "desc" };
 
         public SearchQueryValidatorBase()
         {
-            RequiredInformation(x => x.SearchParams, "La información de búsqueda es obligatoria.")
+            RequiredInformation(x => x.SearchParams, "La informaciï¿½n de bï¿½squeda es obligatoria.")
                 .DependentRules(() =>
                 {
-                    RequiredInformation(x => x.SearchParams.Page, "La información de la página es obligatoria.")
+                    RequiredInformation(x => x.SearchParams.Page, "La informaciï¿½n de la pï¿½gina es obligatoria.")
                         .DependentRules(() =>
                         {
-                            RequiredField(x => x.SearchParams.Page.Page, "Página")
+                            RequiredField(x => x.SearchParams.Page.Page, "Pï¿½gina")
                                 .DependentRules(() =>
                                 {
                                     RuleFor(x => x.SearchParams.Page.Page)
                                         .GreaterThan(0)
-                                        .WithMessage("La página debe ser mayor a 0.");
+                                        .WithMessage("La pï¿½gina debe ser mayor a 0.");
                                 });
 
-                            RequiredField(x => x.SearchParams.Page.PageSize, "Tamaño de página")
+                            RequiredField(x => x.SearchParams.Page.PageSize, "Tamaï¿½o de pï¿½gina")
                                 .DependentRules(() =>
                                 {
-                                    RequiredField(x => x.SearchParams.Page.PageSize, "Tamaño de página")
+                                    RequiredField(x => x.SearchParams.Page.PageSize, "Tamaï¿½o de pï¿½gina")
                                         .GreaterThan(0)
-                                        .WithMessage("El tamaño de página debe ser mayor a 0.");
+                                        .WithMessage("El tamaï¿½o de pï¿½gina debe ser mayor a 0.");
                                 });
                         });
 
@@ -40,10 +52,10 @@ namespace Reserva.Domain.Queries.Base
 
                         var invalidSortDirs = sort.Where(x => !SortDirenctions.Contains(x.Direction));
                         if (invalidSortDirs.Any())
-                            return CustomValidationMessage(context, "La dirección de ordenamiento no es válida (debe ser 'asc' o 'desc').");
+                            return CustomValidationMessage(context, "La direcciï¿½n de ordenamiento no es vï¿½lida (debe ser 'asc' o 'desc').");
 
                         return true;
-                    }).WithMessage("La dirección de ordenamiento no es válida.");
+                    }).WithMessage("La direcciï¿½n de ordenamiento no es vï¿½lida.");
                 });
         }
     }
