@@ -14,6 +14,7 @@ namespace Reserva.Dto.Dbo.Cancha
         public int IdEstadoCancha { get; set; }
         public string Codigo { get; set; } = null!;
         public int IdCancha { get; set; }
+        public DateTimeOffset Version { get; set; }
 
         public int? DuracionPreReserva { get; set; }
         public decimal? PorcentajeAdelantoMinimo { get; set; }

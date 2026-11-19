@@ -29,6 +29,7 @@ namespace Reserva.Common
             public const string Pendiente = "01";
             public const string Aprobado = "02";
             public const string Rechazado = "03";
+            public const string Suspendido = "04";
         }
 
         public struct TIPO_PROVEEDOR

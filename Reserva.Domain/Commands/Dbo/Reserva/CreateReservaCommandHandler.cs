@@ -15,6 +15,7 @@ using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Reserva.Repository.Utils;
 using System;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Commands.Dbo.Reserva
 {
@@ -64,11 +65,11 @@ namespace Reserva.Domain.Commands.Dbo.Reserva
         {
             var response = new ResponseDto<ReservaConPagoDto>();
 
-            var cancha = await _CanchaRepository.GetByAsync(
-                c => c.IdCancha == request.CreateDto.IdCancha,
-                c => c.IdProveedorNavigation!,
-                c => c.IdProveedorNavigation.ConfiguracionProveedor!,
-                c => c.OperadorCancha);
+            var cancha = await _CanchaRepository.FindAll().Where(NegocioReglas.Publicable)
+                .Include(c => c.IdProveedorNavigation.ConfiguracionProveedor)
+                .Include(c => c.OperadorCancha)
+                .FirstOrDefaultAsync(c => c.IdCancha == request.CreateDto.IdCancha, cancellationToken);
+            if (cancha == null) { response.AddErrorResult("Esta cancha no está disponible para reservas públicas."); return response; }
 
             var metodoPago = await _MetodoPagoRepository.GetByAsync(mp => mp.Codigo == request.CreateDto.CodigoMetodoPago);
 

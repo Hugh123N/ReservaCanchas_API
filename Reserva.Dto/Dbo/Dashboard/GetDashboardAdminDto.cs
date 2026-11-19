@@ -20,6 +20,7 @@ public class DashboardAdminIndicadoresDto
     public int ProveedoresRegistrados { get; set; }
     public int ProveedoresActivos { get; set; }
     public int ProveedoresInactivos { get; set; }
+    public int ProveedoresSuspendidos { get; set; }
     public int NuevosProveedoresMes { get; set; }
     public int ProveedoresPlanPago { get; set; }
     public int ProveedoresPrueba { get; set; }

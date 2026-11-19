@@ -9,6 +9,8 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto);
         Task<ResponseDto> Delete(int id);
         Task<ResponseDto<GetCanchaDto>> Get(int id);
+        Task<ResponseDto<GetCanchaDto>> GetGestion(int id);
+        Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> SearchGestion(SearchParamsDto<SearchCanchaFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<ListCanchaDto>>> List(int id);
         Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams);
         Task<ResponseDto<IEnumerable<SelectComboCanchaDto>>> SelectCombo();

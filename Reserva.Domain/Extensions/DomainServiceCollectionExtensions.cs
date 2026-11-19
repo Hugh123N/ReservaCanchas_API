@@ -27,6 +27,7 @@ namespace Reserva.Domain.Extensions
             services.AddMediatR(cfg =>
             {
                 cfg.RegisterServicesFromAssembly(assembly);
+                cfg.AddOpenBehavior(typeof(Services.GestionAdmin.NegocioRestringidoBehavior<,>));
             });
 
             // AutoMapper Configuration
@@ -45,6 +46,9 @@ namespace Reserva.Domain.Extensions
             services.AddScoped<Services.Reporte.ReporteAccessService>();
             services.AddScoped<Services.Reporte.ReporteService>();
             services.AddScoped<Services.Reporte.ControlMovimientosService>();
+            services.AddScoped<Services.GestionAdmin.NegocioAccessService>();
+            services.AddScoped<Services.GestionAdmin.CancelarRenovacionService>();
+            services.AddScoped<Services.GestionAdmin.GestionAdminService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

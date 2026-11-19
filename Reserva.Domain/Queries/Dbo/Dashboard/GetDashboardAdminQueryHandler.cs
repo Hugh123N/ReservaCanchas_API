@@ -39,7 +39,8 @@ public class GetDashboardAdminQueryHandler(
 
         var indicadores = await proveedorQuery.GroupBy(_ => 1).Select(g => new DashboardAdminIndicadoresDto
         {
-            ProveedoresRegistrados = g.Count(), ProveedoresActivos = g.Count(p => p.Activo), ProveedoresInactivos = g.Count(p => !p.Activo),
+            ProveedoresRegistrados = g.Count(), ProveedoresActivos = g.Count(p => p.Activo && p.IdEstadoProveedorNavigation.Codigo == Constants.ESTADO_PROVEEDOR.Aprobado),
+            ProveedoresInactivos = g.Count(p => !p.Activo), ProveedoresSuspendidos = g.Count(p => p.Activo && p.IdEstadoProveedorNavigation.Codigo != Constants.ESTADO_PROVEEDOR.Aprobado),
             NuevosProveedoresMes = g.Count(p => p.CreateDate >= periodo.InicioMes && p.CreateDate <= periodo.Ahora)
         }).SingleOrDefaultAsync(cancellationToken) ?? new();
         var canchasResumen = await canchaQuery.GroupBy(_ => 1).Select(g => new

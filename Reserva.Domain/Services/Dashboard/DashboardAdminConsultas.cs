@@ -23,7 +23,7 @@ public static class DashboardAdminConsultas
         var actuales = planes.Where(p => p.Activo && p.EsActual &&
             !planes.Any(otro => otro.Activo && otro.EsActual && otro.IdProveedor == p.IdProveedor && otro.IdProveedorPlan > p.IdProveedorPlan));
         return from plan in actuales
-               join proveedor in proveedores.Where(p => p.Activo) on plan.IdProveedor equals proveedor.IdProveedor
+               join proveedor in proveedores.Where(p => p.Activo && p.IdEstadoProveedorNavigation.Codigo == Constants.ESTADO_PROVEEDOR.Aprobado) on plan.IdProveedor equals proveedor.IdProveedor
                select new DashboardAdminPlanActual
                {
                    IdProveedorPlan = plan.IdProveedorPlan, IdPlane = plan.IdPlane,
@@ -73,7 +73,7 @@ public static class DashboardAdminConsultas
     }
 
     public static IQueryable<Entity.Cancha> CanchasDelNegocio(IQueryable<Entity.Cancha> canchas) =>
-        canchas.Where(c => c.Activo && c.IdProveedorNavigation.Activo);
+        canchas.Where(c => c.Activo && c.IdProveedorNavigation.Activo && c.IdProveedorNavigation.IdEstadoProveedorNavigation.Codigo == Constants.ESTADO_PROVEEDOR.Aprobado);
 
     public static IQueryable<DashboardAdminCasoDto> CanchasPendientes(IQueryable<Entity.Cancha> canchas) =>
         CanchasDelNegocio(canchas).Where(c => c.IdEstadoCanchaNavigation.Codigo == Constants.ESTADO_CANCHA.Pendiente)

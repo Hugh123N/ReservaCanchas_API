@@ -15,7 +15,8 @@ namespace Reserva.Domain.Mapping.Proveedor
                 .ReverseMap();
 
             CreateMap<Entity.Proveedor, UpdateProveedorDto>()
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(p => p.IdEstadoProveedor, o => o.Ignore());
 
             CreateMap<Entity.Proveedor, GetProveedorDto>()
                 .ReverseMap();

@@ -6,6 +6,7 @@ using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Commands.Dbo.Cancha
 {
@@ -14,6 +15,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.TipoDeporteCancha> _TipoDeporteCanchaRepository;
         private readonly IRepository<Entity.ServicioCancha> _ServicioCanchaRepository;
+        private readonly NegocioAccessService _access;
 
         public UpdateCanchaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -21,12 +23,14 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             UpdateCanchaCommandValidator validator,
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.TipoDeporteCancha> TipoDeporteCanchaRepository,
-            IRepository<Entity.ServicioCancha> ServicioCanchaRepository
+            IRepository<Entity.ServicioCancha> ServicioCanchaRepository,
+            NegocioAccessService access
         ) : base(unitOfWork, mapper, validator)
         {
             _CanchaRepository = CanchaRepository;
             _TipoDeporteCanchaRepository = TipoDeporteCanchaRepository;
             _ServicioCanchaRepository = ServicioCanchaRepository;
+            _access = access;
         }
 
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(UpdateCanchaCommand request, CancellationToken cancellationToken)
@@ -38,6 +42,8 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                 x => x.TipoDeporteCancha,
                 x => x.ServicioCancha);
             
+            if (Cancha == null || !await _access.PuedeEditarCanchaAsync(Cancha))
+            { response.AddErrorResult("No tienes permiso para modificar esta cancha."); return response; }
             _mapper?.Map(request.UpdateDto, Cancha);
 
             if (request.UpdateDto.HorarioCanchas != null && request.UpdateDto.HorarioCanchas.Any())

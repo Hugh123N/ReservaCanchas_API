@@ -18,9 +18,11 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<GetProveedorDto>> Create(CreateProveedorDto createDto)
             => await _ProveedorApplication.Create(createDto);
         [HttpPut]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Proveedor")]
         public async Task<ResponseDto<GetProveedorDto>> Update(UpdateProveedorDto updateDto)
             => await _ProveedorApplication.Update(updateDto);
         [HttpDelete("{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto> Delete(int id)
             => await _ProveedorApplication.Delete(id);
         [HttpGet("{id}")]

@@ -5,6 +5,7 @@ using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.ImagenCancha;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Commands.Dbo.ImagenCancha
 {
@@ -13,6 +14,7 @@ namespace Reserva.Domain.Commands.Dbo.ImagenCancha
         private readonly IRepository<Entity.Cancha> _canchaRepository;
         private readonly IRepository<Entity.ImagenCancha> _imagenCanchaRepository;
         private readonly IStorageService _storageService;
+        private readonly NegocioAccessService _access;
 
         public UploadImagenesCanchaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -20,12 +22,14 @@ namespace Reserva.Domain.Commands.Dbo.ImagenCancha
             UploadImagenesCanchaCommandValidator validator,
             IRepository<Entity.Cancha> canchaRepository,
             IRepository<Entity.ImagenCancha> imagenCanchaRepository,
-            IStorageService storageService
+            IStorageService storageService,
+            NegocioAccessService access
         ) : base(unitOfWork, mapper, validator)
         {
             _canchaRepository = canchaRepository;
             _imagenCanchaRepository = imagenCanchaRepository;
             _storageService = storageService;
+            _access = access;
         }
 
         public override async Task<ResponseDto<List<ImagenCanchaDto>>> HandleCommand(
@@ -35,6 +39,9 @@ namespace Reserva.Domain.Commands.Dbo.ImagenCancha
             var response = new ResponseDto<List<ImagenCanchaDto>>();
 
             var cancha = await _canchaRepository.GetByAsync(x => x.IdCancha == request.IdCancha);
+            if (cancha == null || !await _access.PuedeEditarCanchaAsync(cancha))
+            { response.AddErrorResult("No tienes permiso para modificar las imágenes de esta cancha."); return response; }
+            await _canchaRepository.UpdateAsync(cancha);
 
             var imagenesCreadas = new List<Entity.ImagenCancha>();
 

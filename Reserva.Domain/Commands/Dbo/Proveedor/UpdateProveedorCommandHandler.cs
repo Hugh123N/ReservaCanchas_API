@@ -7,27 +7,34 @@ using Reserva.Dto.Dbo.Proveedor;
 using Reserva.Dto.Dbo.Usuario;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Commands.Dbo.Proveedor
 {
     public class UpdateProveedorCommandHandler : CommandHandlerBase<UpdateProveedorCommand, GetProveedorDto>
     {
         private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly NegocioAccessService _access;
 
         public UpdateProveedorCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IMediator mediator,
             UpdateProveedorCommandValidator validator,
-            IRepository<Entity.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository,
+            NegocioAccessService access
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _ProveedorRepository = ProveedorRepository;
+            _access = access;
         }
 
         public override async Task<ResponseDto<GetProveedorDto>> HandleCommand(UpdateProveedorCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetProveedorDto>();
+            var actual = await _access.ProveedorActualAsync();
+            if (!_access.EsProveedor || actual?.IdProveedor != request.UpdateDto.IdProveedor)
+            { response.AddErrorResult("No tienes permiso para modificar este proveedor."); return response; }
             var Proveedor = await _ProveedorRepository.GetByAsync(x => x.IdProveedor == request.UpdateDto.IdProveedor);
 
             if (Proveedor == null)

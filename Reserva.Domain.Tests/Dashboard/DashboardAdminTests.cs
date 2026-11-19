@@ -64,7 +64,7 @@ public class DashboardAdminTests
     public void Planes_CuentanProveedoresUnicosSeparanPruebasYExcluyenInactivosYVencidos()
     {
         var proveedores = Enumerable.Range(1, 8).Select(i => new Entity.Proveedor
-            { IdProveedor = i, Activo = i != 8, Nombres = "Proveedor", Apellidos = i.ToString() }).AsQueryable();
+            { IdProveedor = i, Activo = i != 8, Nombres = "Proveedor", Apellidos = i.ToString(), IdEstadoProveedorNavigation = new() { Codigo = Constants.ESTADO_PROVEEDOR.Aprobado } }).AsQueryable();
         var planes = new[]
         {
             Plan(1, 1), Plan(2, 1), Plan(3, 2, prueba: true),
@@ -91,7 +91,7 @@ public class DashboardAdminTests
         Entity.Cancha Cancha(int id, string estado, bool proveedorActivo = true) => new()
         {
             IdCancha = id, Nombre = "Cancha " + id, Activo = true, CreateDate = Ahora.AddDays(-id),
-            IdProveedorNavigation = new() { Activo = proveedorActivo, Nombres = "Dueño", Apellidos = "Cancha" },
+            IdProveedorNavigation = new() { Activo = proveedorActivo, Nombres = "Dueño", Apellidos = "Cancha", IdEstadoProveedorNavigation = new() { Codigo = Constants.ESTADO_PROVEEDOR.Aprobado } },
             IdEstadoCanchaNavigation = new() { Codigo = estado }
         };
         var canchas = new[] { Cancha(1, Constants.ESTADO_CANCHA.Aprobado), Cancha(2, Constants.ESTADO_CANCHA.Pendiente),

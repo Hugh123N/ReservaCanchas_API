@@ -287,6 +287,8 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Cancha>(entity =>
         {
+            entity.Property(c => c.IdEstadoCancha).IsConcurrencyToken();
+            entity.Property(c => c.UpdateDate).IsConcurrencyToken();
             entity.HasKey(e => e.IdCancha).HasName("PK__Cancha__7ECD19EE7EFD3120");
 
             entity.HasIndex(e => e.Codigo, "UQ__Cancha__40F9A206F7786B92").IsUnique();
@@ -1261,6 +1263,9 @@ public partial class ReservaCanchasContext : DbContext
 
         modelBuilder.Entity<Proveedor>(entity =>
         {
+            entity.Property(p => p.Activo).IsConcurrencyToken();
+            entity.Property(p => p.IdEstadoProveedor).IsConcurrencyToken();
+            entity.Property(p => p.UpdateDate).IsConcurrencyToken();
             entity.Property(e => e.TipoDoc)
                 .IsRequired()
                 .HasMaxLength(20)

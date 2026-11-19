@@ -12,6 +12,7 @@ namespace Reserva.Dto.Dbo.Cancha
     {
         public string Codigo { get; set; } = null!;
         public int? IdCancha { get; set; }
+        public DateTimeOffset Version { get; set; }
         public string? UrlImagen { get; set; }
         public List<GetTipoDeporteDto>? TipoDeportes { get; set; }
         public GetEstadoCanchaDto? EstadoCancha { get; set; }

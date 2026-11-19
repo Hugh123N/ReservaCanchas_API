@@ -9,6 +9,7 @@ using Reserva.Entity.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Extensions;
 using System.Linq.Expressions;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Queries.Dbo.Cancha
 {
@@ -16,27 +17,36 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
     {
         private readonly IRepository<Entity.Cancha> _CanchaRepository;
         private readonly IRepository<Entity.TipoDeporte> _TipoDeporteRepository;
+        private readonly NegocioAccessService _access;
 
         public SearchCanchaQueryHandler(
             IMapper mapper,
             IMediator mediator,
             IRepository<Entity.Cancha> CanchaRepository,
-            IRepository<Entity.TipoDeporte> TipoDeporteRepository
+            IRepository<Entity.TipoDeporte> TipoDeporteRepository,
+            NegocioAccessService access
         ) : base(mapper, mediator)
         {
             _CanchaRepository = CanchaRepository;
             _TipoDeporteRepository = TipoDeporteRepository;
+            _access = access;
         }
 
         protected override async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> HandleQuery(SearchCanchaQuery request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<SearchResultDto<SearchCanchaDto>>();
 
-            Expression<Func<Entity.Cancha, bool>> filter = x => true;
+            Expression<Func<Entity.Cancha, bool>> filter = NegocioReglas.Publicable;
+
+            if (request.Gestion)
+            {
+                var proveedor = await _access.ProveedorActualAsync();
+                if (!_access.EsProveedor || proveedor == null) { response.AddErrorResult("No tienes acceso a esta gestión."); return response; }
+                var idProveedor = proveedor.IdProveedor;
+                filter = c => c.Activo && c.IdProveedor == idProveedor;
+            }
 
             var filters = request.SearchParams?.Filter;
-
-            filter = filter.And(x => x.Activo == true);
 
             if (!string.IsNullOrEmpty(filters?.Nombre))
                 filter = filter.And(x => x.Nombre.Contains(filters.Nombre));

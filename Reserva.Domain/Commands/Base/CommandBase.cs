@@ -3,12 +3,14 @@ using Reserva.Dto.Base;
 
 namespace Reserva.Domain.Commands.Base
 {
-    public class CommandBase : IRequest<ResponseDto>
+    public interface ICommand { }
+
+    public class CommandBase : IRequest<ResponseDto>, ICommand
     {
 
     }
 
-    public class CommandBase<TResponse> : IRequest<ResponseDto<TResponse>>
+    public class CommandBase<TResponse> : IRequest<ResponseDto<TResponse>>, ICommand
     {
 
     }

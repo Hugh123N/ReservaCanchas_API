@@ -470,17 +470,13 @@ namespace Reserva.Api.Controllers.Dbo
 
                     // ═══ CANCELACIÓN NORMAL (usuario o sistema) ═══
                     //Usuario cancela manualmente de front: El plan permanece ACTIVE hasta FechaFin, pero con renovación cancelada
-                    if (proveedorPlan.CancelAtPeriodEnd)
-                    { 
-                        proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.ACTIVE;
-                        proveedorPlan.EsActual = true;
-                    }
-                    else
+                    if (!proveedorPlan.CancelAtPeriodEnd)
                     { 
                         proveedorPlan.Estado = Constants.ESTADO_PROV_PLAN.CANCELLED;
                         proveedorPlan.EsActual = false;
                     }
                     proveedorPlan.AutoRenovacion = false;
+                    proveedorPlan.FechaProximoCobro = null;
                     proveedorPlan.FechaCancelacion = DateTimeOffset.UtcNow;
 
                     // Si es cancelación de la suscripción anterior (diferida), limpiar referencia

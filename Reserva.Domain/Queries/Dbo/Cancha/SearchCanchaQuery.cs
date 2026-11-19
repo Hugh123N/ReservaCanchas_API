@@ -6,9 +6,10 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
 {
     public class SearchCanchaQuery : SearchQueryBase<SearchCanchaFilterDto, SearchCanchaDto>
     {
-        public SearchCanchaQuery(SearchParamsDto<SearchCanchaFilterDto> searchParams) : base(searchParams)
+        public bool Gestion { get; }
+        public SearchCanchaQuery(SearchParamsDto<SearchCanchaFilterDto> searchParams, bool gestion = false) : base(searchParams)
         {
-
+            Gestion = gestion;
         }
     }
 }

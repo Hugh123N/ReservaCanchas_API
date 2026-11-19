@@ -15,9 +15,12 @@ namespace Reserva.Domain.Mapping.Cancha
                 .ReverseMap();
 
             CreateMap<Entity.Cancha, UpdateCanchaDto>()
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(c => c.IdEstadoCancha, o => o.Ignore())
+                .ForMember(c => c.IdProveedor, o => o.Ignore());
 
             CreateMap<Entity.Cancha, GetCanchaDto>()
+                .ForMember(x => x.Version, opt => opt.MapFrom(x => x.UpdateDate ?? x.CreateDate))
                 .ForMember(x => x.ImagenesCancha, opt => opt.MapFrom(x => x.ImagenCancha))
                 .ForMember(x => x.EstadoCancha, opt => opt.MapFrom(x => x.IdEstadoCanchaNavigation))
                 .ForMember(x => x.Faboritos, opt => opt.MapFrom(x => x.CanchaFavorita))
@@ -32,6 +35,7 @@ namespace Reserva.Domain.Mapping.Cancha
                 .ReverseMap();
 
             CreateMap<Entity.Cancha, SearchCanchaDto>()
+                .ForMember(x => x.Version, opt => opt.MapFrom(x => x.UpdateDate ?? x.CreateDate))
                 .ForMember(x => x.UrlImagen, opt => opt.MapFrom(x => x.ImagenCancha.Select(x => x.UrlImagen).First()))
                 .ForMember(x => x.EstadoCancha, opt => opt.MapFrom(x => x.IdEstadoCanchaNavigation))
                 .ForMember(x => x.Faboritos, opt => opt.MapFrom(x => x.CanchaFavorita))

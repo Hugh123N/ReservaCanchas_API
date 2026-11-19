@@ -8,6 +8,7 @@ using Reserva.Dto.Base;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
 using Microsoft.Data.SqlClient;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Commands.Dbo.Cancha
 {
@@ -17,6 +18,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
         private readonly IRepository<Entity.EstadoCancha> _EstadoCanchaRepository;
         private readonly IDbParameterFactory _parameterFactory;
         private readonly IPlanLimitValidationService _planLimitService;
+        private readonly NegocioAccessService _access;
 
         public CreateCanchaCommandHandler(
             IUnitOfWork unitOfWork,
@@ -26,18 +28,23 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             IRepository<Entity.Cancha> CanchaRepository,
             IRepository<Entity.EstadoCancha> EstadoCanchaRepository,
             IDbParameterFactory parameterFactory,
-            IPlanLimitValidationService planLimitService
+            IPlanLimitValidationService planLimitService,
+            NegocioAccessService access
         ) : base(unitOfWork, mapper, mediator, validator)
         {
             _CanchaRepository = CanchaRepository;
             _EstadoCanchaRepository = EstadoCanchaRepository;
             _parameterFactory = parameterFactory;
             _planLimitService = planLimitService;
+            _access = access;
         }
 
         public override async Task<ResponseDto<GetCanchaDto>> HandleCommand(CreateCanchaCommand request, CancellationToken cancellationToken)
         {
             var response = new ResponseDto<GetCanchaDto>();
+            var proveedor = await _access.ProveedorActualAsync();
+            if (!_access.EsProveedor || proveedor == null || proveedor.IdProveedor != request.CreateDto.IdProveedor || !NegocioReglas.Habilitado(proveedor))
+            { response.AddErrorResult("No tienes permiso para crear canchas en este negocio."); return response; }
 
             var puedeCrear = await _planLimitService.CanCreateCanchaAsync(request.CreateDto.IdProveedor);
             if (!puedeCrear)

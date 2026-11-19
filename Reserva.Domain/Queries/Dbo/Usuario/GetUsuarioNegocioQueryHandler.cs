@@ -42,7 +42,8 @@ namespace Reserva.Domain.Queries.Dbo.Usuario
             }
             else if (request.Roles.Any(role => string.Equals(role, Constants.Role.Proveedor, StringComparison.OrdinalIgnoreCase)))
             {
-                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(p => p.IdUsuario == userId && p.Activo);
+                // La inactivación del negocio conserva el acceso limitado a sus reservas existentes.
+                var proveedor = await _proveedorRepository.GetByAsNoTrackingAsync(p => p.IdUsuario == userId);
                 idUsuarioNegocio = proveedor?.IdProveedor;
             }
             else if (request.Roles.Any(role => string.Equals(role, Constants.Role.Operador, StringComparison.OrdinalIgnoreCase)))

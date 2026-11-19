@@ -10,6 +10,7 @@ using Reserva.Dto.Dbo.Servicio;
 using Reserva.Dto.Dbo.TipoDeporte;
 using Reserva.Repository.Abstractions.Base;
 using Reserva.Repository.Abstractions.Transactions;
+using Reserva.Domain.Services.GestionAdmin;
 
 namespace Reserva.Domain.Queries.Dbo.Cancha
 {
@@ -20,6 +21,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
         private readonly IRepository<Entity.TipoDeporte> _TipoDeporteRepository;
         private readonly IRepository<Entity.HorarioCancha> _HorarioCanchaRepository;
         private readonly IRepository<Entity.Proveedor> _ProveedorRepository;
+        private readonly NegocioAccessService _access;
 
         public GetCanchaQueryHandler(
             IMapper mapper,
@@ -29,7 +31,8 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
             IRepository<Entity.Servicio> ServicioRepository,
             IRepository<Entity.TipoDeporte> TipoDeporteRepository,
             IRepository<Entity.HorarioCancha> HorarioCanchaRepository,
-            IRepository<Entity.Proveedor> ProveedorRepository
+            IRepository<Entity.Proveedor> ProveedorRepository,
+            NegocioAccessService access
         ) : base(mapper, mediator, validator)
         {
             _CanchaRepository = CanchaRepository;
@@ -37,6 +40,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
             _TipoDeporteRepository = TipoDeporteRepository;
             _HorarioCanchaRepository = HorarioCanchaRepository;
             _ProveedorRepository = ProveedorRepository;
+            _access = access;
         }
 
         protected override async Task<ResponseDto<GetCanchaDto>> HandleQuery(GetCanchaQuery request, CancellationToken cancellationToken)
@@ -48,9 +52,12 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 x => x.ServicioCancha.Where(sc => sc.Activo),
                 x => x.TipoDeporteCancha.Where(td => td.Activo),
                 x => x.IdEstadoCanchaNavigation,
+                x => x.IdProveedorNavigation.IdEstadoProveedorNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
                 x => x.CodigoUbigeoNavigation!
             );
+            if (Cancha == null || (request.Gestion ? !await _access.PuedeConsultarCanchaAsync(Cancha) : !NegocioReglas.EsPublicable(Cancha)))
+            { response.AddErrorResult("Cancha no disponible."); return response; }
             var CanchaDto = _mapper?.Map<GetCanchaDto>(Cancha);
 
             var idsServicios = Cancha.ServicioCancha.Select(sc => sc.IdServicio).ToList();

@@ -15,12 +15,15 @@ namespace Reserva.Api.Controllers.Dbo
             => _EstadoCanchaApplication = EstadoCanchaApplication;
 
         [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto<GetEstadoCanchaDto>> Create(CreateEstadoCanchaDto createDto)
             => await _EstadoCanchaApplication.Create(createDto);
         [HttpPut]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto<GetEstadoCanchaDto>> Update(UpdateEstadoCanchaDto updateDto)
             => await _EstadoCanchaApplication.Update(updateDto);
         [HttpDelete("{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto> Delete(int id)
             => await _EstadoCanchaApplication.Delete(id);
         [HttpGet("{id}")]

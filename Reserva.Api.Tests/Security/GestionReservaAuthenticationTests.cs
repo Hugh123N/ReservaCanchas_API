@@ -93,6 +93,23 @@ public class GestionReservaAuthenticationTests
         else if (!permitido) Assert.True(result.Forbidden);
     }
 
+    [Theory]
+    [InlineData("Admin", true)]
+    [InlineData("Proveedor", false)]
+    [InlineData("Operador", false)]
+    [InlineData("Cliente", false)]
+    [InlineData(null, false)]
+    public async Task GestionAdmin_ProtegeConsultasYCambiosDeEstado(string? rol, bool permitido)
+    {
+        foreach (var accion in new[] { nameof(GestionAdminController.Proveedores), nameof(GestionAdminController.Proveedor),
+            nameof(GestionAdminController.Canchas), nameof(GestionAdminController.Cancha), nameof(GestionAdminController.CambiarProveedor), nameof(GestionAdminController.CambiarCancha) })
+        {
+            var (result, _, _, _) = await AutorizarAsync(typeof(GestionAdminController), accion, rol);
+            Assert.Equal(permitido, result.Succeeded);
+            if (rol == null) Assert.True(result.Challenged);
+        }
+    }
+
     private static async Task<(PolicyAuthorizationResult Result, Guid? IdUsuario, int? IdNegocio, HttpContext Context)> AutorizarAsync(
         Type controller, string action, string? role, bool expired = false)
     {
@@ -124,7 +141,7 @@ public class GestionReservaAuthenticationTests
             context.Request.Headers.Authorization = $"Bearer {new JwtSecurityTokenHandler().WriteToken(token)}";
         }
         var attributes = controller.GetMethod(action)!.GetCustomAttributes<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
-            .Cast<IAuthorizeData>().ToArray();
+            .Concat(controller.GetCustomAttributes<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()).Cast<IAuthorizeData>().ToArray();
         Assert.NotEmpty(attributes);
         var policy = await AuthorizationPolicy.CombineAsync(scope.ServiceProvider.GetRequiredService<IAuthorizationPolicyProvider>(), attributes);
         Assert.NotNull(policy);

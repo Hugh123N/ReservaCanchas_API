@@ -26,9 +26,9 @@ Sin cobros positivos en la base comparable, la variación porcentual es `null` y
 
 ### Proveedores y planes
 
-- Registrados: todas las filas de proveedor, con desglose por `Activo` e incorporaciones del mes.
+- Registrados: todas las filas de proveedor, con desglose de habilitados (activos/aprobados), suspendidos administrativos e inactivos, e incorporaciones del mes.
 - Los gráficos de registros incluyen proveedores luego inactivados.
-- Para planes y pendientes de planes solo se consideran proveedores activos y registros `ProveedorPlan.Activo && EsActual`.
+- Para planes y pendientes de planes solo se consideran proveedores habilitados (activos/aprobados) y registros `ProveedorPlan.Activo && EsActual`.
 - Si hay varios registros actuales del mismo proveedor, se elige el mayor `IdProveedorPlan` para evitar duplicar proveedores.
 - Plan de pago vigente: `ACTIVE`, no prueba gratuita, tarifa de precio positivo y `FechaInicio <= ahora < FechaFin`.
 - Prueba vigente: `EsPruebaGratis`, `ACTIVE` y las mismas condiciones de vigencia.
@@ -54,7 +54,7 @@ El booleano `Activo` no equivale a aprobación. No existe una aprobación de pro
 - Vencimientos sin autorrenovación excluye cancelaciones programadas para no duplicarlas en esa categoría.
 - Cada categoría devuelve su cantidad total y hasta 5 casos prioritarios. Canchas: solicitudes más antiguas; planes: fecha relevante más próxima.
 - Los casos muestran nombres, cancha/plan y fecha, sin IDs internos. Las categorías no se suman como si fueran proveedores únicos: pueden solaparse.
-- La aprobación de canchas se realizará en la pantalla de gestión, no en este dashboard de lectura.
+- La aprobación de canchas se realiza en `/admin/gestion/canchas`, enlazado desde los pendientes del dashboard.
 
 ## Verificación
 

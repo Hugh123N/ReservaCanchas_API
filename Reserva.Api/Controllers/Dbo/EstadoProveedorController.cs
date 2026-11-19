@@ -15,12 +15,15 @@ namespace Reserva.Api.Controllers.Dbo
             => _EstadoProveedorApplication = EstadoProveedorApplication;
 
         [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto<GetEstadoProveedorDto>> Create(CreateEstadoProveedorDto createDto)
             => await _EstadoProveedorApplication.Create(createDto);
         [HttpPut]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto<GetEstadoProveedorDto>> Update(UpdateEstadoProveedorDto updateDto)
             => await _EstadoProveedorApplication.Update(updateDto);
         [HttpDelete("{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = "Bearer", Roles = "Admin")]
         public async Task<ResponseDto> Delete(int id)
             => await _EstadoProveedorApplication.Delete(id);
         [HttpGet("{id}")]

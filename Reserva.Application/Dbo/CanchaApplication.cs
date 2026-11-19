@@ -23,6 +23,10 @@ namespace Reserva.Application.Dbo
             => await _mediator.Send(new DeleteCanchaCommand(id));
         public async Task<ResponseDto<GetCanchaDto>> Get(int id)
             => await _mediator.Send(new GetCanchaQuery(id));
+        public Task<ResponseDto<GetCanchaDto>> GetGestion(int id)
+            => _mediator.Send(new GetCanchaQuery(id, true));
+        public Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> SearchGestion(SearchParamsDto<SearchCanchaFilterDto> searchParams)
+            => _mediator.Send(new SearchCanchaQuery(searchParams, true));
         public async Task<ResponseDto<IEnumerable<ListCanchaDto>>> List(int id)
             => await _mediator.Send(new ListCanchaQuery(id));
         public async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams)

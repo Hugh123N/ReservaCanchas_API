@@ -27,19 +27,30 @@ namespace Reserva.Api.Controllers.Dbo
         }
 
         [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto)
             => await _CanchaApplication.Create(createDto);
         [HttpPut]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto)
             => await _CanchaApplication.Update(updateDto);
         [HttpDelete("{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto> Delete(int id)
             => await _CanchaApplication.Delete(id);
         [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ResponseDto<GetCanchaDto>> Get(int id)
             => await _CanchaApplication.Get(id);
+        [HttpGet("gestion/{id:int}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Proveedor,Operador")]
+        public Task<ResponseDto<GetCanchaDto>> GetGestion(int id) => _CanchaApplication.GetGestion(id);
+        [HttpPost("gestion/search")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
+        public Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> SearchGestion(SearchParamsDto<SearchCanchaFilterDto> searchParams)
+            => _CanchaApplication.SearchGestion(searchParams);
         [HttpPost("list")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Proveedor,Operador")]
         public async Task<ResponseDto<IEnumerable<ListCanchaDto>>> List(int id)
             => await _CanchaApplication.List(id);
         [AllowAnonymous]
@@ -47,12 +58,15 @@ namespace Reserva.Api.Controllers.Dbo
         public async Task<ResponseDto<SearchResultDto<SearchCanchaDto>>> Search(SearchParamsDto<SearchCanchaFilterDto> searchParams)
             => await _CanchaApplication.Search(searchParams);
         [HttpGet("selectcombo")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Proveedor,Operador")]
         public async Task<ResponseDto<IEnumerable<SelectComboCanchaDto>>> SelectCombo()
             => await _CanchaApplication.SelectCombo();
         [HttpPost("select")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Proveedor,Operador")]
         public async Task<ResponseDto<SearchResultDto<SelectCanchaDto>>> Select(SearchParamsDto<SelectCanchaFilterDto> searchParams)
             => await _CanchaApplication.Select(searchParams);
         [HttpGet("config/{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Proveedor,Operador")]
         public async Task<ResponseDto<GetCanchaConfigDto>> GetConfig(int id)
             => await _CanchaApplication.GetConfig(id);
 

@@ -193,10 +193,17 @@ namespace Reserva.Domain.Services.Culqi
                 _logger.LogInformation("Cancelando suscripción en Culqi - SubscriptionId: {SubscriptionId}", subscriptionId);
 
                 var response = await _httpClient.DeleteAsync($"/v2/recurrent/subscriptions/{subscriptionId}");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return true;
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    if (response.StatusCode is System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Conflict)
+                    {
+                        var actual = await GetSubscriptionAsync(subscriptionId);
+                        if (actual?.Status is Reserva.Common.Constants.CULQI_SUBSCRIPTION_STATUS.CANCELED or Reserva.Common.Constants.CULQI_SUBSCRIPTION_STATUS.FINALIZADO)
+                            return true;
+                    }
                     _logger.LogError("Error al cancelar suscripción. Status: {StatusCode}, Response: {Response}",
                         response.StatusCode, responseContent);
                     return false;
