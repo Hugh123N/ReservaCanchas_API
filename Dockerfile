@@ -2,7 +2,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY *.sln ./
 COPY Reserva.Api/*.csproj ./Reserva.Api/
 COPY Reserva.Entity/*.csproj ./Reserva.Entity/
 COPY Reserva.Dto/*.csproj ./Reserva.Dto/
@@ -13,11 +12,11 @@ COPY Reserva.Application.Abstractions/*.csproj ./Reserva.Application.Abstraction
 COPY Reserva.Repository/*.csproj ./Reserva.Repository/
 COPY Reserva.Repository.Abstractions/*.csproj ./Reserva.Repository.Abstractions/
 
-RUN dotnet restore
+RUN dotnet restore "Reserva.Api/Reserva.Api.csproj"
 
 COPY . ./
 WORKDIR /src/Reserva.Api
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish "Reserva.Api.csproj" -c Release -o /app/publish
 
 # Etapa 2: runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
