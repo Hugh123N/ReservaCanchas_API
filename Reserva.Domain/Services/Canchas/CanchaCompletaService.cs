@@ -142,8 +142,6 @@ public class CanchaCompletaService(
                 {
                     if (!entrada.ImagenesConservar.Contains(imagen.IdImagenCancha))
                     {
-                        imagen.Activo = false;
-                        imagen.EsPrincipal = false;
                         cancha.ImagenCancha.Remove(imagen);
                         await imagenes.DeleteAsync(imagen);
                     }
