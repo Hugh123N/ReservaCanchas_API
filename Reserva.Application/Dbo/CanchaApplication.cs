@@ -22,6 +22,8 @@ namespace Reserva.Application.Dbo
             => _mediator.Send(new CrearCanchaCompletaCommand(datos, archivos), ct);
         public async Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto)
             => await _mediator.Send(new UpdateCanchaCommand(updateDto));
+        public Task<ResponseDto<GetCanchaDto>> UpdateCompleta(int id, string datos, IFormFileCollection? archivos, CancellationToken ct)
+            => _mediator.Send(new ActualizarCanchaCompletaCommand(id, datos, archivos), ct);
         public async Task<ResponseDto> Delete(int id)
             => await _mediator.Send(new DeleteCanchaCommand(id));
         public async Task<ResponseDto<GetCanchaDto>> Get(int id)

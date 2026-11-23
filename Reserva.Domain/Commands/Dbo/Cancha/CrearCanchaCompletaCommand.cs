@@ -13,7 +13,7 @@ public class CrearCanchaCompletaCommand(string datos, IFormFileCollection archiv
     public IFormFileCollection Archivos { get; } = archivos;
 }
 
-public class CrearCanchaCompletaCommandHandler(CrearCanchaCompletaService service)
+public class CrearCanchaCompletaCommandHandler(CanchaCompletaService service)
     : IRequestHandler<CrearCanchaCompletaCommand, ResponseDto<GetCanchaDto>>
 {
     public Task<ResponseDto<GetCanchaDto>> Handle(CrearCanchaCompletaCommand request, CancellationToken ct)

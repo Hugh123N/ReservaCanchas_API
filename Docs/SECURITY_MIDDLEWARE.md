@@ -199,7 +199,7 @@ Los siguientes archivos **no** se limitan:
 
 ### 4.1. ¿Qué hace?
 
-Analiza el contenido de las peticiones (body, query params, headers) en busca de patrones maliciosos de SQL Injection y Cross-Site Scripting (XSS). Si detecta una amenaza, rechaza la petición con HTTP 400.
+Analiza los datos de entrada de las peticiones (body y query params) en busca de patrones maliciosos de SQL Injection y Cross-Site Scripting (XSS). Si detecta una amenaza, rechaza la petición con HTTP 400.
 
 ### 4.2. Tipos de amenazas detectadas
 
@@ -293,7 +293,9 @@ Si no se detectó ninguna amenaza:
   → Continúa al siguiente middleware (Authentication)
 ```
 
-> **Nota:** Los headers HTTP (Content-Type, User-Agent, Authorization, etc.) **no se revisan** porque no son input controlado por el usuario. Contienen caracteres como `;` que son normales en HTTP y causarían falsos positivos. El riesgo real de inyección está en el **body** y **query parameters**.
+> **Nota:** Los headers HTTP (Content-Type, User-Agent, Authorization, etc.) no se analizan con estas expresiones de SQL/HTML. Son metadatos del protocolo y contienen caracteres como `;` que son normales en HTTP y causarían falsos positivos. Este detector se aplica a los valores del **body** y **query parameters**; los controladores conservan sus validaciones y las consultas deben seguir parametrizadas.
+
+**Formularios multipart y URL-encoded:** se leen con `ReadFormAsync` y se revisan los nombres y valores de los campos de texto. En multipart no se analiza el cuerpo crudo: sus separadores contienen `--`, las cabeceras contienen `;` y los archivos son binarios, por lo que analizarlos como SQL/HTML causaba falsos positivos. El formulario leído se conserva para el model binding del controlador. Los archivos mantienen sus validaciones específicas del endpoint. Un formulario mal formado devuelve un rechazo de lectura, no una detección de inyección ficticia.
 
 ### 4.4. Ejemplo con curl
 

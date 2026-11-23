@@ -44,6 +44,8 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
             
             if (Cancha == null || !await _access.PuedeEditarCanchaAsync(Cancha))
             { response.AddErrorResult("No tienes permiso para modificar esta cancha."); return response; }
+            if (request.UpdateDto.Version.HasValue && request.UpdateDto.Version.Value != (Cancha.UpdateDate ?? Cancha.CreateDate))
+            { response.AddErrorResult("La cancha cambió. Recarga el detalle antes de guardar."); return response; }
             _mapper?.Map(request.UpdateDto, Cancha);
 
             if (request.UpdateDto.HorarioCanchas != null && request.UpdateDto.HorarioCanchas.Any())

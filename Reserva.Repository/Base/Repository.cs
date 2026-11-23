@@ -273,8 +273,12 @@ namespace Reserva.Repository.Base
 
             UpdateAuditInfo(entity, creation);
 
+            var entityType = _dbContext.Model.FindEntityType(entity.GetType());
             foreach (var property in entity.GetType().GetProperties())
             {
+                // Auditar un detalle no debe volver a modificar la versión de su entidad padre.
+                if (entityType?.FindNavigation(property.Name)?.IsOnDependent == true) continue;
+
                 var propertyValue = property.GetValue(entity);
 
                 if (propertyValue == null) continue;

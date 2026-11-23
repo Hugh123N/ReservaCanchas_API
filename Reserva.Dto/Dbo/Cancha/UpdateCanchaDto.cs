@@ -6,6 +6,7 @@ namespace Reserva.Dto.Dbo.Cancha
     {
         public int IdEstadoCancha { get; set; }
         public int IdCancha { get; set; }
+        public DateTimeOffset? Version { get; set; }
         public List<UpdateHorarioCanchaDto> HorarioCanchas { get; set; } = new List<UpdateHorarioCanchaDto>();
         public List<int> IdsTipoDeportes { get; set; } = new List<int>();
         public List<int> IdsServicios { get; set; } = new List<int>();

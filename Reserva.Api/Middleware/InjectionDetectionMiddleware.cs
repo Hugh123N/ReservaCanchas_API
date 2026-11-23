@@ -31,23 +31,38 @@ namespace Reserva.Api.Middleware
                 return;
             }
 
-            if (await HasInjectionThreat(context.Request))
+            bool tieneAmenaza;
+            try { tieneAmenaza = await HasInjectionThreat(context.Request); }
+            catch (InvalidDataException)
             {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    data = (object?)null,
-                    messages = new[]
-                    {
-                        new { message = "Solicitud rechazada: se detectó un patrón no permitido.", messageType = "Error" }
-                    },
-                    isValid = false
-                });
+                await RechazarAsync(context, "El formulario enviado no es válido o supera los límites permitidos.");
+                return;
+            }
+            catch (BadHttpRequestException ex)
+            {
+                await RechazarAsync(context, "No se pudo leer el formulario enviado.", ex.StatusCode);
+                return;
+            }
+
+            if (tieneAmenaza)
+            {
+                await RechazarAsync(context, "Solicitud rechazada: se detectó un patrón no permitido.");
                 return;
             }
 
             await _next(context);
+        }
+
+        private static Task RechazarAsync(HttpContext context, string mensaje, int status = StatusCodes.Status400BadRequest)
+        {
+            context.Response.StatusCode = status;
+            context.Response.ContentType = "application/json";
+            return context.Response.WriteAsJsonAsync(new
+            {
+                data = (object?)null,
+                messages = new[] { new { message = mensaje, messageType = "Error" } },
+                isValid = false
+            });
         }
 
         private async Task<bool> HasInjectionThreat(HttpRequest request)
@@ -59,6 +74,20 @@ namespace Reserva.Api.Middleware
                     if (InjectionDetector.HasThreats(key) || InjectionDetector.HasThreats(value))
                         return true;
                 }
+            }
+
+            if (request.HasFormContentType)
+            {
+                // ReadFormAsync conserva el formulario para el model binding de MVC. Los separadores,
+                // las cabeceras multipart y los archivos binarios no son valores SQL/HTML del usuario.
+                var form = await request.ReadFormAsync(request.HttpContext.RequestAborted);
+                foreach (var (key, values) in form)
+                {
+                    if (InjectionDetector.HasThreats(key)) return true;
+                    foreach (var value in values)
+                        if (InjectionDetector.HasThreats(value)) return true;
+                }
+                return false;
             }
 
             if (request.ContentLength > 0 && request.ContentLength <= _options.MaxPayloadLength)

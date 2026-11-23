@@ -49,7 +49,7 @@ namespace Reserva.Domain.Extensions
             services.AddScoped<Services.GestionAdmin.NegocioAccessService>();
             services.AddScoped<Services.GestionAdmin.CancelarRenovacionService>();
             services.AddScoped<Services.GestionAdmin.GestionAdminService>();
-            services.AddScoped<Services.Canchas.CrearCanchaCompletaService>();
+            services.AddScoped<Services.Canchas.CanchaCompletaService>();
 
             // Background Services
             services.AddHostedService<ReservaExpirationService>();

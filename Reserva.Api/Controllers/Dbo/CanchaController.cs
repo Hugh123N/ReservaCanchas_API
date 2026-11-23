@@ -48,6 +48,19 @@ namespace Reserva.Api.Controllers.Dbo
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto)
             => await _CanchaApplication.Update(updateDto);
+
+        [HttpPut("completa/{id:int}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Proveedor")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(26_214_400)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 26_214_400)]
+        public Task<ResponseDto<GetCanchaDto>> UpdateCompleta(
+            int id,
+            [FromForm, Required, MaxLength(131072)] string datos,
+            [FromForm] IFormFileCollection? archivos,
+            CancellationToken ct)
+            => _CanchaApplication.UpdateCompleta(id, datos, archivos, ct);
+
         [HttpDelete("{id}")]
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto> Delete(int id)

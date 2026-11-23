@@ -124,7 +124,7 @@ namespace Reserva.Domain.Queries.Dbo.Cancha
                 sorts,
                 filter,
                 x => x.TipoDeporteCancha,
-                x => x.ImagenCancha.Where(i => i.EsPrincipal == true),
+                x => x.ImagenCancha.Where(i => i.Activo && i.EsPrincipal),
                 x => x.IdEstadoCanchaNavigation,
                 x => x.CanchaFavorita.Where(x => x.Activo),
                 x => x.CodigoUbigeoNavigation!

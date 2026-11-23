@@ -9,6 +9,7 @@ namespace Reserva.Application.Abstractions.Dbo
         Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto);
         Task<ResponseDto<GetCanchaDto>> CreateCompleta(string datos, IFormFileCollection archivos, CancellationToken ct);
         Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto);
+        Task<ResponseDto<GetCanchaDto>> UpdateCompleta(int id, string datos, IFormFileCollection? archivos, CancellationToken ct);
         Task<ResponseDto> Delete(int id);
         Task<ResponseDto<GetCanchaDto>> Get(int id);
         Task<ResponseDto<GetCanchaDto>> GetGestion(int id);

@@ -297,7 +297,8 @@ namespace Reserva.Repository.Transactions
         {
             var timezone = _timezoneInfoData.TimeZone;
             Console.WriteLine("Display TimeZone: " + timezone.DisplayName);
-            foreach (var entry in _dbContext.ChangeTracker.Entries())
+            foreach (var entry in _dbContext.ChangeTracker.Entries()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified).ToList())
             {
                 foreach (var propertyInfo in entry.Entity.GetType().GetTypeProperties().Where(p => p.PropertyType == typeof(DateTimeOffset)))
                 {
