@@ -24,7 +24,7 @@ namespace Reserva.Domain.Commands.Dbo.Cancha
                     .GreaterThan(0).WithMessage("Debe seleccionar un tipo de superficie válido.");
 
                 RuleFor(x => x.CreateDto.HorarioCanchas)
-                    .NotNull().WithMessage("Debe especificar al menos un Horario Cancha.");
+                    .NotEmpty().WithMessage("Debe especificar al menos un Horario Cancha.");
             });
         }
     }

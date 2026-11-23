@@ -179,7 +179,7 @@ namespace Reserva.Repository.Transactions
                     try
                     {
                         var result = operation.Invoke(stateIn);
-                        Commit();
+                        if (Context.Database.CurrentTransaction == null && Context.ChangeTracker.HasChanges()) Commit();
                         onComplete?.Invoke(result);
                         return result;
                     }
@@ -204,7 +204,7 @@ namespace Reserva.Repository.Transactions
                     try
                     {
                         var result = await operation.Invoke(stateIn, cancellationTokenIn);
-                        await CommitAsync();
+                        if (Context.Database.CurrentTransaction == null && Context.ChangeTracker.HasChanges()) await CommitAsync();
                         if (onComplete != null) await onComplete.Invoke(result);
                         return result;
                     }
@@ -231,6 +231,7 @@ namespace Reserva.Repository.Transactions
             try
             {
                 var result = operation.Invoke(state);
+                Commit();
                 transaction.Commit();
                 onComplete?.Invoke(transactionInCourse, result);
                 return result;
@@ -261,6 +262,7 @@ namespace Reserva.Repository.Transactions
             try
             {
                 var result = await operation.Invoke(state, cancellationToken);
+                await CommitAsync();
                 await transaction.CommitAsync(cancellationToken);
                 if (onComplete != null) await onComplete.Invoke(transactionInCourse, result);
                 return result;
@@ -273,7 +275,7 @@ namespace Reserva.Repository.Transactions
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await transaction.RollbackAsync(CancellationToken.None);
                 ClearChangeTracker();
                 throw;
             }

@@ -1,4 +1,6 @@
 using MediatR;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Dbo;
@@ -30,6 +32,18 @@ namespace Reserva.Api.Controllers.Dbo
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto)
             => await _CanchaApplication.Create(createDto);
+
+        [HttpPost("completa")]
+        [Microsoft.AspNetCore.Authorization.Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Proveedor")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(26_214_400)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 26_214_400)]
+        public Task<ResponseDto<GetCanchaDto>> CreateCompleta(
+            [FromForm, Required, MaxLength(131072)] string datos,
+            [FromForm] IFormFileCollection archivos,
+            CancellationToken ct)
+            => _CanchaApplication.CreateCompleta(datos, archivos, ct);
+
         [HttpPut]
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Proveedor")]
         public async Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto)

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Reserva.Dto.Base;
 using Reserva.Dto.Dbo.Cancha;
 
@@ -6,6 +7,7 @@ namespace Reserva.Application.Abstractions.Dbo
     public interface ICanchaApplication
     {
         Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto);
+        Task<ResponseDto<GetCanchaDto>> CreateCompleta(string datos, IFormFileCollection archivos, CancellationToken ct);
         Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto);
         Task<ResponseDto> Delete(int id);
         Task<ResponseDto<GetCanchaDto>> Get(int id);

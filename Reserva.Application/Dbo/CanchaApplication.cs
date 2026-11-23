@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Reserva.Dto.Base;
 using Reserva.Application.Abstractions.Dbo;
 using Reserva.Application.Base;
@@ -17,6 +18,8 @@ namespace Reserva.Application.Dbo
 
         public async Task<ResponseDto<GetCanchaDto>> Create(CreateCanchaDto createDto)
             => await _mediator.Send(new CreateCanchaCommand(createDto));
+        public Task<ResponseDto<GetCanchaDto>> CreateCompleta(string datos, IFormFileCollection archivos, CancellationToken ct)
+            => _mediator.Send(new CrearCanchaCompletaCommand(datos, archivos), ct);
         public async Task<ResponseDto<GetCanchaDto>> Update(UpdateCanchaDto updateDto)
             => await _mediator.Send(new UpdateCanchaCommand(updateDto));
         public async Task<ResponseDto> Delete(int id)
