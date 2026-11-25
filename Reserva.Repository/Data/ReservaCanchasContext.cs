@@ -84,6 +84,8 @@ public partial class ReservaCanchasContext : DbContext
 
     public virtual DbSet<ProveedorPlan> ProveedorPlan { get; set; }
 
+    public virtual DbSet<Reclamacion> Reclamacion { get; set; }
+
     public virtual DbSet<Entity.Reserva> Reserva { get; set; }
 
     public virtual DbSet<Servicio> Servicio { get; set; }
@@ -104,6 +106,41 @@ public partial class ReservaCanchasContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Reclamacion>(entity =>
+        {
+            entity.ToTable("Reclamacion");
+            entity.HasKey(e => e.IdReclamacion);
+            entity.Property(e => e.NumeroHoja).HasMaxLength(20).IsUnicode(false).IsRequired(false).ValueGeneratedNever();
+            entity.HasIndex(e => e.NumeroHoja).IsUnique();
+            entity.HasIndex(e => new { e.Estado, e.FechaRegistro, e.IdReclamacion });
+            entity.Property(e => e.ComercioTitular).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.ComercioNombre).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.ComercioRuc).HasMaxLength(11).IsUnicode(false).IsRequired();
+            entity.Property(e => e.ComercioDireccion).HasMaxLength(400).IsRequired();
+            entity.Property(e => e.ComercioTelefono).HasMaxLength(20).IsUnicode(false).IsRequired();
+            entity.Property(e => e.ComercioEmail).HasMaxLength(254).IsRequired();
+            entity.Property(e => e.Nombres).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.TipDoc).HasMaxLength(1).IsUnicode(false).IsRequired();
+            entity.Property(e => e.NroDoc).HasMaxLength(20).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Domicilio).HasMaxLength(400).IsRequired();
+            entity.Property(e => e.Email).HasMaxLength(254).IsRequired();
+            entity.Property(e => e.Telefono).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.Representante).HasMaxLength(200);
+            entity.Property(e => e.DescripcionServicio).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.MontoReclamado).HasColumnType("decimal(12,2)");
+            entity.Property(e => e.ReferenciaOperacion).HasMaxLength(100);
+            entity.Property(e => e.Tipo).HasMaxLength(7).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Detalle).HasMaxLength(4000).IsRequired();
+            entity.Property(e => e.Pedido).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.Estado).HasMaxLength(12).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Observaciones).HasMaxLength(2000);
+            entity.Property(e => e.Respuesta).HasMaxLength(4000);
+            entity.Property(e => e.ReferenciaRespuesta).HasMaxLength(250);
+            entity.Property(e => e.ResponsableRespuesta).HasMaxLength(250);
+            entity.Property(e => e.UserNameCreate).HasMaxLength(250);
+            entity.Property(e => e.UserNameUpdate).HasMaxLength(250);
+        });
+
         modelBuilder.Entity<MovimientoPago>(entity =>
         {
             entity.ToTable("MovimientoPago");

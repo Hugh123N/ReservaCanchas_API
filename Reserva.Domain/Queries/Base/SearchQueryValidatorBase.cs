@@ -25,7 +25,7 @@ namespace Reserva.Domain.Queries.Base
             RequiredInformation(x => x.SearchParams, "La informaci�n de b�squeda es obligatoria.")
                 .DependentRules(() =>
                 {
-                    RequiredInformation(x => x.SearchParams.Page, "La informaci�n de la p�gina es obligatoria.")
+                    RequiredInformation(x => x.SearchParams.Page, "La información de la página es obligatoria.")
                         .DependentRules(() =>
                         {
                             RequiredField(x => x.SearchParams.Page.Page, "P�gina")
@@ -41,7 +41,7 @@ namespace Reserva.Domain.Queries.Base
                                 {
                                     RequiredField(x => x.SearchParams.Page.PageSize, "Tama�o de p�gina")
                                         .GreaterThan(0)
-                                        .WithMessage("El tama�o de p�gina debe ser mayor a 0.");
+                                        .WithMessage("El tamño de p�gina debe ser mayor a 0.");
                                 });
                         });
 
@@ -52,10 +52,10 @@ namespace Reserva.Domain.Queries.Base
 
                         var invalidSortDirs = sort.Where(x => !SortDirenctions.Contains(x.Direction));
                         if (invalidSortDirs.Any())
-                            return CustomValidationMessage(context, "La direcci�n de ordenamiento no es v�lida (debe ser 'asc' o 'desc').");
+                            return CustomValidationMessage(context, "La dirección de ordenamiento no es válida (debe ser 'asc' o 'desc').");
 
                         return true;
-                    }).WithMessage("La direcci�n de ordenamiento no es v�lida.");
+                    }).WithMessage("La dirección de ordenamiento no es válida.");
                 });
         }
     }

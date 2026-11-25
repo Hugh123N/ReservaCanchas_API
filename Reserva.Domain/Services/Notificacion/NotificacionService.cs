@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Reserva.Domain.Services.Notificacion
 {
-    public class NotificacionService : INotificacionService
+    public partial class NotificacionService : INotificacionService
     {
         private readonly IMediator _mediator;
         private readonly IConfiguration _configuration;

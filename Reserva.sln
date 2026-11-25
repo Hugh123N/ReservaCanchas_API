@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.9.34723.18
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12023.21 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reserva.Api", "Reserva.Api\Reserva.Api.csproj", "{5C7AFCCF-85AC-4F19-90B6-287D89421C65}"
 EndProject
@@ -28,6 +28,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reserva.Repository", "Reserva.Repository\Reserva.Repository.csproj", "{381A3C04-918A-43A2-96F6-58F454A046F9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reserva.Repository.Abstractions", "Reserva.Repository.Abstractions\Reserva.Repository.Abstractions.csproj", "{B180C929-70D6-4FFA-B08F-D02B72DCBBDA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{170B1222-E16D-4B49-9F06-0CF996F19441}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -19,7 +19,7 @@ namespace Reserva.Api.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!_options.InjectionDetectionEnabled)
+            if (!_options.InjectionDetectionEnabled || context.GetEndpoint()?.Metadata.GetMetadata<PlainTextPayloadAttribute>() != null)
             {
                 await _next(context);
                 return;

@@ -1,4 +1,5 @@
 using Reserva.Entity;
+using Reserva.Dto.Dbo.Reclamacion;
 
 namespace Reserva.Domain.Services.Notificacion
 {
@@ -7,6 +8,7 @@ namespace Reserva.Domain.Services.Notificacion
     /// </summary>
     public interface INotificacionService
     {
+        Task<bool> NotificarReclamacionRegistradaAsync(GetReclamacionDto reclamacionDto);
         /// <summary>
         /// Notifica al operador sobre una nueva reserva pendiente
         /// </summary>

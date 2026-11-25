@@ -83,6 +83,8 @@ namespace Reserva.Domain.Commands.Email
             }
             catch (Exception ex) {
                 _logger.LogError(ex, "Error al enviar el correo: ");
+                response.AddErrorResult("No se pudo enviar el correo electrónico.");
+                return response;
             } 
 
             response.AddOkResult(

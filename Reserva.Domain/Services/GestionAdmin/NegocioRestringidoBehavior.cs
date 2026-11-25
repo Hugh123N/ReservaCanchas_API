@@ -13,7 +13,8 @@ public class NegocioRestringidoBehavior<TRequest, TResponse>(IUserIdentity ident
     private static readonly HashSet<string> AtencionExistente = new(StringComparer.Ordinal)
     {
         "DeleteReservaCommand", "LiberarReservaOperadorCommand", "ConfirmarReservaOperadorCommand", "UpdateReservaCommand",
-        "RegistrarMovimientoPagoCommand", "ConfirmarPagoCommand", "CompletarPagoCommand", "UpdatePagoCommand"
+            "RegistrarMovimientoPagoCommand", "ConfirmarPagoCommand", "CompletarPagoCommand", "UpdatePagoCommand",
+            "CreateReclamacionCommand", "SendEmailCommand"
     };
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
