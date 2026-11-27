@@ -49,7 +49,7 @@ namespace Reserva.Domain.Commands.Dbo.Reclamacion
             reclamacion.ComercioRuc = "10733842356";
             reclamacion.ComercioDireccion = "Calle 19, Campoy, San Juan de Lurigancho, Lima, Perú";
             reclamacion.ComercioTelefono = "965147445";
-            reclamacion.ComercioEmail = _configuration["LibroReclamaciones:EmailAtencion"] ?? "hughhnp@gmail.com";
+            reclamacion.ComercioEmail = _configuration["LibroReclamaciones:EmailAtencion"] ?? "soporte@reservafast.com";
 
             // La columna es normal y nullable: el ID se obtiene al insertar, no mediante una fórmula del motor SQL.
             reclamacion.NumeroHoja = null;

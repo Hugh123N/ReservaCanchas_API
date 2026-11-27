@@ -5,7 +5,7 @@
 1. Crear la tabla del motor configurado. Para SQL Server, la referencia es `Docs/Sql/RECLAMACION_SQLSERVER.sql`. Para MySQL, utilizar una tabla InnoDB con `IdReclamacion INT AUTO_INCREMENT` y `NumeroHoja VARCHAR(20) NULL` como columna normal, no generada. Si esa tabla ya existe, no es necesario recrearla para esta corrección.
 2. Desplegar la API y el frontend de gestión. No se aplican migraciones ni cambios de datos automáticamente desde el código.
 3. Configurar el SMTP existente (`EmailSettings`) para las copias y notificaciones.
-4. El correo del comercio usa `LibroReclamaciones:EmailAtencion` o, si no se configura, `hughhnp@gmail.com`. En variables de entorno corresponde a `LibroReclamaciones__EmailAtencion`.
+4. El correo del comercio usa `LibroReclamaciones:EmailAtencion` o, si no se configura, `soporte@reservafast.com`. En variables de entorno corresponde a `LibroReclamaciones__EmailAtencion`. Si existe una configuración anterior, actualizarla a `soporte@reservafast.com`: tiene prioridad sobre el valor predeterminado del código. Este es el contacto del comercio y destinatario del aviso de nuevas hojas, no la credencial SMTP ni el remitente de los correos automáticos.
 
 El script de SQL Server crea una tabla, sin modificar datos existentes, con comentarios junto a cada columna y separación por grupos. Puede ejecutarse nuevamente sin borrar una tabla ya creada. No actualiza estructuras anteriores si cambian en el futuro. Las sentencias `AUTO_INCREMENT`, `TINYINT(1)`, `ENGINE=InnoDB` y las colaciones `utf8mb4` son de MySQL, no de SQL Server.
 
